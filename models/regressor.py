@@ -37,8 +37,8 @@ class Regressor:
     epochs = 100
     batch_size = 32
 
-    Y_pred = None
-    Y_true = None
+    y_pred = None
+    y_true = None
 
     def __init__(self, name: str, data: DataTransformer) -> None:
         """
@@ -59,7 +59,7 @@ class Regressor:
         regressor = Sequential()
 
         regressor.add(LSTM(units=50, return_sequences=True,
-                           input_shape=(self.data.X_train.shape[1], self.data.X_train.shape[2])))
+                           input_shape=(self.data.x_train.shape[1], self.data.x_train.shape[2])))
         regressor.add(Dropout(0.2))
 
         regressor.add(LSTM(units=50, return_sequences=True))
@@ -71,7 +71,7 @@ class Regressor:
         regressor.add(LSTM(units=50))
         regressor.add(Dropout(0.2))
 
-        regressor.add(Dense(units=self.data.Y_train.shape[1]))
+        regressor.add(Dense(units=self.data.y_train.shape[1]))
 
         regressor.compile(optimizer=optimizer, loss=loss_function)
 
@@ -83,8 +83,8 @@ class Regressor:
         """
 
         self.regressor.fit(
-            self.data.X_train,
-            self.data.Y_train,
+            self.data.x_train,
+            self.data.y_train,
             epochs=self.epochs,
             batch_size=self.batch_size
         )
@@ -94,17 +94,17 @@ class Regressor:
         Use the trained regressor to predict the label features for the test set.
         """
 
-        self.Y_pred = self.regressor.predict(self.data.X_test)
-        self.Y_pred[:, 0] = self.data.scales['Open'].inverse_transform(
-            self.Y_pred[:, 0].reshape(-1, 1)).reshape(-1)
-        self.Y_pred[:, 1] = self.data.scales['Close'].inverse_transform(
-            self.Y_pred[:, 1].reshape(-1, 1)).reshape(-1)
+        self.y_pred = self.regressor.predict(self.data.x_test)
+        self.y_pred[:, 0] = self.data.scales['Open'].inverse_transform(
+            self.y_pred[:, 0].reshape(-1, 1)).reshape(-1)
+        self.y_pred[:, 1] = self.data.scales['Close'].inverse_transform(
+            self.y_pred[:, 1].reshape(-1, 1)).reshape(-1)
 
-        self.Y_true = self.data.df_test_Y.copy()
-        self.Y_true['Open'] = self.data.scale_dict['Open'].inverse_transform(
-            self.Y_true['Open'].values.reshape(-1, 1)).reshape(-1)
-        self.Y_true['Close'] = self.data.scale_dict['Close'].inverse_transform(
-            self.Y_true['Close'].values.reshape(-1, 1)).reshape(-1)
+        self.y_true = self.data.df_test_y.copy()
+        self.y_true['Open'] = self.data.scale_dict['Open'].inverse_transform(
+            self.y_true['Open'].values.reshape(-1, 1)).reshape(-1)
+        self.y_true['Close'] = self.data.scale_dict['Close'].inverse_transform(
+            self.y_true['Close'].values.reshape(-1, 1)).reshape(-1)
 
 
     def plot(self, feature: str) -> None:
@@ -126,13 +126,13 @@ class Regressor:
             raise NameError(f'{feature} not found in Y_features: {self.data.Y_features}')
 
         plt.plot(
-            self.Y_true[feature].values,
+            self.y_true[feature].values,
             '-',
             color='red',
             label=f'Real NOD Stock Price {feature}'
         )
         plt.plot(
-            self.Y_pred[:, self.data.Y_features.index(feature)],
+            self.y_pred[:, self.data.Y_features.index(feature)],
             '--',
             color='red',
             label=f'Predicted NOD Stock Price {feature}'
