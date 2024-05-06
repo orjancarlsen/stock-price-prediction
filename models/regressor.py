@@ -100,7 +100,7 @@ class Regressor:
         self.y_pred[:, 1] = self.data.scales['Close'].inverse_transform(
             self.y_pred[:, 1].reshape(-1, 1)).reshape(-1)
 
-        self.y_true = self.data.df_test_y.copy()
+        self.y_true = self.data.y_test.copy()
         self.y_true['Open'] = self.data.scale_dict['Open'].inverse_transform(
             self.y_true['Open'].values.reshape(-1, 1)).reshape(-1)
         self.y_true['Close'] = self.data.scale_dict['Close'].inverse_transform(
@@ -122,8 +122,8 @@ class Regressor:
             If feature which is not predicted is tried to be plotted.
         """
 
-        if feature not in self.data.Y_features:
-            raise NameError(f'{feature} not found in Y_features: {self.data.Y_features}')
+        if feature not in self.data.y_features:
+            raise NameError(f'{feature} not found in y_features: {self.data.y_features}')
 
         plt.plot(
             self.y_true[feature].values,
@@ -132,7 +132,7 @@ class Regressor:
             label=f'Real NOD Stock Price {feature}'
         )
         plt.plot(
-            self.y_pred[:, self.data.Y_features.index(feature)],
+            self.y_pred[:, self.data.y_features.index(feature)],
             '--',
             color='red',
             label=f'Predicted NOD Stock Price {feature}'

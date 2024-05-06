@@ -15,9 +15,9 @@ class DataTransformer:
     ----------
     df : pd.DataFrame
         DataFrame with stock data from path.
-    X_features : list
+    x_features : list
         Chosen features used to perform training and predictions.
-    Y_features : list
+    y_features : list
         Chosen features used as ground truth.
     df_train_x : pd.DataFrame
         DataFrame with features for training
@@ -51,8 +51,8 @@ class DataTransformer:
         for training and testing a machine learning model.
     """
 
-    X_features = ['Open', 'High', 'Low', 'Close', 'Volume']
-    Y_features = ['Open', 'Close']
+    x_features = ['Open', 'High', 'Low', 'Close', 'Volume']
+    y_features = ['Open', 'Close']
 
     df_train_x = None
     df_train_y = None
@@ -83,10 +83,10 @@ class DataTransformer:
         df_train = self.df[self.df['Date'] < date]
         df_test = self.df[self.df['Date'] >= date]
 
-        self.df_train_x = df_train[self.X_features]
-        self.df_train_y = df_train[self.Y_features]
-        self.df_test_x = df_test[self.X_features]
-        self.df_test_y = df_test[self.Y_features]
+        self.df_train_x = df_train[self.x_features]
+        self.df_train_y = df_train[self.y_features]
+        self.df_test_x = df_test[self.x_features]
+        self.df_test_y = df_test[self.y_features]
 
     def scale(self) -> None:
         """
@@ -105,7 +105,7 @@ class DataTransformer:
             self.df_test_x[feature] = scale.transform(self.df_test_x[[feature]])
 
             # Transform test data column
-            if feature in self.Y_features:
+            if feature in self.y_features:
                 self.df_train_y[feature] = scale.transform(self.df_train_y[[feature]])
                 self.df_test_y[feature] = scale.transform(self.df_test_y[[feature]])
 
