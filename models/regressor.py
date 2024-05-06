@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from keras.models import Sequential, load_model
 from keras.layers import Dense, Dropout, LSTM
 
-from data.data_tronsformer import DataTransformer
+from data.data_transformer import DataTransformer
 
 
 class Regressor:
