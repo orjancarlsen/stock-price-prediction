@@ -1,8 +1,10 @@
+"""Module providing regressor class for stock price prediction"""
+
 import matplotlib.pyplot as plt
 from keras.models import Sequential, load_model
 from keras.layers import Dense, Dropout, LSTM
 
-from ..data.data_tronsformer import DataTransformer
+from data.data_tronsformer import DataTransformer
 
 
 class Regressor:
@@ -35,6 +37,9 @@ class Regressor:
     epochs = 100
     batch_size = 32
 
+    Y_pred = None
+    Y_true = None
+
     def __init__(self, name: str, data: DataTransformer) -> None:
         """
         Parameters
@@ -53,7 +58,8 @@ class Regressor:
 
         regressor = Sequential()
 
-        regressor.add(LSTM(units=50, return_sequences=True, input_shape=(self.data.X_train.shape[1], self.data.X_train.shape[2])))
+        regressor.add(LSTM(units=50, return_sequences=True,
+                           input_shape=(self.data.X_train.shape[1], self.data.X_train.shape[2])))
         regressor.add(Dropout(0.2))
 
         regressor.add(LSTM(units=50, return_sequences=True))
@@ -70,33 +76,37 @@ class Regressor:
         regressor.compile(optimizer=optimizer, loss=loss_function)
 
         self.regressor = regressor
-    
+
     def train(self) -> None:
         """
         Fit the parameters of the regressor to the training set.
         """
 
         self.regressor.fit(
-            self.data.X_train, 
-            self.data.Y_train, 
-            epochs=self.epochs, 
+            self.data.X_train,
+            self.data.Y_train,
+            epochs=self.epochs,
             batch_size=self.batch_size
         )
-    
+
     def predict(self) -> None:
         """
         Use the trained regressor to predict the label features for the test set.
         """
 
         self.Y_pred = self.regressor.predict(self.data.X_test)
-        self.Y_pred[:, 0] = self.data.scales['Open'].inverse_transform(self.Y_pred[:, 0].reshape(-1, 1)).reshape(-1)
-        self.Y_pred[:, 1] = self.data.scales['Close'].inverse_transform(self.Y_pred[:, 1].reshape(-1, 1)).reshape(-1)
+        self.Y_pred[:, 0] = self.data.scales['Open'].inverse_transform(
+            self.Y_pred[:, 0].reshape(-1, 1)).reshape(-1)
+        self.Y_pred[:, 1] = self.data.scales['Close'].inverse_transform(
+            self.Y_pred[:, 1].reshape(-1, 1)).reshape(-1)
 
         self.Y_true = self.data.df_test_Y.copy()
-        self.Y_true['Open'] = self.data.scale_dict['Open'].inverse_transform(self.Y_true['Open'].values.reshape(-1, 1)).reshape(-1)
-        self.Y_true['Close'] = self.data.scale_dict['Close'].inverse_transform(self.Y_true['Close'].values.reshape(-1, 1)).reshape(-1)
+        self.Y_true['Open'] = self.data.scale_dict['Open'].inverse_transform(
+            self.Y_true['Open'].values.reshape(-1, 1)).reshape(-1)
+        self.Y_true['Close'] = self.data.scale_dict['Close'].inverse_transform(
+            self.Y_true['Close'].values.reshape(-1, 1)).reshape(-1)
 
-    
+
     def plot(self, feature: str) -> None:
         """
         Plots predicted values against true values for one feature.
@@ -111,12 +121,22 @@ class Regressor:
         Exception
             If feature which is not predicted is tried to be plotted.
         """
-        
-        if feature not in self.data.Y_features:
-            raise Exception(f'{feature} not found in {self.data.Y_features}')
 
-        plt.plot(self.Y_true[feature].values, '-', color='red', label=f'Real NOD Stock Price {feature}')
-        plt.plot(self.Y_pred[:, self.data.Y_features.index(feature)], '--', color='red', label=f'Predicted NOD Stock Price {feature}')
+        if feature not in self.data.Y_features:
+            raise NameError(f'{feature} not found in Y_features: {self.data.Y_features}')
+
+        plt.plot(
+            self.Y_true[feature].values,
+            '-',
+            color='red',
+            label=f'Real NOD Stock Price {feature}'
+        )
+        plt.plot(
+            self.Y_pred[:, self.data.Y_features.index(feature)],
+            '--',
+            color='red',
+            label=f'Predicted NOD Stock Price {feature}'
+        )
         plt.title('NOD Stock Price Prediction')
         plt.xlabel('Time')
         plt.ylabel('NOD Stock Price')
@@ -126,9 +146,9 @@ class Regressor:
         """
         Save the model parameters to file.
         """
-        
+
         self.regressor.save(f'{self.name}.keras')
-    
+
     def load(self) -> None:
         """
         Load the model parameters from file.

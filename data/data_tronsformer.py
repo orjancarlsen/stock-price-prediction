@@ -1,3 +1,5 @@
+"""Module providing class to process stock data"""
+
 import numpy as np
 import pandas as pd
 
@@ -52,6 +54,16 @@ class DataTransformer:
     X_features = ['Open', 'High', 'Low', 'Close', 'Volume']
     Y_features = ['Open', 'Close']
 
+    df_train_X = None
+    df_train_Y = None
+    df_test_X = None
+    df_test_Y = None
+    X_train = None
+    Y_train = None
+    X_test = None
+    Y_test = None
+    scales = None
+
     def __init__(self, path: str) -> None:
         """
         Parameters
@@ -61,13 +73,13 @@ class DataTransformer:
         """
 
         self.df = pd.read_csv(path, parse_dates=['Date'])
-    
+
     def split(self, date: str) -> None:
         """
         Splits the dataset into fractions for both training and testing
         based on a date, and feature and target.
         """
-        
+
         df_train = self.df[self.df['Date'] < date]
         df_test = self.df[self.df['Date'] >= date]
 
@@ -75,7 +87,7 @@ class DataTransformer:
         self.df_train_Y = df_train[self.Y_features]
         self.df_test_X = df_test[self.X_features]
         self.df_test_Y = df_test[self.Y_features]
-    
+
     def scale(self) -> None:
         """
         Scales the datasets, and stores mapping of scaling for inversion later.
@@ -88,7 +100,7 @@ class DataTransformer:
         for feature in scale_features:
             # Fit on training data column
             scale = MinMaxScaler(feature_range=(0, 1)).fit(self.df_train_X[[feature]])
-            
+
             self.df_train_X[feature] = scale.transform(self.df_train_X[[feature]])
             self.df_test_X[feature] = scale.transform(self.df_test_X[[feature]])
 
@@ -99,7 +111,7 @@ class DataTransformer:
 
             # Store the scale for inversion later
             self.scales[feature] = scale
-    
+
     def create_train_and_test_data(self, n_days: int) -> None:
         """
         Separate the splitted data into complete ndarrays that can be used
@@ -112,18 +124,18 @@ class DataTransformer:
         """
 
         # Create training data
-        X_train = []
-        Y_train = []
+        self.X_train = []
+        self.Y_train = []
         for i in range(n_days + 1, self.df_train_X.shape[0]):
-            X_train.append(self.df_train_X.iloc[i - 1 - n_days:i - 1])
-            Y_train.append(self.df_train_Y.iloc[i])
-        self.X_train = np.array(X_train)
-        self.Y_train = np.array(Y_train)
+            self.X_train.append(self.df_train_X.iloc[i - 1 - n_days:i - 1])
+            self.Y_train.append(self.df_train_Y.iloc[i])
+        self.X_train = np.array(self.X_train)
+        self.Y_train = np.array(self.Y_train)
 
         # Create testing data
         df_test_inputs = pd.concat((self.df_train_X.iloc[-n_days:], self.df_test_X), axis=0)
-        X_test = []
+        self.X_test = []
         for i in range(n_days + 1, df_test_inputs.shape[0]):
-            X_test.append(df_test_inputs.iloc[i - 1 - n_days:i - 1])
-        self.X_test = np.array(X_test)
+            self.X_test.append(df_test_inputs.iloc[i - 1 - n_days:i - 1])
+        self.X_test = np.array(self.X_test)
         self.Y_test = np.array(self.df_test_Y.copy())
