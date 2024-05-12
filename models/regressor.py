@@ -49,7 +49,6 @@ class Regressor:
         data : DataTransformer
             Transormed data used for training and testing the model.
         """
-
         self.name = name
         self.data = data
 
@@ -81,7 +80,6 @@ class Regressor:
         """
         Fit the parameters of the regressor to the training set.
         """
-
         self.regressor.fit(
             self.data.x_train,
             self.data.y_train,
@@ -93,7 +91,6 @@ class Regressor:
         """
         Use the trained regressor to predict the label features for the test set.
         """
-
         self.y_pred = self.regressor.predict(self.data.x_test)
         self.y_pred[:, 0] = self.data.scales['Open'].inverse_transform(
             self.y_pred[:, 0].reshape(-1, 1)).reshape(-1)
@@ -121,7 +118,6 @@ class Regressor:
         Exception
             If feature which is not predicted is tried to be plotted.
         """
-
         if feature not in self.data.y_features:
             raise NameError(f'{feature} not found in y_features: {self.data.y_features}')
 
@@ -146,12 +142,10 @@ class Regressor:
         """
         Save the model parameters to file.
         """
-
         self.regressor.save(f'{self.name}.keras')
 
     def load(self) -> None:
         """
         Load the model parameters from file.
         """
-
         self.regressor = load_model(f'{self.name}.keras')

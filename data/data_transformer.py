@@ -59,16 +59,19 @@ class DataTransformer:
         path : str
             Path to csv file with stock data.
         """
-
         self.df = pd.read_csv(path, parse_dates=['Date'])
 
     def split_and_scale(self, date: str) -> Tuple[np.ndarray]:
         """
-        (Internal method) Splits the dataset into fractions for both training and 
-        testing based on a date, and feature and target. Then each feature is scaled,
+        Splits the dataset into fractions for both training and testing
+        based on a date, and feature and target. Then each feature is scaled,
         and mapping of scaling stored for inversion later.
-        """
 
+        Parameters
+        ----------
+        date : str
+            Date to use for splitting between training and testing.
+        """
         df_train = self.df[self.df['Date'] < date]
         df_test = self.df[self.df['Date'] >= date]
 
@@ -108,7 +111,6 @@ class DataTransformer:
         n_days : int
             Number of days used for prediction
         """
-
         df_train_x, df_train_y, df_test_x, df_test_y = self.split_and_scale('2021-01-01')
 
         # Create training data
