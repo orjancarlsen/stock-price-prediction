@@ -98,10 +98,10 @@ class Regressor:
             self.y_pred[:, 1].reshape(-1, 1)).reshape(-1)
 
         self.y_true = self.data.y_test.copy()
-        self.y_true['Open'] = self.data.scale_dict['Open'].inverse_transform(
-            self.y_true['Open'].values.reshape(-1, 1)).reshape(-1)
-        self.y_true['Close'] = self.data.scale_dict['Close'].inverse_transform(
-            self.y_true['Close'].values.reshape(-1, 1)).reshape(-1)
+        self.y_true[:, 0] = self.data.scales['Open'].inverse_transform(
+            self.y_true[:, 0].reshape(-1, 1)).reshape(-1)
+        self.y_true[:, 1] = self.data.scales['Close'].inverse_transform(
+            self.y_true[:, 1].reshape(-1, 1)).reshape(-1)
 
 
     def plot(self, feature: str) -> None:
