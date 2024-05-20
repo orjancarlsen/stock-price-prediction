@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from keras.models import Sequential, load_model
 from keras.layers import Dense, Dropout, LSTM
 
-from data.data_transformer import DataTransformer
+from ..data.data_transformer import DataTransformer
 
 
 class Regressor:
@@ -34,7 +34,7 @@ class Regressor:
         Load the model parameters from file.
     """
 
-    epochs = 100
+    epochs = 1
     batch_size = 32
 
     y_pred = None

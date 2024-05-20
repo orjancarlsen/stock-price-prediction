@@ -1,10 +1,10 @@
-
 """API to interact with the stock price regressor."""
+
 from pathlib import Path
 from flask import Flask, jsonify
 
-from data.data_transformer import DataTransformer
-from models.regressor import Regressor
+from data.data_transformer import DataTransformer # pylint: disable=import-error
+from models.regressor import Regressor            # pylint: disable=import-error
 
 
 app = Flask(__name__)
