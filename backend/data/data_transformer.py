@@ -65,7 +65,7 @@ class DataTransformer:
 
         # Convert index to a column
         self.df.reset_index(inplace=True)
-        
+
         # Ensure the 'Date' column is of datetime type
         self.df['Date'] = pd.to_datetime(self.df['Date'])
 
