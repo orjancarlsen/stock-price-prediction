@@ -2,6 +2,7 @@
 
 from typing import Tuple
 
+import yfinance as yf
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
@@ -52,14 +53,21 @@ class DataTransformer:
     y_test = None
     scales = None
 
-    def __init__(self, path: str) -> None:
+    def __init__(self, ticker: str) -> None:
         """
         Parameters
         ----------
-        path : str
-            Path to csv file with stock data.
+        ticker : str
+            Ticker for stock.
         """
-        self.df = pd.read_csv(path, parse_dates=['Date'])
+        # Download data from Yahoo Finance API
+        self.df = yf.download(ticker, start="2000-01-01", end="2024-01-01")
+
+        # Convert index to a column
+        self.df.reset_index(inplace=True)
+        
+        # Ensure the 'Date' column is of datetime type
+        self.df['Date'] = pd.to_datetime(self.df['Date'])
 
     def split_and_scale(self, date: str) -> Tuple[np.ndarray]:
         """
