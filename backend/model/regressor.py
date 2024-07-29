@@ -7,7 +7,7 @@ import joblib
 import matplotlib.pyplot as plt
 
 from datetime import datetime
-from keras.models import Sequential, load_model
+from keras.models import Sequential
 from keras.layers import Dense, Dropout, LSTM
 
 from data.data_transformer import DataTransformer # pylint: disable=import-error
