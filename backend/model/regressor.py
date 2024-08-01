@@ -1,12 +1,12 @@
 """Module providing regressor class for stock price prediction"""
 
+from datetime import datetime
+
 import pathlib
 import os
 import glob
 import joblib
 import matplotlib.pyplot as plt
-
-from datetime import datetime
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, LSTM
 
