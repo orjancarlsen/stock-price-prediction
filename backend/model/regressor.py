@@ -1,6 +1,7 @@
 """Module providing regressor class for stock price prediction"""
 
 from datetime import datetime
+from typing import List
 
 import pathlib
 import os
@@ -178,3 +179,20 @@ class Regressor:
         files.sort(key=extract_date, reverse=True)
         latest_file = files[0]
         return joblib.load(latest_file)
+
+    @staticmethod
+    def get_trained_models() -> List[str]:
+        """
+        Return a list of tickers for which there exist a model.
+        """
+        filepath = pathlib.Path(__file__).parent.resolve()
+        files = glob.glob(str(filepath / f'models/*.joblib'))
+
+        trained_models = set()
+        for filename in files:
+            basename = os.path.basename(filename)
+            ticker = basename.split('-', 1)[0]
+            trained_models.add(ticker)
+
+        return trained_models
+

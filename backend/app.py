@@ -1,6 +1,7 @@
 """API to interact with the stock price regressor."""
 
 from flask import Flask, jsonify
+import yfinance as yf
 
 from data.data_transformer import DataTransformer # pylint: disable=import-error
 from model.regressor import Regressor             # pylint: disable=import-error
@@ -38,7 +39,14 @@ def predict(ticker: str):
     y_true_list = regressor.y_true.tolist()
     return jsonify({'prediction': y_pred_list, 'true_values': y_true_list}), 200
 
-
+@app.route('/trained_models', methods=['GET'])
+def get_trained_models():
+    """
+    Return a list of stocks which there exist 
+    """
+    trained_models = Regressor.get_trained_models()
+    add_company_name = lambda tickers: [f"{ticker} - {yf.Ticker(ticker).info.get('longName', 'Unknown')}" for ticker in tickers]
+    return add_company_name(trained_models)
 
 if __name__ == '__main__':
     app.run()
