@@ -1,6 +1,7 @@
 """API to interact with the stock price regressor."""
 
 from flask import Flask, jsonify
+from flask_cors import CORS
 import yfinance as yf
 
 from data.data_transformer import DataTransformer # pylint: disable=import-error
@@ -8,6 +9,7 @@ from model.regressor import Regressor             # pylint: disable=import-error
 
 
 app = Flask(__name__)
+CORS(app, origins=['http://localhost:8080'])
 
 @app.route('/train/<ticker>', methods=['GET'])
 def train(ticker: str):
@@ -46,7 +48,7 @@ def get_trained_models():
     """
     trained_models = Regressor.get_trained_models()
     add_company_name = lambda tickers: [f"{ticker} - {yf.Ticker(ticker).info.get('longName', 'Unknown')}" for ticker in tickers]
-    return add_company_name(trained_models)
+    return jsonify(add_company_name(trained_models))
 
 if __name__ == '__main__':
     app.run()
