@@ -12,3 +12,6 @@ Tasks:
 11. Allow these ratings to be part of ML model
 12. Include transaction costs in model
 13. Connect predictions to bank and use to trade
+
+
+# Setup Guid

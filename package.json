@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "chart.js": "^4.4.3",
+    "frontend": "file:frontend",
     "react-chartjs-2": "^5.2.0"
   }
 }
