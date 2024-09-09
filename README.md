@@ -15,3 +15,17 @@ Tasks:
 
 
 # Setup Guid
+
+## Backend
+```
+python backend/app.py
+```
+
+
+## Frontend
+
+```
+cd frontend/
+npm install
+npm start
+```
