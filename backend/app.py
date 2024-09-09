@@ -1,5 +1,6 @@
 """API to interact with the stock price regressor."""
 
+from typing import List
 from flask import Flask, jsonify
 from flask_cors import CORS
 import yfinance as yf
@@ -47,7 +48,13 @@ def get_trained_models():
     Return a list of stocks which there exist 
     """
     trained_models = Regressor.get_trained_models()
-    add_company_name = lambda tickers: [f"{ticker} - {yf.Ticker(ticker).info.get('longName', 'Unknown')}" for ticker in tickers]
+
+    def add_company_name(tickers: List[str]):
+        """
+        Add company name to list of ticker symbols.
+        """
+        return [f"{ticker} - {yf.Ticker(ticker).info.get('longName', '')}" for ticker in tickers]
+
     return jsonify(add_company_name(trained_models))
 
 if __name__ == '__main__':

@@ -186,7 +186,7 @@ class Regressor:
         Return a list of tickers for which there exist a model.
         """
         filepath = pathlib.Path(__file__).parent.resolve()
-        files = glob.glob(str(filepath / f'models/*.joblib'))
+        files = glob.glob(str(filepath / 'models/*.joblib'))
 
         trained_models = set()
         for filename in files:
@@ -195,4 +195,3 @@ class Regressor:
             trained_models.add(ticker)
 
         return trained_models
-
