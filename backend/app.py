@@ -64,7 +64,7 @@ def get_trained_models() -> List[str]:
     Return a list of stocks which there exist 
     """
     trained_models = Regressor.get_trained_models()
-    
+
     symbol_name = []
     for ticker in trained_models:
         symbol_name.append(
