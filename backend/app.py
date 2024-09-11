@@ -64,17 +64,17 @@ def get_trained_models() -> List[str]:
     Return a list of stocks which there exist 
     """
     trained_models = Regressor.get_trained_models()
-
-    def add_company_name(tickers: List[str]):
-        """
-        Add company name to list of ticker symbols.
-        """
-        return [{"symbol": ticker, "name": yf.Ticker(ticker).info.get('longName', '')} for ticker in tickers]
     
-    print('/companies/trained: ' + str(add_company_name(trained_models)))
+    symbol_name = []
+    for ticker in trained_models:
+        symbol_name.append(
+            {
+                "symbol": ticker,
+                "name": yf.Ticker(ticker).info.get('longName', '')
+            }
+        )
 
-
-    return jsonify(add_company_name(trained_models))
+    return jsonify(symbol_name)
 
 
 if __name__ == '__main__':
