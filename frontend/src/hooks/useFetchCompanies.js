@@ -9,11 +9,15 @@ export const useFetchCompanies = (url) => {
     const fetchCompanies = async () => {
       try {
         const response = await fetch(url);
-        console.log("Response: " + response);
         const data = await response.json();
-        setCompanies(data);
+        
+        // Ensure data is an array of objects
+        if (Array.isArray(data)) {
+          setCompanies(data); // Store the array of company objects
+        } else {
+          throw new Error("Unexpected response format");
+        }
       } catch (err) {
-        console.log("Failed here: " + err.message);
         setError(err.message);
       } finally {
         setLoading(false);

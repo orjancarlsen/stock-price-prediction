@@ -9,26 +9,43 @@ import { useFetchCompanies } from './hooks/useFetchCompanies';
 
 function App() {
   const [selectedCompany, setSelectedCompany] = useState('');
-  const { companies, error, loading } = useFetchCompanies('http://localhost:5000/trained_models');
+  const { 
+    companies: trainedCompanies, 
+    error: trainedCompaniesError,
+    loading: trainedCompaniesLoading 
+  } = useFetchCompanies('http://localhost:5000/companies/trained');
+  const { 
+    companies: availableCompanies,
+    error: availableCompaniesError,
+    loading: availableCompaniesLoading 
+  } = useFetchCompanies('http://localhost:5000/companies/available');
 
   const handleCompanyChange = (e) => {
     setSelectedCompany(e.target.value);
     console.log("Selected company:", e.target.value);
   };
 
-  if (loading) {
+  if (trainedCompaniesLoading || availableCompaniesLoading) {
     return <div>Loading...</div>;
   }
 
-  if (error) {
-    return <div>Error fetching companies: {error}</div>;
+  if (trainedCompaniesError || availableCompaniesError) {
+    return <div>Error fetching companies: {trainedCompaniesError}</div>;
   }
 
   return (
     <div>
-      <h1>Company Selector</h1>
+      <h1>Trained Models</h1>
       <Dropdown 
-        options={companies} 
+        options={trainedCompanies} 
+        value={selectedCompany} 
+        onChange={handleCompanyChange} 
+        placeholder="Select model" 
+      />
+
+      <h1>Available Models</h1>
+      <Dropdown 
+        options={availableCompanies} 
         value={selectedCompany} 
         onChange={handleCompanyChange} 
         placeholder="Select a company" 
