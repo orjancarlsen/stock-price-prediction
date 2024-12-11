@@ -11,7 +11,7 @@ from model.regressor import Regressor             # pylint: disable=import-error
 
 
 app = Flask(__name__)
-CORS(app, origins=['http://localhost:8080'])
+CORS(app, origins=['http://localhost:8081'])
 
 
 @app.route('/train/<ticker>', methods=['GET'])
