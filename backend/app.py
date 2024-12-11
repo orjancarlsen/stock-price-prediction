@@ -54,23 +54,27 @@ def available_companies() -> List[str]:
     stock_data = PyTickerSymbols()
     sp500 = stock_data.get_stocks_by_index('S&P 500')
     sp500_ticker_name = [{'symbol': stock['symbol'], 'name': stock['name']} for stock in sp500]
-    print('/companies/available: ' + str(sp500_ticker_name))
+
     return jsonify(sp500_ticker_name)
 
 
 @app.route('/companies/trained', methods=['GET'])
 def get_trained_models() -> List[str]:
     """
-    Return a list of stocks which there exist 
+    Return a list of stocks for which there exist trained models.
     """
     trained_models = Regressor.get_trained_models()
 
     symbol_name = []
     for ticker in trained_models:
+        try:
+            name = yf.Ticker(ticker).info.get('longName', '')
+        except Exception:
+            name = ticker
         symbol_name.append(
             {
                 "symbol": ticker,
-                "name": yf.Ticker(ticker).info.get('longName', '')
+                "name": name
             }
         )
 
