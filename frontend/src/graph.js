@@ -15,7 +15,7 @@ const useStyles = createUseStyles(() => ({
     backgroundColor: 'rgb(255, 255, 255)',
     padding: '1rem',
     transition: '0.3s ease-in-out',
-    width: '100%',
+    width: '100vh - 50px',
     height: '400px',
   },
 }));
