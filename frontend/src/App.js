@@ -1,7 +1,6 @@
 import React, {useState} from 'react';
-import GradientLineChart from './GradientLineChart';
 import Graph from './graph';
-import Dropdown from './components/Dropdown';
+import TypingFieldDropdown from './components/TypingFieldDropdown';
 
 import { useFetchCompanies } from './hooks/useFetchCompanies';
 
@@ -36,7 +35,7 @@ function App() {
   return (
     <div>
       <h1>Trained Models</h1>
-      <Dropdown 
+      <TypingFieldDropdown 
         options={trainedCompanies} 
         value={selectedCompany} 
         onChange={handleCompanyChange} 
@@ -44,7 +43,7 @@ function App() {
       />
 
       <h1>Available Models</h1>
-      <Dropdown 
+      <TypingFieldDropdown 
         options={availableCompanies} 
         value={selectedCompany} 
         onChange={handleCompanyChange} 
