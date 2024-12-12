@@ -15,4 +15,4 @@ jobs:
 
     - name: Run Pylint in Docker container
       run: |
-        docker run --rm -w /app -e PYTHONPATH=/app backend-linter pylint $(find . -name '*.py')
+        docker run --rm -w /app -e PYTHONPATH=/app backend-linter pylint $(find backend -name '*.py')
