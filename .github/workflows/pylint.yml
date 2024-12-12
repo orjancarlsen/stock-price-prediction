@@ -3,21 +3,16 @@ name: Pylint
 on: [push]
 
 jobs:
-  build:
+  lint:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.12"]
     steps:
-    - uses: actions/checkout@v4
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
+    - name: Checkout the code
+      uses: actions/checkout@v4
+      
+    - name: Build Docker image for backend
       run: |
-        python -m pip install --upgrade pip
-        pip install -r backend/requirements.txt
-    - name: Analysing the code with pylint
+        docker build -t backend-linter ./backend
+
+    - name: Run Pylint in Docker container
       run: |
-        pylint $(git ls-files '*.py')
+        docker run --rm backend-linter pylint $(git ls-files '*.py')
