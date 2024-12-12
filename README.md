@@ -16,14 +16,22 @@ Tasks:
 
 # Setup Guid
 
-## Backend
+## Docker
+Start the Docker container running the following commands from the root folder:
 ```
+docker compose build --no-cache
+docker compose up -d
+```
+
+## Backend
+To start the backend individually, first install the dependencies, then start the server:
+```
+pip install -r requirements.txt
 python backend/app.py
 ```
 
-
 ## Frontend
-
+To start the frontend individually, run these commands:
 ```
 cd frontend/
 npm install
