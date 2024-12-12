@@ -15,4 +15,4 @@ jobs:
 
     - name: Run Pylint in Docker container
       run: |
-        docker run --rm backend-linter pylint $(git ls-files '*.py')
+        docker run --rm -e PYTHONPATH=/app backend-linter pylint $(git ls-files '*.py')
