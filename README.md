@@ -14,7 +14,7 @@ Tasks:
 13. Connect predictions to bank and use to trade
 
 
-# Setup Guid
+# Setup Guide
 
 ## Docker
 Start the Docker container running the following commands from the root folder:
