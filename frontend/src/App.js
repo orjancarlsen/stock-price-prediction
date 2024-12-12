@@ -13,12 +13,12 @@ function App() {
     companies: trainedCompanies, 
     error: trainedCompaniesError,
     loading: trainedCompaniesLoading 
-  } = useFetchCompanies('http://localhost:5000/companies/trained');
+  } = useFetchCompanies('http://localhost:2000/companies/trained');
   const { 
     companies: availableCompanies,
     error: availableCompaniesError,
     loading: availableCompaniesLoading 
-  } = useFetchCompanies('http://localhost:5000/companies/available');
+  } = useFetchCompanies('http://localhost:2000/companies/available');
 
   const handleCompanyChange = (e) => {
     setSelectedCompany(e.target.value);
