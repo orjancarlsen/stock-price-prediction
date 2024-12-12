@@ -13,8 +13,5 @@ COPY . .
 # Expose the port your backend is running on
 EXPOSE 2000
 
-# Set PYTHONPATH to current working directory
-ENV PYTHONPATH=/app
-
 # Command to run the application
 CMD ["python", "app.py"]
