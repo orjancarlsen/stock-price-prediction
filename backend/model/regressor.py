@@ -8,8 +8,8 @@ import os
 import glob
 import joblib
 import matplotlib.pyplot as plt
-from keras.models import Sequential
-from keras.layers import Dense, Dropout, LSTM
+from keras._tf_keras.keras.models import Sequential
+from keras._tf_keras.keras.layers import Dense, Dropout, LSTM
 
 from data.data_transformer import DataTransformer # pylint: disable=import-error
 
