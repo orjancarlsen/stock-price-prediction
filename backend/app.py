@@ -67,14 +67,10 @@ def get_trained_models() -> List[str]:
 
     symbol_name = []
     for ticker in trained_models:
-        try:
-            name = yf.Ticker(ticker).info.get('longName', '')
-        except Exception:
-            name = ticker
         symbol_name.append(
             {
                 "symbol": ticker,
-                "name": name
+                "name": yf.Ticker(ticker).info.get('longName', '')
             }
         )
 
