@@ -10,7 +10,7 @@ COPY package*.json ./
 # Install dependencies
 RUN npm install -g npm@10.9.2
 
-RUN npm install -g webpack webpack-cli
+RUN npm install
 
 # Copy the rest of the frontend source code
 COPY . .
