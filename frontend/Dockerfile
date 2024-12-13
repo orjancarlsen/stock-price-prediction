@@ -7,7 +7,7 @@ WORKDIR /app
 # Copy the package.json
 COPY package.json ./
 
-ARG NPM_AUTH_TOKEN
+ARG NPM_AUTH_TOKEN, REACT_APP_API_URL
 COPY .npmrc ./
 
 # Install dependencies
