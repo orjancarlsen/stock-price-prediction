@@ -8,16 +8,18 @@ import { useFetchCompanies } from './hooks/useFetchCompanies';
 
 function App() {
   const [selectedCompany, setSelectedCompany] = useState('');
+  const apiUrl = process.env.REACT_APP_BACKEND_URL;
+
   const { 
     companies: trainedCompanies, 
     error: trainedCompaniesError,
     loading: trainedCompaniesLoading 
-  } = useFetchCompanies('http://localhost:2000/companies/trained');
+  } = useFetchCompanies(`${apiUrl}/companies/trained`);
   const { 
     companies: availableCompanies,
     error: availableCompaniesError,
     loading: availableCompaniesLoading 
-  } = useFetchCompanies('http://localhost:2000/companies/available');
+  } = useFetchCompanies(`${apiUrl}/companies/available`);
 
   const handleCompanyChange = (e) => {
     setSelectedCompany(e.target.value);

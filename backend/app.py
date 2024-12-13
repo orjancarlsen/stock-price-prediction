@@ -11,7 +11,15 @@ from model.regressor import Regressor             # pylint: disable=import-error
 
 
 app = Flask(__name__)
-CORS(app, origins=['http://localhost:2001'])
+
+# Enable CORS with different origins for local and production environments
+cors_config = {
+    "origins": [
+        "http://localhost:2001",
+        "https://stock-price-prediction-frontend.onrender.com"
+    ],
+}
+CORS(app, resources={r"/*": cors_config})
 
 
 @app.route('/train/<ticker>', methods=['GET'])
