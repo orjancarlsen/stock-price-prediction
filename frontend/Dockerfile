@@ -4,11 +4,15 @@ FROM node:20.10.0-slim
 # Set the working directory
 WORKDIR /app
 
-# Copy the package.json and package-lock.json
-COPY package*.json ./
+# Copy the package.json
+COPY package.json ./
+
+ARG NPM_AUTH_TOKEN
+COPY .npmrc ./
 
 # Install dependencies
-RUN npm install -g npm@10.9.2 && npm install
+RUN npm install -g npm@10.9.2
+RUN npm install
 
 # Copy the rest of the frontend source code
 COPY . .
