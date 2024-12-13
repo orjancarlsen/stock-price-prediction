@@ -9,6 +9,7 @@ import { useFetchCompanies } from './hooks/useFetchCompanies';
 function App() {
   const [selectedCompany, setSelectedCompany] = useState('');
   const apiUrl = process.env.REACT_APP_BACKEND_URL;
+  console.log("apiUrl:", apiUrl);
 
   const { 
     companies: trainedCompanies, 
