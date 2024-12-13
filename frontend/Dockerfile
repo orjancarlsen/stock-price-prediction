@@ -8,9 +8,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install -g npm@10.9.2
-
-RUN npm install --include=dev
+RUN npm install -g npm@10.9.2 && npm install
 
 # Copy the rest of the frontend source code
 COPY . .
