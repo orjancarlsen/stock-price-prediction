@@ -5,9 +5,9 @@ WORKDIR /app
 
 # Arguments defined in .env file
 ARG NPM_AUTH_TOKEN
-ARG REACT_APP_API_URL
+ARG REACT_APP_BACKEND_URL
 RUN echo "NPM_AUTH_TOKEN: $NPM_AUTH_TOKEN"
-RUN echo "REACT_APP_API_URL: $REACT_APP_API_URL"
+RUN echo "REACT_APP_BACKEND_URL: $REACT_APP_BACKEND_URL"
 
 # Copy the package.json
 COPY package.json ./
