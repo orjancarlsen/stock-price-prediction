@@ -1,12 +1,10 @@
 """API to interact with the stock price regressor."""
 
 from typing import List
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 from pytickersymbols import PyTickerSymbols
 import yfinance as yf
-from flask import request
-import datetime
 
 from data.data_transformer import DataTransformer # pylint: disable=import-error
 from model.regressor import Regressor             # pylint: disable=import-error
@@ -16,10 +14,13 @@ app = Flask(__name__)
 
 # Enable CORS with different origins for local and production environments
 CORS(
-    app, 
+    app,
     resources={
         r"/*": {
-            "origins": ["http://localhost:2001", "https://stock-price-prediction-frontend.onrender.com"], 
+            "origins": [
+                "http://localhost:2001", 
+                "https://stock-price-prediction-frontend.onrender.com"
+            ], 
             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"], 
             "allow_headers": ["Content-Type", "Authorization"]
         }
