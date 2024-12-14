@@ -8,19 +8,17 @@ import { useFetchCompanies } from './hooks/useFetchCompanies';
 
 function App() {
   const [selectedCompany, setSelectedCompany] = useState('');
-  const apiUrl = process.env.REACT_APP_BACKEND_URL;
-  console.log("apiUrl:", apiUrl);
 
   const { 
     companies: trainedCompanies, 
     error: trainedCompaniesError,
     loading: trainedCompaniesLoading 
-  } = useFetchCompanies(`${apiUrl}/companies/trained`);
+  } = useFetchCompanies('/companies/trained');
   const { 
     companies: availableCompanies,
     error: availableCompaniesError,
     loading: availableCompaniesLoading 
-  } = useFetchCompanies(`${apiUrl}/companies/available`);
+  } = useFetchCompanies('/companies/available');
 
   const handleCompanyChange = (e) => {
     setSelectedCompany(e.target.value);
@@ -53,7 +51,6 @@ function App() {
         placeholder="Select a company" 
       />
 
-      {/* Display Graph Component */}
       {/* <Graph selectedCompany={selectedCompany} /> */}
       <Graph />
     </div>
