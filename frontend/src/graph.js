@@ -12,20 +12,22 @@ const Graph = () => {
 
   // Configuration for the gradient
   let cachedGradient;
-  const getGradient = (ctx, chartArea) => {
+  const getGradient = (ctx, chartArea, min, max) => {
     if (!cachedGradient || chartArea !== previousChartArea) {
       console.log("Render gradient");
       const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
-      gradient.addColorStop(0, 'rgba(64, 105, 225, 0)');
-      gradient.addColorStop(0.3, 'rgba(64, 105, 225, 0.4)');
-      gradient.addColorStop(0.75, 'rgba(64, 105, 225, 0.3)');
-      gradient.addColorStop(0.95, 'rgba(64, 105, 225, 0.2)');
+  
+      // Position gradient stops
+      gradient.addColorStop(1, 'rgba(64, 105, 225, 0.8)'); // Strongest blue at the top
+      gradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)'); // Midway fade slower (higher up)
+      // gradient.addColorStop(0, 'rgba(255, 255, 255, 0)'); // Fully transparent below
+  
       cachedGradient = gradient;
       previousChartArea = chartArea;
     }
     return cachedGradient;
   };
-  
+    
   // Chart data
   const data = {
     labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
@@ -42,7 +44,13 @@ const Graph = () => {
             // This case happens on initial chart load
             return null;
           }
-          return getGradient(ctx, chartArea);
+
+          const yScale = chart.scales.y;
+          const min = yScale.min;
+          const max = yScale.max;
+        
+          return getGradient(ctx, chartArea, min, max);
+        
         },
         fill: true,
         tension: 0.1,
@@ -57,7 +65,7 @@ const Graph = () => {
       legend: {
         display: true,
         position: 'top',
-      }
+      },
     },
     interaction: {
       intersect: false,
@@ -65,18 +73,26 @@ const Graph = () => {
     },
     scales: {
       x: {
+        grid: {
+          color: 'rgba(0, 0, 0, 0.2)',
+          lineWidth: 1,
+        },
         title: {
-          display: true
-        }
+          display: true,
+        },
       },
       y: {
+        grid: {
+          color: 'rgba(0, 0, 0, 0.2)',
+          lineWidth: 1,
+        },
         title: {
-          display: true
-        }
-      }
-    }
+          display: true,
+        },
+      },
+    },
   };
-
+  
   const containerStyle = {
     color: '#000',
     backgroundColor: 'rgb(255, 255, 255)',
