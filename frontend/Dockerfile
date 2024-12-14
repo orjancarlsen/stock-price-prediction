@@ -1,13 +1,18 @@
-# Save this as frontend/Dockerfile
 FROM node:20.10.0-slim
 
 # Set the working directory
 WORKDIR /app
 
+# Arguments defined in .env file
+ARG NPM_AUTH_TOKEN
+ARG REACT_APP_API_URL
+RUN echo "NPM_AUTH_TOKEN: $NPM_AUTH_TOKEN"
+RUN echo "REACT_APP_API_URL: $REACT_APP_API_URL"
+
 # Copy the package.json
 COPY package.json ./
 
-ARG NPM_AUTH_TOKEN, REACT_APP_API_URL
+# NPM_AUTH_TOKEN needed in .npmrc file
 COPY .npmrc ./
 
 # Install dependencies
