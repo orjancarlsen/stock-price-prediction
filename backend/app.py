@@ -5,6 +5,8 @@ from flask import Flask, jsonify
 from flask_cors import CORS
 from pytickersymbols import PyTickerSymbols
 import yfinance as yf
+from flask import request
+import datetime
 
 from data.data_transformer import DataTransformer # pylint: disable=import-error
 from model.regressor import Regressor             # pylint: disable=import-error
@@ -13,13 +15,16 @@ from model.regressor import Regressor             # pylint: disable=import-error
 app = Flask(__name__)
 
 # Enable CORS with different origins for local and production environments
-cors_config = {
-    "origins": [
-        "http://localhost:2001",
-        "https://stock-price-prediction-frontend.onrender.com"
-    ],
-}
-CORS(app, resources={r"/*": cors_config})
+CORS(
+    app, 
+    resources={
+        r"/*": {
+            "origins": ["http://localhost:2001", "https://stock-price-prediction-frontend.onrender.com"], 
+            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"], 
+            "allow_headers": ["Content-Type", "Authorization"]
+        }
+    }
+)
 
 
 @app.route('/train/<ticker>', methods=['GET'])
@@ -84,6 +89,22 @@ def get_trained_models() -> List[str]:
 
     return jsonify(symbol_name)
 
+@app.route('/companies/price/<string:ticker>', methods=['GET'])
+def get_stock_price(ticker: str):
+    """
+    Return the stock price for the given ticker within the specified date range.
+    """
+    from_date = request.args.get('fromDate')
+    to_date = request.args.get('toDate')
+
+    stock = yf.Ticker(ticker)
+    price_data = stock.history(start=from_date, end=to_date)
+    prices = price_data['Close'].tolist()
+    dates = price_data.index.strftime('%Y-%m-%d').tolist()
+
+    print("Number of dates: ", len(dates))
+
+    return jsonify({'dates': dates, 'prices': prices})
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=2000)

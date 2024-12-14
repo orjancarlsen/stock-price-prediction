@@ -7,8 +7,8 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip,
 
 let previousChartArea;
 
-const Graph = () => {
-  console.log("Render Graph")
+const Graph = ({ selectedCompany, historicCompanyPrices }) => {
+  console.log("Render Graph for", selectedCompany, "with data:", historicCompanyPrices);
 
   // Configuration for the gradient
   let cachedGradient;
@@ -30,11 +30,11 @@ const Graph = () => {
     
   // Chart data
   const data = {
-    labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
+    labels: historicCompanyPrices.dates,
     datasets: [
       {
         label: 'Stock Price',
-        data: [65, 59, 80, 81, 56, 55, 40],
+        data: historicCompanyPrices.prices,
         borderColor: 'rgba(64, 105, 225, 1)',
         backgroundColor: function(context) {
           const chart = context.chart;
@@ -54,6 +54,7 @@ const Graph = () => {
         },
         fill: true,
         tension: 0.1,
+        pointRadius: 0, // Disable circles at data points
       }
     ]
   };
@@ -105,7 +106,7 @@ const Graph = () => {
 
   return (
     <div style={containerStyle}>
-      <h1>Stock Price Changes</h1>
+      <h1>{selectedCompany} Stock Price Changes</h1>
       <Line data={data} options={options} />
     </div>
   );

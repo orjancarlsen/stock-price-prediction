@@ -1,10 +1,8 @@
 import React, {useState} from 'react';
 import Graph from './graph';
 import TypingFieldDropdown from './components/TypingFieldDropdown';
-
 import { useFetchCompanies } from './hooks/useFetchCompanies';
-
-
+import useFetchPrices from './hooks/useFetchPrices';
 
 function App() {
   const [selectedCompany, setSelectedCompany] = useState('');
@@ -14,11 +12,18 @@ function App() {
     error: trainedCompaniesError,
     loading: trainedCompaniesLoading 
   } = useFetchCompanies('/companies/trained');
+
   const { 
     companies: availableCompanies,
     error: availableCompaniesError,
     loading: availableCompaniesLoading 
   } = useFetchCompanies('/companies/available');
+
+  const {
+    data: historicCompanyPrices,
+    loading: pricesLoading,
+    error: pricesError
+  } = useFetchPrices(selectedCompany, '2023-01-01', '2023-12-31');
 
   const handleCompanyChange = (e) => {
     setSelectedCompany(e.target.value);
@@ -51,8 +56,9 @@ function App() {
         placeholder="Select a company" 
       />
 
-      {/* <Graph selectedCompany={selectedCompany} /> */}
-      <Graph />
+      {selectedCompany && historicCompanyPrices.dates.length > 0 && (
+        <Graph selectedCompany={selectedCompany} historicCompanyPrices={historicCompanyPrices} />
+      )}
     </div>
   );
 }
