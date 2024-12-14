@@ -20,7 +20,7 @@ CORS(
             "origins": [
                 "http://localhost:2001", 
                 "https://stock-price-prediction-frontend.onrender.com"
-            ], 
+            ],
             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"], 
             "allow_headers": ["Content-Type", "Authorization"]
         }
