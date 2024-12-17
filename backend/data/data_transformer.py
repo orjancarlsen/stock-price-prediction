@@ -45,7 +45,7 @@ class DataTransformer:
     """
 
     x_features = ['Open', 'High', 'Low', 'Close', 'Volume']
-    y_features = ['Open', 'Close']
+    y_features = ['Low', 'High']
 
     x_train = None
     y_train = None
@@ -60,8 +60,10 @@ class DataTransformer:
         ticker : str
             Ticker for stock.
         """
+        self.ticker = ticker
+
         # Download data from Yahoo Finance API
-        self.df = yf.download(ticker, start="2000-01-01", end="2024-01-01")
+        self.df = yf.download(self.ticker)
 
         # Convert index to a column
         self.df.reset_index(inplace=True)
@@ -83,10 +85,18 @@ class DataTransformer:
         df_train = self.df[self.df['Date'] < date]
         df_test = self.df[self.df['Date'] >= date]
 
-        df_train_x = df_train[self.x_features]
-        df_train_y = df_train[self.y_features]
-        df_test_x = df_test[self.x_features]
-        df_test_y = df_test[self.y_features]
+        df_train_x = df_train[self.x_features].copy()
+        df_train_y = df_train[self.y_features].copy()
+        df_test_x = df_test[self.x_features].copy()
+        df_test_y = df_test[self.y_features].copy()
+
+        # Calculate minimum Low and maximum High of rolling period of 10 days
+        df_train_y['Low'] = df_train_y['Low'].rolling(window=10, min_periods=10).min().shift(-9)
+        df_train_y['High'] = df_train_y['High'].rolling(window=10, min_periods=10).max().shift(-9)
+        df_test_y['Low'] = df_test_y['Low'].rolling(window=10, min_periods=10).min().shift(-9)
+        df_test_y['High'] = df_test_y['High'].rolling(window=10, min_periods=10).max().shift(-9)
+        df_train_y.dropna(inplace=True)
+        df_test_y.dropna(inplace=True)
 
         self.scales = {}
 
@@ -119,21 +129,23 @@ class DataTransformer:
         n_days : int
             Number of days used for prediction
         """
-        df_train_x, df_train_y, df_test_x, df_test_y = self.split_and_scale('2021-01-01')
+        df_train_x, df_train_y, df_test_x, df_test_y = self.split_and_scale('2024-01-01')
 
         # Create training data
         self.x_train = []
         self.y_train = []
-        for i in range(n_days + 1, df_train_x.shape[0]):
-            self.x_train.append(df_train_x.iloc[i - 1 - n_days:i - 1])
+        for i in range(n_days, df_train_x.shape[0] - 10):
+            self.x_train.append(df_train_x.iloc[i - n_days:i])
             self.y_train.append(df_train_y.iloc[i])
         self.x_train = np.array(self.x_train)
         self.y_train = np.array(self.y_train)
 
         # Create testing data
-        df_test_inputs = pd.concat((df_train_x.iloc[-n_days:], df_test_x), axis=0)
+        df_test_x_inputs = pd.concat((df_train_x.iloc[-n_days:], df_test_x), axis=0)
         self.x_test = []
-        for i in range(n_days + 1, df_test_inputs.shape[0]):
-            self.x_test.append(df_test_inputs.iloc[i - 1 - n_days:i - 1])
+        self.y_test = []
+        for i in range(n_days, df_test_x_inputs.shape[0] - 10):
+            self.x_test.append(df_test_x_inputs.iloc[i - n_days:i])
+            self.y_test.append(df_test_y.iloc[i - n_days])
         self.x_test = np.array(self.x_test)
-        self.y_test = np.array(df_test_y.copy())
+        self.y_test = np.array(self.y_test)

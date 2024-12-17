@@ -1,18 +1,25 @@
 """Module providing regressor class for stock price prediction"""
 
+# Suppress tensorflow warnings
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
 from datetime import datetime
 from typing import List
+from pytz import timezone
 
 import pathlib
-import os
 import glob
 import joblib
 import matplotlib.pyplot as plt
 from keras._tf_keras.keras.models import Sequential
-from keras._tf_keras.keras.layers import Dense, Dropout, LSTM
+from keras._tf_keras.keras.layers import Dense, Dropout, LSTM, Input
+from keras._tf_keras.keras.optimizers import Adam
+from keras._tf_keras.keras.metrics import MeanAbsoluteError
+from keras._tf_keras.keras.losses import MeanSquaredError
+from keras._tf_keras.keras.callbacks import EarlyStopping
 
 from data.data_transformer import DataTransformer # pylint: disable=import-error
-
 
 class Regressor:
     """
@@ -25,23 +32,23 @@ class Regressor:
         Name of the regressor.
     data : DataTransformer
         Transormed data used for training and testing the model.
-    regressor : Sequential
+    model : Sequential
         Model with plain stack of layers where each layer has exactly
         one input tensor and one output tensor.
 
     Methods
     -------
     train()
-        Fit the parameters of the regressor to the training set.
+        Fit the parameters of the model to the training set.
     predict()
-        Use the trained regressor to predict the label features for the test set.
+        Use the trained model to predict the label features for the test set.
     save()
         Save the model parameters to file.
     load()
         Load the model parameters from file.
     """
 
-    epochs = 1
+    epochs = 100
     batch_size = 32
 
     y_pred = None
@@ -59,55 +66,70 @@ class Regressor:
         self.ticker = ticker
         self.data = data
 
-        optimizer = 'adam'
-        loss_function = 'mean_squared_error'
+        model = Sequential()
 
-        regressor = Sequential()
+        input_layer = Input(
+            shape=(self.data.x_train.shape[1], self.data.x_train.shape[2]),
+            batch_size=self.batch_size,
+            dtype='float32',
+            sparse=False
+        )
+        model.add(input_layer)
 
-        regressor.add(LSTM(units=50, return_sequences=True,
-                           input_shape=(self.data.x_train.shape[1], self.data.x_train.shape[2])))
-        regressor.add(Dropout(0.2))
+        model.add(LSTM(units=50, return_sequences=True))
+        model.add(Dropout(0.2))
 
-        regressor.add(LSTM(units=50, return_sequences=True))
-        regressor.add(Dropout(0.2))
+        model.add(LSTM(units=100, return_sequences=True))
+        model.add(Dropout(0.2))
 
-        regressor.add(LSTM(units=50, return_sequences=True))
-        regressor.add(Dropout(0.2))
+        model.add(LSTM(units=200, return_sequences=True))
+        model.add(Dropout(0.2))
 
-        regressor.add(LSTM(units=50))
-        regressor.add(Dropout(0.2))
+        model.add(LSTM(units=100, return_sequences=True))
+        model.add(Dropout(0.2))
 
-        regressor.add(Dense(units=self.data.y_train.shape[1]))
+        model.add(LSTM(units=50, return_sequences=False))
+        model.add(Dropout(0.2))
 
-        regressor.compile(optimizer=optimizer, loss=loss_function)
+        model.add(Dense(units=self.data.y_train.shape[1]))
 
-        self.regressor = regressor
+        model.compile(
+            optimizer=Adam(learning_rate=1e-4),
+            loss=MeanSquaredError(),
+            metrics=[MeanAbsoluteError()]
+        )
+
+        model.summary()
+
+        self.model = model
 
     def train(self) -> None:
         """
-        Fit the parameters of the regressor to the training set.
+        Fit the parameters of the model to the training set.
         """
-        self.regressor.fit(
+        self.model.fit(
             self.data.x_train,
             self.data.y_train,
             epochs=self.epochs,
-            batch_size=self.batch_size
+            batch_size=self.batch_size,
+            validation_data=(self.data.x_test, self.data.y_test),
+            callbacks=[EarlyStopping(monitor='val_loss', patience=5)]
         )
 
     def predict(self) -> None:
         """
-        Use the trained regressor to predict the label features for the test set.
+        Use the trained model to predict the label features for the test set.
         """
-        self.y_pred = self.regressor.predict(self.data.x_test)
-        self.y_pred[:, 0] = self.data.scales['Open'].inverse_transform(
+        self.y_pred = self.model.predict(self.data.x_test)
+        self.y_pred[:, 0] = self.data.scales['Low'].inverse_transform(
             self.y_pred[:, 0].reshape(-1, 1)).reshape(-1)
-        self.y_pred[:, 1] = self.data.scales['Close'].inverse_transform(
+        self.y_pred[:, 1] = self.data.scales['High'].inverse_transform(
             self.y_pred[:, 1].reshape(-1, 1)).reshape(-1)
 
         self.y_true = self.data.y_test.copy()
-        self.y_true[:, 0] = self.data.scales['Open'].inverse_transform(
+        self.y_true[:, 0] = self.data.scales['Low'].inverse_transform(
             self.y_true[:, 0].reshape(-1, 1)).reshape(-1)
-        self.y_true[:, 1] = self.data.scales['Close'].inverse_transform(
+        self.y_true[:, 1] = self.data.scales['High'].inverse_transform(
             self.y_true[:, 1].reshape(-1, 1)).reshape(-1)
 
 
@@ -149,7 +171,8 @@ class Regressor:
         """
         Save the model parameters to file.
         """
-        date = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+        timezone_norway = timezone('Europe/Oslo')
+        date = datetime.now(timezone_norway).strftime('%Y-%m-%d_%H-%M-%S')
         filepath = pathlib.Path(__file__).parent.resolve()
         filename = filepath / f'models/{self.ticker}-{date}.joblib'
         joblib.dump(self, filename)
@@ -165,7 +188,7 @@ class Regressor:
             raise FileNotFoundError(f"No model files found for ticker {ticker}")
 
         # Extract timestamps from filenames and sort by date
-        def extract_date(filename):
+        def extract_date(filename) -> datetime:
             basename = os.path.basename(filename)
             # Split only on the first hyphen
             parts = basename.split('-', 1)

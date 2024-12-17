@@ -1,6 +1,7 @@
 """API to interact with the stock price regressor."""
 
 from typing import List
+
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from pytickersymbols import PyTickerSymbols
@@ -9,6 +10,7 @@ import yfinance as yf
 from data.data_transformer import DataTransformer # pylint: disable=import-error
 from model.regressor import Regressor             # pylint: disable=import-error
 
+N_DAYS = 200
 
 app = Flask(__name__)
 
@@ -28,20 +30,16 @@ CORS(
 )
 
 
-@app.route('/train/<ticker>', methods=['GET'])
+@app.route('/train/<ticker>', methods=['POST'])
 def train(ticker: str):
     """
     Train regressor to predict stock prices.
     """
-    n_days = 200
-
     data = DataTransformer(ticker=ticker)
-    data.create_train_and_test_data(n_days=n_days)
+    data.create_train_and_test_data(n_days=N_DAYS)
 
     regressor = Regressor(ticker=ticker, data=data)
     regressor.train()
-
-    # Save regressor to filesystem
     regressor.save()
 
     return jsonify({}), 200
@@ -90,6 +88,7 @@ def get_trained_models() -> List[str]:
 
     return jsonify(symbol_name)
 
+
 @app.route('/companies/price/<string:ticker>', methods=['GET'])
 def get_stock_price(ticker: str):
     """
@@ -106,6 +105,7 @@ def get_stock_price(ticker: str):
     print("Number of dates: ", len(dates))
 
     return jsonify({'dates': dates, 'prices': prices})
+
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=2000)
