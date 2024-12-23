@@ -19,8 +19,9 @@ from keras._tf_keras.keras.optimizers import Adam
 from keras._tf_keras.keras.metrics import MeanAbsoluteError
 from keras._tf_keras.keras.losses import MeanSquaredError
 from keras._tf_keras.keras.callbacks import EarlyStopping
+from keras._tf_keras.keras.utils import set_random_seed
 import tensorflow as tf
-tf.keras.utils.set_random_seed(42)
+set_random_seed(42)
 tf.config.experimental.enable_op_determinism()
 
 from data.data_transformer import DataTransformer # pylint: disable=import-error
