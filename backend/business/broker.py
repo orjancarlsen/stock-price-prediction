@@ -1,6 +1,27 @@
+"""Broker module to handle trading"""
+
 import yfinance as yf
 
 class Broker:
+    """
+    Represents a broker that can evaluate stock prices and make buy and sell decisions.
+
+    Attributes
+    ----------
+    ticker : str
+        The ticker of the stock.
+    did_buy : bool
+        Indicates if the broker made a buy decision.
+    did_sell : bool
+        Indicates if the broker made a sell decision.
+
+    Methods
+    -------
+    evaluate_action(buy_threshold, sell_threshold)
+        Evaluates the action to be taken based on today's prices and the calculated thresholds.
+    calculate_thresholds(prediction)
+        Calculates the buy and sell thresholds based on the prediction.
+    """
 
     min_prediction_difference = 0.05
     buy_threshold_increase = 0.01
