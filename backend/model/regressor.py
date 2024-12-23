@@ -11,6 +11,7 @@ from pytz import timezone
 import pathlib
 import glob
 import joblib
+import numpy as np
 import matplotlib.pyplot as plt
 from keras._tf_keras.keras.models import Sequential
 from keras._tf_keras.keras.layers import Dense, Dropout, LSTM, Input
@@ -18,6 +19,7 @@ from keras._tf_keras.keras.optimizers import Adam
 from keras._tf_keras.keras.metrics import MeanAbsoluteError
 from keras._tf_keras.keras.losses import MeanSquaredError
 from keras._tf_keras.keras.callbacks import EarlyStopping
+import tensorflow as tf
 
 from data.data_transformer import DataTransformer # pylint: disable=import-error
 
@@ -65,6 +67,10 @@ class Regressor:
         """
         self.ticker = ticker
         self.data = data
+
+        # Set seed for reproducibility
+        np.random.seed(42)
+        tf.random.set_seed(42)
 
         model = Sequential()
 
@@ -131,7 +137,16 @@ class Regressor:
             self.y_true[:, 0].reshape(-1, 1)).reshape(-1)
         self.y_true[:, 1] = self.data.scales['High'].inverse_transform(
             self.y_true[:, 1].reshape(-1, 1)).reshape(-1)
+        
+    def predict_next_day(self, n_days) -> np.ndarray:
+        past_n_days = self.data.get_past_n_days(n_days)
+        prediction_next_period = self.model.predict(past_n_days.reshape(1, n_days, 5))
 
+        prediction_next_period[:, 0] = self.data.scales['Low'].inverse_transform(
+            prediction_next_period[:, 0].reshape(-1, 1)).reshape(-1)
+        prediction_next_period[:, 1] = self.data.scales['High'].inverse_transform(
+            prediction_next_period[:, 1].reshape(-1, 1)).reshape(-1)
+        return prediction_next_period[0]
 
     def plot(self, feature: str) -> None:
         """

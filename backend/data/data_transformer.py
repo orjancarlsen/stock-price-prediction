@@ -63,7 +63,7 @@ class DataTransformer:
         self.ticker = ticker
 
         # Download data from Yahoo Finance API
-        self.df = yf.download(self.ticker)
+        self.df = yf.download(self.ticker, end='2024-01-01')
 
         # Convert index to a column
         self.df.reset_index(inplace=True)
@@ -129,7 +129,7 @@ class DataTransformer:
         n_days : int
             Number of days used for prediction
         """
-        df_train_x, df_train_y, df_test_x, df_test_y = self.split_and_scale('2024-01-01')
+        df_train_x, df_train_y, df_test_x, df_test_y = self.split_and_scale('2023-01-01')
 
         # Create training data
         self.x_train = []
@@ -149,3 +149,29 @@ class DataTransformer:
             self.y_test.append(df_test_y.iloc[i - n_days])
         self.x_test = np.array(self.x_test)
         self.y_test = np.array(self.y_test)
+    
+    def get_past_n_days(self, n_days: int) -> np.ndarray:
+        """
+        Get the last n_days of data from the dataset to do a prediction.
+
+        Parameters
+        ----------
+        n_days : int
+            Number of days to retrieve.
+
+        Returns
+        -------
+        np.ndarray
+            Array containing the last n_days of data.
+        """
+        past_n_days = yf.download(self.ticker, period='1y').tail(n_days)
+        past_n_days = past_n_days[self.x_features].copy()
+
+        # Apply the stored scales to the past n days data
+        for feature in self.x_features:
+            scale = self.scales.get(feature)
+            if scale:
+                past_n_days[feature] = scale.transform(past_n_days[[feature]])
+
+        return past_n_days.values
+
