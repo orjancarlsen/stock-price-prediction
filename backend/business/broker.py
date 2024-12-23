@@ -39,15 +39,30 @@ class Broker:
     def calculate_thresholds(self, prediction: list) -> list:
         """
         Calculates the buy and sell thresholds based on the prediction.
-        If the predicted low price needs at least a 5% increase to be higher than the predicted high price,
-        the threshold to buy is set 1% above the predicted low price and the threshold to sell is set 1% below the predicted high price.
+        If the predicted low price needs at least a 5% increase to be higher than the predicted
+        high price, the threshold to buy is set 1% above the predicted low price and the threshold
+        to sell is set 1% below the predicted high price.
         
         Parameters
         ----------
         prediction : list
-            The predicted stock prices for the next period.
-            The first element is the predicted low price and the second element is the predicted high price.
+            The predicted stock prices for the next period. The first element is the predicted
+            low price and the second element is the predicted high price.
+        
+        Returns
+        -------
+        list
+            A list containing the buy and sell thresholds.
         """
+        if not prediction:
+            return [None, None]
+        
+        if prediction[0] >= prediction[1]:
+            return [None, None]
+        
+        if prediction[0] < 0 or prediction[1] < 0:
+            return [None, None]
+        
         predicted_low, predicted_high = prediction
         if predicted_low * (1 + self.min_prediction_difference) <= predicted_high:
             buy_threshold = predicted_low * (1 + self.buy_threshold_increase)
