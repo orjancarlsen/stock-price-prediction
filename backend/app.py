@@ -9,10 +9,6 @@ import yfinance as yf
 
 from data.data_transformer import DataTransformer # pylint: disable=import-error
 from model.regressor import Regressor             # pylint: disable=import-error
-import pathlib
-import matplotlib.pyplot as plt
-import pathlib
-import matplotlib.pyplot as plt
 
 N_DAYS = 200
 
@@ -69,8 +65,6 @@ def predict_next_day(ticker: str):
     """
     regressor = Regressor.load(ticker)
     prediction_next_period = regressor.predict_next_day(n_days=N_DAYS)
-
-    print("Prediction: ", prediction_next_period)
 
     return jsonify(prediction_next_period.tolist())
 

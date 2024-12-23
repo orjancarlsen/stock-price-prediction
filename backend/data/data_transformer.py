@@ -149,7 +149,7 @@ class DataTransformer:
             self.y_test.append(df_test_y.iloc[i - n_days])
         self.x_test = np.array(self.x_test)
         self.y_test = np.array(self.y_test)
-    
+
     def get_past_n_days(self, n_days: int) -> np.ndarray:
         """
         Get the last n_days of data from the dataset to do a prediction.
@@ -174,4 +174,3 @@ class DataTransformer:
                 past_n_days[feature] = scale.transform(past_n_days[[feature]])
 
         return past_n_days.values
-

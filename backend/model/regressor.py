@@ -2,17 +2,17 @@
 
 # Suppress tensorflow warnings
 import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-
-from datetime import datetime
-from typing import List
-from pytz import timezone
-
 import pathlib
 import glob
 import joblib
 import numpy as np
 import matplotlib.pyplot as plt
+from datetime import datetime
+from typing import List
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
+from pytz import timezone
 from keras._tf_keras.keras.models import Sequential
 from keras._tf_keras.keras.layers import Dense, Dropout, LSTM, Input
 from keras._tf_keras.keras.optimizers import Adam
