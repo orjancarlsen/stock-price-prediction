@@ -15,4 +15,4 @@ jobs:
 
     - name: Run Pylint in Docker container
       run: |
-        docker run --rm backend-linter sh -c 'find /app -name "*.py" | xargs pylint'
+        docker run --rm backend-linter sh -c 'find /app -name "*.py" | xargs pylint  --rcfile=/app/.pylintrc'
