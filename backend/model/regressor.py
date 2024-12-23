@@ -1,6 +1,5 @@
 """Module providing regressor class for stock price prediction"""
 
-# Suppress tensorflow warnings
 import os
 import pathlib
 import glob
@@ -10,6 +9,7 @@ import joblib
 import numpy as np
 import matplotlib.pyplot as plt
 
+# Suppress tensorflow warnings
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 from pytz import timezone
@@ -20,6 +20,8 @@ from keras._tf_keras.keras.metrics import MeanAbsoluteError
 from keras._tf_keras.keras.losses import MeanSquaredError
 from keras._tf_keras.keras.callbacks import EarlyStopping
 import tensorflow as tf
+tf.keras.utils.set_random_seed(42)
+tf.config.experimental.enable_op_determinism()
 
 from data.data_transformer import DataTransformer # pylint: disable=import-error
 
