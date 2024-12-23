@@ -77,13 +77,13 @@ class Broker:
         """
         if not prediction:
             return [None, None]
-        
+
         if prediction[0] >= prediction[1]:
             return [None, None]
-        
+
         if prediction[0] < 0 or prediction[1] < 0:
             return [None, None]
-        
+
         predicted_low, predicted_high = prediction
         if predicted_low * (1 + self.min_prediction_difference) <= predicted_high:
             buy_threshold = predicted_low * (1 + self.buy_threshold_increase)
