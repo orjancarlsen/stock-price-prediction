@@ -39,7 +39,7 @@ def test_sql_wrapper_create_tables(wrapper):
     assert ('transactions',) in tables
     assert ('orders',) in tables
 
-def test_sql_wrapper_sequence(wrapper):
+def test_sql_wrapper_sequence(wrapper): # pylint: disable=too-many-statements
     """
     Test a squence of database actions:
     1. Create tables

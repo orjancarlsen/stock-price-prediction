@@ -80,7 +80,7 @@ class SQLWrapper:
                 file_path = os.path.join(base_path, sql_file)
                 if not os.path.exists(file_path):
                     raise FileNotFoundError(f"SQL file not found: {file_path}")
-                with open(file_path, "r") as file:
+                with open(file_path, "r", encoding="utf-8") as file:
                     sql_script = file.read()
                 cursor.executescript(sql_script)
 
@@ -114,7 +114,7 @@ class SQLWrapper:
                     f"Insufficient available cash to create buy order. "
                     f"Available: ${available_cash}, Required: ${total_cost}"
                 )
-            
+
             # Deduct the amount from available cash
             cursor.execute('''
                 UPDATE portfolio
@@ -126,7 +126,7 @@ class SQLWrapper:
             cursor.execute('''
                 INSERT INTO orders (order_type, stock_symbol, price_per_share, number_of_shares, fee, amount, status, timestamp_created)
                 VALUES ('BUY', ?, ?, ?, ?, ?, 'PENDING', ?)
-            ''', (stock_symbol, price_per_share, number_of_shares, 
+            ''', (stock_symbol, price_per_share, number_of_shares,
                   fee, total_cost, timestamp_created))
             conn.commit()
             print(f"Buy order created for {number_of_shares} shares of {stock_symbol} "
@@ -155,7 +155,7 @@ class SQLWrapper:
             cursor.execute('''
                 INSERT INTO orders (order_type, stock_symbol, price_per_share, number_of_shares, fee, amount, status, timestamp_created)
                 VALUES ('SELL', ?, ?, ?, ?, ?, 'PENDING', ?)
-            ''', (stock_symbol, price_per_share, number_of_shares, fee, total_proceeds, 
+            ''', (stock_symbol, price_per_share, number_of_shares, fee, total_proceeds,
                   timestamp_created))
             conn.commit()
             print(f"Sell order created for {number_of_shares} shares of {stock_symbol} "
@@ -177,7 +177,7 @@ class SQLWrapper:
             order = cursor.fetchone()
             if not order:
                 raise ValueError("Order not found.")
-            
+
             order_type, stock_symbol, price_per_share, number_of_shares, fee, amount, status = order
 
             if status != 'PENDING':
@@ -185,9 +185,13 @@ class SQLWrapper:
 
             # Execute based on order type
             if order_type == 'BUY':
-                self._execute_buy_order(cursor, stock_symbol, price_per_share, number_of_shares, fee, amount)
+                self._execute_buy_order(
+                    cursor, stock_symbol, price_per_share, number_of_shares, fee, amount
+                )
             elif order_type == 'SELL':
-                self._execute_sell_order(cursor, stock_symbol, price_per_share, number_of_shares, fee, amount)
+                self._execute_sell_order(
+                    cursor, stock_symbol, price_per_share, number_of_shares, fee, amount
+                )
 
             # Update the order timestamp
             cursor.execute('''
@@ -196,7 +200,9 @@ class SQLWrapper:
                 WHERE id = ?
             ''', (datetime.now(timezone('Europe/Oslo')).strftime("%Y-%m-%d %H:%M:%S"), order_id))
 
-    def _execute_buy_order(self, cursor, stock_symbol, price_per_share, number_of_shares, fee, amount):
+    def _execute_buy_order(
+            self, cursor, stock_symbol, price_per_share, number_of_shares, fee, amount
+        ):
         """
         Executes a buy order by updating the portfolio, transactions, and cash balance.
         """
@@ -206,7 +212,6 @@ class SQLWrapper:
         cash = cursor.fetchone()[0]
         if cash < amount:
             raise ValueError("Insufficient cash balance to execute buy order.")
-
         # Update portfolio for the stock
         cursor.execute('''
             INSERT INTO portfolio (asset_type, stock_symbol, number_of_shares, price_per_share, total_value)
@@ -387,7 +392,7 @@ class SQLWrapper:
         """
         if dividend_per_share <= 0:
             raise ValueError("Dividend amount must be positive.")
-        
+
         with self.connect() as conn:
             cursor = conn.cursor()
 
@@ -425,7 +430,7 @@ class SQLWrapper:
             cursor = conn.cursor()
             cursor.execute("SELECT total_value FROM portfolio WHERE asset_type = 'CASH'")
             return cursor.fetchone()[0]
-    
+
     def get_cash_available(self):
         """
         Returns the available cash balance.
@@ -470,7 +475,7 @@ class SQLWrapper:
                 SELECT * FROM portfolio
             ''')
             return cursor.fetchall()
-    
+
     def get_transactions(self):
         """
         Returns the transaction details.
@@ -481,7 +486,7 @@ class SQLWrapper:
                 SELECT * FROM transactions
             ''')
             return cursor.fetchall()
-    
+
     def get_orders(self):
         """
         Returns the order details.
@@ -539,4 +544,3 @@ if __name__ == "__main__":
     pprint.pp(sql_wrapper.get_portfolio())
     pprint.pp(sql_wrapper.get_transactions())
     pprint.pp(sql_wrapper.get_orders())
-
