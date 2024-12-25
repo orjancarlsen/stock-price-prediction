@@ -1,17 +1,24 @@
 name: Pylint
 
-on: [push]
+on:
+  workflow_run:
+    workflows: ["Build Docker Backend Image"]
+    types:
+      - completed
+
 
 jobs:
   lint:
+    name: Lint Python Code
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout the code
-      uses: actions/checkout@v4
-      
-    - name: Build Docker image for backend
-      run: |
-        docker build -t backend-linter ./backend
+    - name: Download Docker image artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: backend-image
+    
+    - name: Load Docker image
+      run: docker load < backend.tar
 
     - name: Run Pylint in Docker container
       run: |

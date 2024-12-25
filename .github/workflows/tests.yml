@@ -1,0 +1,24 @@
+name: Tests
+
+on:
+  workflow_run:
+    workflows: ["Build Docker Backend Image"]
+    types:
+      - completed
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Docker image artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: backend-image
+
+      - name: Load Docker image
+        run: docker load < backend.tar
+
+      - name: Run pytest in Docker container
+        run: |
+          docker run --rm backend sh -c 'pytest /app/tests'
