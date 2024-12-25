@@ -1,3 +1,5 @@
+"""Module for interacting with the SQLite database."""
+
 import os
 import sqlite3
 import pprint
@@ -6,15 +8,69 @@ from pytz import timezone
 
 
 class SQLWrapper:
+    """
+    Class for interacting with the SQLite database.
+
+    Attributes
+    ----------
+    db_path : str
+        Path to the SQLite database file.
+
+    Methods
+    -------
+    connect()
+        Connects to the SQLite database.
+    create_tables()
+        Reads and executes SQL scripts from `portfolio.sql`, `transactions.sql` and `orders.sql` 
+        to create the tables in the database.
+    create_buy_order(stock_symbol, price_per_share, number_of_shares, fee=0)
+        Creates a new buy order and stores it in the orders table.
+    create_sell_order(stock_symbol, price_per_share, number_of_shares, fee=0)
+        Creates a new sell order and stores it in the orders table.
+    execute_order(order_id)
+        Executes a buy or sell order by fetching details from the `orders` table and updating the
+        corresponding portfolio, transactions, and order status.
+    cancel_order(order_id)
+        Cancels a pending buy order by updating its status to 'CANCELED' and timestamp_updated.
+        Restores the available cash for canceled BUY orders.
+    get_pending_orders()
+        Returns a list of all pending orders.
+    deposit(amount)
+        Deposits the specified amount into the cash balance.
+    withdraw(amount)
+        Withdraws the specified amount from the cash balance.
+    receive_dividend(stock_symbol, dividend_per_share)
+        Receives a dividend for the specified stock symbol.
+    get_cash_balance()
+        Returns the total cash balance.
+    get_cash_available()
+        Returns the available cash balance.
+    get_number_of_shares_for_stock(stock_symbol)
+        Returns the number of shares for the specified stock symbol.
+    get_number_of_distinct_stocks()
+        Returns the number of distinct stocks in the portfolio.
+    get_portfolio()
+        Returns the portfolio details.
+    get_transactions()
+        Returns the transaction history.
+    get_orders()
+        Returns the order history.
+    """
     def __init__(self):
         self.db_path = 'storage.db'
 
     def connect(self):
+        """
+        Connects to the SQLite database.
+        If the database file doesn't exist, it creates a new one and initializes the tables.
+        """
+        if not os.path.exists(self.db_path):
+            self.create_tables()
         return sqlite3.connect(self.db_path)
 
     def create_tables(self):
         """
-        Reads and executes SQL scripts from `portfolio.sql` and `transactions.sql` 
+        Reads and executes SQL scripts from `portfolio.sql`, `transactions.sql` and `orders.sql`
         to create the tables in the database.
         """
         sql_files = ["portfolio.sql", "transactions.sql", "orders.sql"]
@@ -75,6 +131,7 @@ class SQLWrapper:
     def create_sell_order(self, stock_symbol, price_per_share, number_of_shares, fee=0):
         """
         Creates a new sell order and stores it in the orders table.
+        Ensures sufficient shares are available before creating the order.
         """
         total_proceeds = price_per_share * number_of_shares - fee
         timestamp_created = datetime.now(timezone('Europe/Oslo')).strftime('%Y-%m-%d %H:%M:%S')
@@ -134,6 +191,10 @@ class SQLWrapper:
             ''', (datetime.now(timezone('Europe/Oslo')).strftime("%Y-%m-%d %H:%M:%S"), order_id))
 
     def _execute_buy_order(self, cursor, stock_symbol, price_per_share, number_of_shares, fee, amount):
+        """
+        Executes a buy order by updating the portfolio, transactions, and cash balance.
+        """
+
         # Check if sufficient cash is available
         cursor.execute("SELECT total_value FROM portfolio WHERE asset_type = 'CASH'")
         cash = cursor.fetchone()[0]
@@ -169,6 +230,10 @@ class SQLWrapper:
         ''', (stock_symbol, price_per_share, number_of_shares, fee, amount, timestamp))
 
     def _execute_sell_order(self, cursor, stock_symbol, price_per_share, number_of_shares, fee, amount):
+        """
+        Executes a sell order by updating the portfolio, transactions, and cash balance.
+        """
+
         # Check if sufficient shares are available
         cursor.execute('''
             SELECT number_of_shares FROM portfolio 
@@ -311,6 +376,12 @@ class SQLWrapper:
             ''', (amount,))
 
     def receive_dividend(self, stock_symbol, dividend_per_share):
+        """
+        Receives dividend for a stock and updates the cash balance.
+        """
+        if dividend_per_share <= 0:
+            raise ValueError("Dividend amount must be positive.")
+        
         with self.connect() as conn:
             cursor = conn.cursor()
 
@@ -341,18 +412,27 @@ class SQLWrapper:
             ''', (stock_symbol, dividend_per_share, number_of_shares, total_dividend))
 
     def get_cash_balance(self):
+        """
+        Returns the total cash balance.
+        """
         with self.connect() as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT total_value FROM portfolio WHERE asset_type = 'CASH'")
             return cursor.fetchone()[0]
     
     def get_cash_available(self):
+        """
+        Returns the available cash balance.
+        """
         with self.connect() as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT available FROM portfolio WHERE asset_type = 'CASH'")
             return cursor.fetchone()[0]
 
     def get_number_of_shares_for_stock(self, stock_symbol):
+        """
+        Returns the number of shares for a given stock symbol.
+        """
         with self.connect() as conn:
             cursor = conn.cursor()
             cursor.execute('''
@@ -363,6 +443,9 @@ class SQLWrapper:
             return result[0] if result else 0
 
     def get_number_of_distinct_stocks(self):
+        """
+        Returns the number of distinct stocks in the portfolio.
+        """
         with self.connect() as conn:
             cursor = conn.cursor()
             cursor.execute('''
@@ -372,6 +455,9 @@ class SQLWrapper:
             return cursor.fetchone()[0]
 
     def get_portfolio(self):
+        """
+        Returns the portfolio details.
+        """
         with self.connect() as conn:
             cursor = conn.cursor()
             cursor.execute('''
@@ -380,6 +466,9 @@ class SQLWrapper:
             return cursor.fetchall()
     
     def get_transactions(self):
+        """
+        Returns the transaction details.
+        """
         with self.connect() as conn:
             cursor = conn.cursor()
             cursor.execute('''
@@ -388,6 +477,9 @@ class SQLWrapper:
             return cursor.fetchall()
     
     def get_orders(self):
+        """
+        Returns the order details.
+        """
         with self.connect() as conn:
             cursor = conn.cursor()
             cursor.execute('''
