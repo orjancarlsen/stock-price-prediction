@@ -50,4 +50,4 @@ jobs:
       - name: Load Docker image
         run: docker load < backend.tar
       - name: Run Pylint
-        run: docker run --rm backend sh -c "pylint /app --rcfile=/app/.pylintrc"
+        run: docker run --rm backend sh -c 'find /app -name "*.py" | xargs pylint --rcfile=/app/.pylintrc'
