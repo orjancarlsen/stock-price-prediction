@@ -17,14 +17,14 @@ def wrapper():
             pass
     return SQLWrapper(db_path=db_name)
 
-def test_sql_wrapper_init(wrapper):
+def test_sql_wrapper_init(wrapper): # pylint: disable=redefined-outer-name
     """
     Test the initialization of the SQLWrapper class.
     """
     assert wrapper.db_path == 'storage_test.db'
     assert wrapper.connect() is not None
 
-def test_sql_wrapper_create_tables(wrapper):
+def test_sql_wrapper_create_tables(wrapper): # pylint: disable=redefined-outer-name
     """
     Test the creation of tables in the database.
     """
@@ -39,7 +39,7 @@ def test_sql_wrapper_create_tables(wrapper):
     assert ('transactions',) in tables
     assert ('orders',) in tables
 
-def test_sql_wrapper_sequence(wrapper): # pylint: disable=too-many-statements
+def test_sql_wrapper_sequence(wrapper): # pylint: disable=too-many-statements, redefined-outer-name
     """
     Test a squence of database actions:
     1. Create tables

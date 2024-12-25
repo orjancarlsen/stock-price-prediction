@@ -200,7 +200,7 @@ class SQLWrapper:
                 WHERE id = ?
             ''', (datetime.now(timezone('Europe/Oslo')).strftime("%Y-%m-%d %H:%M:%S"), order_id))
 
-    def _execute_buy_order(
+    def _execute_buy_order( # pylint: disable=too-many-arguments, too-many-positional-arguments
             self, cursor, stock_symbol, price_per_share, number_of_shares, fee, amount
         ):
         """
@@ -240,7 +240,9 @@ class SQLWrapper:
             VALUES ('BUY', ?, ?, ?, ?, ?, ?)
         ''', (stock_symbol, price_per_share, number_of_shares, fee, amount, timestamp))
 
-    def _execute_sell_order(self, cursor, stock_symbol, price_per_share, number_of_shares, fee, amount):
+    def _execute_sell_order( # pylint: disable=too-many-arguments, too-many-positional-arguments
+        self, cursor, stock_symbol, price_per_share, number_of_shares, fee, amount
+    ):
         """
         Executes a sell order by updating the portfolio, transactions, and cash balance.
         """
@@ -300,7 +302,7 @@ class SQLWrapper:
             order = cursor.fetchone()
             if not order:
                 raise ValueError("Order not found.")
-            
+
             order_type, _, _, _, amount, status = order
 
             if status != 'PENDING':
