@@ -1,6 +1,6 @@
 import os
 import pytest
-from backend.storage.sql_wrapper import SQLWrapper
+from storage.sql_wrapper import SQLWrapper
 
 @pytest.fixture
 def wrapper():
@@ -145,5 +145,5 @@ def test_sql_wrapper_sequence(wrapper):
     assert wrapper.get_cash_available() == 91500
     transactions = wrapper.get_transactions()
     assert len(transactions) == 5  # Includes 1 deposit, 1 withdraw, 2 buys and 1 sell
-    
+
 
