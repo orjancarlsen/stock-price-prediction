@@ -56,16 +56,14 @@ class SQLWrapper:
     get_orders()
         Returns the order history.
     """
-    def __init__(self):
-        self.db_path = 'storage.db'
+    def __init__(self, db_path='storage.db'):
+        self.db_path = db_path
 
     def connect(self):
         """
         Connects to the SQLite database.
         If the database file doesn't exist, it creates a new one and initializes the tables.
         """
-        if not os.path.exists(self.db_path):
-            self.create_tables()
         return sqlite3.connect(self.db_path)
 
     def create_tables(self):
@@ -74,11 +72,12 @@ class SQLWrapper:
         to create the tables in the database.
         """
         sql_files = ["portfolio.sql", "transactions.sql", "orders.sql"]
+        base_path = os.path.abspath(os.path.dirname(__file__))
 
         with self.connect() as conn:
             cursor = conn.cursor()
             for sql_file in sql_files:
-                file_path = os.path.join(os.path.dirname(self.db_path), sql_file)
+                file_path = os.path.join(base_path, sql_file)
                 if not os.path.exists(file_path):
                     raise FileNotFoundError(f"SQL file not found: {file_path}")
                 with open(file_path, "r") as file:
