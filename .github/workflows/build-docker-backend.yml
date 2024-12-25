@@ -4,7 +4,6 @@ on: [push]
 
 jobs:
   build:
-    name: Build Docker Backend Image
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the code
