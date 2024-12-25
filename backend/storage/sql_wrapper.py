@@ -94,7 +94,7 @@ class SQLWrapper:
             ''')
 
             conn.commit()
-    
+
     def create_buy_order(self, stock_symbol, price_per_share, number_of_shares, fee=0):
         """
         Creates a new buy order and stores it in the orders table.
@@ -110,7 +110,10 @@ class SQLWrapper:
             cursor.execute("SELECT available FROM portfolio WHERE asset_type = 'CASH'")
             available_cash = cursor.fetchone()[0]
             if available_cash < total_cost:
-                raise ValueError(f"Insufficient available cash to create buy order. Available: ${available_cash}, Required: ${total_cost}")
+                raise ValueError(
+                    f"Insufficient available cash to create buy order. "
+                    f"Available: ${available_cash}, Required: ${total_cost}"
+                )
             
             # Deduct the amount from available cash
             cursor.execute('''
@@ -123,9 +126,11 @@ class SQLWrapper:
             cursor.execute('''
                 INSERT INTO orders (order_type, stock_symbol, price_per_share, number_of_shares, fee, amount, status, timestamp_created)
                 VALUES ('BUY', ?, ?, ?, ?, ?, 'PENDING', ?)
-            ''', (stock_symbol, price_per_share, number_of_shares, fee, total_cost, timestamp_created))
+            ''', (stock_symbol, price_per_share, number_of_shares, 
+                  fee, total_cost, timestamp_created))
             conn.commit()
-            print(f"Buy order created for {number_of_shares} shares of {stock_symbol} at {price_per_share} per share.")
+            print(f"Buy order created for {number_of_shares} shares of {stock_symbol} "
+                  f"at {price_per_share} per share.")
 
     def create_sell_order(self, stock_symbol, price_per_share, number_of_shares, fee=0):
         """
@@ -150,9 +155,11 @@ class SQLWrapper:
             cursor.execute('''
                 INSERT INTO orders (order_type, stock_symbol, price_per_share, number_of_shares, fee, amount, status, timestamp_created)
                 VALUES ('SELL', ?, ?, ?, ?, ?, 'PENDING', ?)
-            ''', (stock_symbol, price_per_share, number_of_shares, fee, total_proceeds, timestamp_created))
+            ''', (stock_symbol, price_per_share, number_of_shares, fee, total_proceeds, 
+                  timestamp_created))
             conn.commit()
-            print(f"Sell order created for {number_of_shares} shares of {stock_symbol} at {price_per_share} per share (Fee: ${fee}).")
+            print(f"Sell order created for {number_of_shares} shares of {stock_symbol} "
+                  f"at {price_per_share} per share (Fee: ${fee}).")
 
     def execute_order(self, order_id):
         """
@@ -289,7 +296,7 @@ class SQLWrapper:
             if not order:
                 raise ValueError("Order not found.")
             
-            order_type, price_per_share, number_of_shares, fee, amount, status = order
+            order_type, _, _, _, amount, status = order
 
             if status != 'PENDING':
                 raise ValueError("Order is not in a PENDING state and cannot be canceled.")

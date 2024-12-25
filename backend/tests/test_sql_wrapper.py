@@ -1,3 +1,5 @@
+"""Module to test the SQLWrapper class."""
+
 import os
 import pytest
 from storage.sql_wrapper import SQLWrapper
@@ -43,15 +45,15 @@ def test_sql_wrapper_sequence(wrapper):
     1. Create tables
     2. Deposit 110000
     3. Withdraw 10000
-    4. Create a buy order of 100 AAPL shares to 200kr each
-    5. Execute the buy order
-    6. Create a buy order of 10 NOD shares to 100kr each
-    7. Execute the buy order
+    4. Buy order of 100 AAPL shares to 200kr
+    5. Execute buy order
+    6. Buy order of 10 NOD shares to 100kr each
+    7. Execute buy order
     8. Try to sell 150 AAPL shares
     9. Try to sell 1 MSFT share
     10. Try to place a buy order for 1000 MSFT shares at 2500kr each
-    11. Place a sell order for 50 AAPL shares
-    12. Execute the sell order
+    11. Sell order for 50 AAPL shares
+    12. Execute sell order
     """
 
     # 1. Init SQLWrapper and create tables
@@ -64,7 +66,7 @@ def test_sql_wrapper_sequence(wrapper):
         transactions = cursor.fetchall()
         cursor.execute("SELECT * FROM orders")
         orders = cursor.fetchall()
-    
+
     assert len(portfolio) == 1
     assert portfolio[0][0] == 'CASH'
     assert portfolio[0][4] == 0  # total_value
@@ -140,10 +142,8 @@ def test_sql_wrapper_sequence(wrapper):
     # 12. Execute the sell order
     wrapper.execute_order(orders[0][0])
     portfolio = wrapper.get_portfolio()
-    assert any(row[1] == "AAPL" and row[2] == 50 for row in portfolio)  # Check 50 AAPL shares remaining in portfolio
+    assert any(row[1] == "AAPL" and row[2] == 50 for row in portfolio)
     assert wrapper.get_cash_balance() == 91500
     assert wrapper.get_cash_available() == 91500
     transactions = wrapper.get_transactions()
     assert len(transactions) == 5  # Includes 1 deposit, 1 withdraw, 2 buys and 1 sell
-
-
