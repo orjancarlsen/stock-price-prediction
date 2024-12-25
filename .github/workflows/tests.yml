@@ -5,6 +5,8 @@ on:
     workflows: ["Build Docker Backend Image"]
     types:
       - completed
+    branches:
+      - "*"
 
 jobs:
   test:
