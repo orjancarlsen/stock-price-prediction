@@ -93,7 +93,7 @@ def get_trained_models() -> List[str]:
         symbol_name.append(
             {
                 "symbol": ticker,
-                "name": yf.Ticker(ticker).info
+                "name": yf.Ticker(ticker).info.get('longName', '')
             }
         )
 

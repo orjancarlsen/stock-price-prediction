@@ -8,8 +8,8 @@ function Dropdown({ options, value, onChange, placeholder }) {
 
     // Filter options based on the input text (case-insensitive)
     const filteredOptions = options.filter(option =>
-        option.name.toLowerCase().includes(filterText.toLowerCase()) ||
-        option.symbol.toLowerCase().includes(filterText.toLowerCase())
+        (typeof option.name === 'string' && option.name.toLowerCase().includes(filterText.toLowerCase())) ||
+        (typeof option.symbol === 'string' && option.symbol.toLowerCase().includes(filterText.toLowerCase()))
     );
 
     const handleInputChange = (e) => {
@@ -21,7 +21,7 @@ function Dropdown({ options, value, onChange, placeholder }) {
     };
 
     const handleOptionClick = (option) => {
-        setFilterText(`${option.name} (${option.symbol})`); // Set clicked value in input
+        setFilterText(option.name ? `${option.name} (${option.symbol})` : option.symbol); // Set clicked value in input
         onChange({ target: { value: option.symbol } }); // Update value
         setIsDropdownOpen(false); // Close dropdown after selection
         setHighlightedIndex(-1); // Reset highlighted index
