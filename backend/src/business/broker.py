@@ -6,7 +6,6 @@ import yfinance as yf
 from pytz import timezone
 from src.storage.sql_wrapper import SQLWrapper
 from src.business.stock_prediction import StockPrediction
-import matplotlib.ticker as ticker
 
 class Broker:
     """
