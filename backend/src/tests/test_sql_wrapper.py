@@ -2,7 +2,7 @@
 
 import os
 import pytest
-from storage.sql_wrapper import SQLWrapper
+from src.storage.sql_wrapper import SQLWrapper
 
 @pytest.fixture
 def wrapper():
