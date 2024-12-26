@@ -34,9 +34,10 @@ def trading():
         )
 
     # Sort predictions by profitability and create possible orders
-    broker.sort_prediction_profitability(predictions)
+    broker.populate_prediction_with_orders(predictions)
 
-    print("Predictions:", predictions)
+    # Decide orders to create
+    broker.create_orders(predictions)
 
 
 if __name__ == "__main__":

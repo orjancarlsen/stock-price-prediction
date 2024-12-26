@@ -480,6 +480,28 @@ class SQLWrapper:
                 SELECT SUM(total_value) FROM portfolio
             ''')
             return cursor.fetchone()[0]
+    
+    def get_stock_in_portfolio(self, stock_symbol):
+        """
+        Returns the portfolio row for a given stock symbol.
+
+        Parameters
+        ----------
+        stock_symbol : str
+            The stock symbol to retrieve the portfolio row for.
+
+        Returns
+        -------
+        tuple
+            The portfolio row for the given stock symbol, or None if not found.
+        """
+        with self.connect() as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT * FROM portfolio 
+                WHERE asset_type = 'STOCK' AND stock_symbol = ?
+            ''', (stock_symbol,))
+            return cursor.fetchone()
 
     def get_portfolio(self):
         """
@@ -521,7 +543,7 @@ if __name__ == "__main__":
     # Initial cash deposit
     # sql_wrapper.deposit(100000)
 
-    # sql_wrapper.create_buy_order('AAPL', 180, 10)
+    # sql_wrapper.create_buy_order('AAPL', 258, 10, 15)
 
     # sql_wrapper.execute_order(3)
 
