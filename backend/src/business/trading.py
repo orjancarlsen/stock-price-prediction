@@ -10,7 +10,7 @@ def trading():
     broker = Broker()
     tickers = Regressor.get_trained_models()
 
-    # Checking orders and making predictions is only necessary if there have been 
+    # Checking orders and making predictions is only necessary if there have been
     # activity in the stock since last time
     tickers = broker.check_exchange_open_today(tickers)
 
@@ -41,4 +41,3 @@ def trading():
 
 if __name__ == "__main__":
     trading()
-  

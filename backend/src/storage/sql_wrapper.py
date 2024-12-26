@@ -469,7 +469,7 @@ class SQLWrapper:
                 WHERE asset_type = 'STOCK'
             ''')
             return cursor.fetchone()[0]
-    
+
     def get_portfolio_value(self):
         """
         Returns the total value of the portfolio.

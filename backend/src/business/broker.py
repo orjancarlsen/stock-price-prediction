@@ -6,7 +6,6 @@ import yfinance as yf
 from pytz import timezone
 from src.storage.sql_wrapper import SQLWrapper
 from src.business.stock_prediction import StockPrediction
-from src.business.possible_order import PossibleOrder
 
 class Broker:
     """
@@ -30,43 +29,18 @@ class Broker:
     """
 
     number_of_stocks_allowed = 10
-    min_prediction_difference = 0.1 
+    min_prediction_difference = 0.1
     buy_threshold_increase = 0.02
     sell_threshold_decrease = 0.02
 
     def __init__(self) -> None:
         self.sql_wrapper = SQLWrapper()
 
-    def evaluate_action(self, ticker, predictions) -> None:
-        """
-        Evaluates the action to be taken based on today's prices and the calculated thresholds.
-        
-        Parameters
-        ----------
-        predictions : list
-            The predicted stock prices for the next period. The first element is the predicted
-            low price and the second element is the predicted high price.
-        """
-        buy_threshold, sell_threshold = self.calculate_thresholds(predictions)
-        todays_prices = yf.download(ticker, period='1d')
-
-        if buy_threshold and sell_threshold:
-            if todays_prices['Low'][0] >= self.buy_threshold:
-                number_of_shares = self.calculate_number_of_shares(ticker)
-                self.sql_wrapper.create_buy_order(
-                    stock_symbol=ticker,
-                    price_per_share=self.buy_threshold,
-                    number_of_shares=number_of_shares,
-                    fee=self.calculate_fee(ticker, self.buy_threshold, number_of_shares)
-                )
-            elif todays_prices['High'][0] <= self.sell_threshold:
-                self.did_buy = False
-                self.did_sell = True
-            else:
-                self.did_buy = False
-                self.did_sell = False
-
-    def calculate_thresholds(self, predicted_low: float, predicted_high: float) -> tuple[float, float]:
+    def calculate_thresholds(
+            self,
+            predicted_low: float,
+            predicted_high: float
+        ) -> tuple[float, float]:
         """
         Calculates the buy and sell thresholds based on the prediction.
         The predicted low price needs at least a 5% increase to be higher than the predicted
@@ -91,7 +65,7 @@ class Broker:
             return (buy_threshold, sell_threshold)
 
         return (None, None)
-    
+
     def calculate_fee(self, ticker, price_per_share: float, number_of_shares: int) -> float:
         """
         Calculates the fee for a transaction based on the price per share and the number of shares.
@@ -120,10 +94,10 @@ class Broker:
             return min(minimum_fee_nordics, percentage_nordics * price_per_share * number_of_shares)
         else:
             return min(minimum_fee, precentage * price_per_share * number_of_shares)
-        
+
     def calculate_number_of_shares(self, ticker: str, buy_threshold: float) -> int:
         """
-        Calculates the maximum number of shares to buy without exceeding the allowed value per stock.
+        Calculates maximum number of shares to buy without exceeding the allowed value per stock.
 
         Returns
         -------
@@ -142,8 +116,11 @@ class Broker:
             max_shares -= 1
 
         return max_shares
-    
-    def sort_prediction_profitability(self, predictions: List[StockPrediction]) -> List[StockPrediction]:
+
+    def sort_prediction_profitability(
+            self,
+            predictions: List[StockPrediction]
+        ) -> List[StockPrediction]:
         """
         Sorts the predictions by profitability.
 
@@ -156,9 +133,12 @@ class Broker:
         -------
         List[StockPrediction]
             The sorted predictions.
-        """       
+        """
         for prediction in predictions:
-            buy_threshold, sell_threshold = self.calculate_thresholds(prediction.predicted_low, prediction.predicted_high)
+            buy_threshold, sell_threshold = self.calculate_thresholds(
+                prediction.predicted_low,
+                prediction.predicted_high
+            )
             if buy_threshold and sell_threshold:
                 # Calculate the profit for each prediction
                 number_of_shares = self.calculate_number_of_shares(prediction.ticker, buy_threshold)
@@ -176,7 +156,7 @@ class Broker:
 
         # Sort the predictions by profitability
         predictions.sort(key=lambda x: x.profit, reverse=True)
-    
+
     def round_prediction_to_tick_size(self, prediction: List[float]) -> tuple[float, float]:
         """
         Rounds the prediction according to the tick size.
@@ -192,8 +172,11 @@ class Broker:
             The rounded prediction.
         """
         tick_size = 0.1
-        return (round(prediction[0] / tick_size) * tick_size, round(prediction[1] / tick_size) * tick_size)
-    
+        return (
+            round(prediction[0] / tick_size) * tick_size,
+            round(prediction[1] / tick_size) * tick_size
+        )
+
     def check_exchange_open_today(self, tickers: List[str]) -> List[str]:
         """
         Checks if the exchange was open today for the given list of tickers.
@@ -216,7 +199,7 @@ class Broker:
             if last_traded_date == datetime.now(timezone('Europe/Oslo')).date():
                 open_tickers.append(ticker)
         return open_tickers
-    
+
     def conclude_pending_orders(self, tickers: List[str]) -> None:
         """
         Concludes pending orders for the given list of tickers.
@@ -228,18 +211,17 @@ class Broker:
             The list of stock tickers for which to conclude pending orders.
         """
         pending_orders = self.sql_wrapper.get_pending_orders()
-        print("Pending orders:", pending_orders)
         for ticker in tickers:
             for order in pending_orders:
                 if order[2] == ticker:
                     print("Order:", order)
                     todays_prices = yf.download(ticker, period='1d')
                     todays_prices.reset_index(inplace=True)
-                    
+
                     # If todays lowest price was lower than our buy threshold, execute the order
-                    # or if todays highest price was higher than our sell threshold, execute the order
+                    # If todays highest price was higher than our sell threshold, execute the order
                     if (
-                        (order[1] == 'BUY' and todays_prices['Low'][0] <= order[3]) or 
+                        (order[1] == 'BUY' and todays_prices['Low'][0] <= order[3]) or
                         (order[1] == 'SELL' and todays_prices['High'][0] >= order[3])
                     ):
                         self.sql_wrapper.execute_order(order[0])
