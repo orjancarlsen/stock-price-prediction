@@ -116,12 +116,12 @@ class Broker:
 
         return max_shares
 
-    def sort_prediction_profitability(
+    def populate_prediction_with_orders(
             self,
             predictions: List[StockPrediction]
         ) -> List[StockPrediction]:
         """
-        Sorts the predictions by profitability.
+        Sorts the predictions by profitability and creates possible orders for the top predictions.
 
         Parameters
         ----------
@@ -213,17 +213,52 @@ class Broker:
         for ticker in tickers:
             for order in pending_orders:
                 if order[2] == ticker:
-                    print("Order:", order)
                     todays_prices = yf.download(ticker, period='1d')
                     todays_prices.reset_index(inplace=True)
 
                     # If todays lowest price was lower than our buy threshold, execute the order
                     # If todays highest price was higher than our sell threshold, execute the order
                     if (
-                        (order[1] == 'BUY' and todays_prices['Low'][0] <= order[3]) or
-                        (order[1] == 'SELL' and todays_prices['High'][0] >= order[3])
+                        (order[1] == 'BUY' and todays_prices['Low'].values[0][0] <= order[3]) or
+                        (order[1] == 'SELL' and todays_prices['High'].values[0][0] >= order[3])
                     ):
                         self.sql_wrapper.execute_order(order[0])
                     else:
                         self.sql_wrapper.cancel_order(order[0])
                     break
+
+    def create_orders(self, predictions: List[StockPrediction]) -> None:
+        """
+        Creates orders for the top predictions.
+        """
+        # Filter predictions with positive profit
+        predictions = [p for p in predictions if p.profit > 0]
+
+        # Limit the number of predictions to the maximum allowed stocks
+        predictions = predictions[:self.number_of_stocks_allowed]
+
+        for prediction in predictions:
+            stock_in_portfolio = self.sql_wrapper.get_stock_in_portfolio(prediction.ticker)
+            if stock_in_portfolio:
+                number_of_shares = stock_in_portfolio[2]
+                self.sql_wrapper.create_sell_order(
+                    stock_symbol=prediction.ticker,
+                    price_per_share=prediction.sell_threshold,
+                    number_of_shares=number_of_shares,
+                    fee=self.calculate_fee(
+                        prediction.ticker,
+                        prediction.sell_threshold,
+                        number_of_shares
+                    )
+                )
+            else:
+                self.sql_wrapper.create_buy_order(
+                    stock_symbol=prediction.ticker,
+                    price_per_share=prediction.buy_threshold,
+                    number_of_shares=prediction.number_of_shares,
+                    fee=self.calculate_fee(
+                        prediction.ticker,
+                        prediction.buy_threshold,
+                        prediction.number_of_shares
+                    )
+                )
