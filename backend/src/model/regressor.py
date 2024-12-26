@@ -4,7 +4,6 @@ import os
 import pathlib
 import glob
 from datetime import datetime
-from typing import List
 import joblib
 import numpy as np
 import matplotlib.pyplot as plt

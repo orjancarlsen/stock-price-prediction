@@ -1,4 +1,7 @@
+"""Data class for stock prediction."""
+
 class StockPrediction:
+    """Store stock prediction data."""
     def __init__(
         self,
         ticker: str,
