@@ -480,7 +480,7 @@ class SQLWrapper:
                 SELECT SUM(total_value) FROM portfolio
             ''')
             return cursor.fetchone()[0]
-    
+
     def get_stock_in_portfolio(self, stock_symbol):
         """
         Returns the portfolio row for a given stock symbol.
