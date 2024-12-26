@@ -92,8 +92,7 @@ class Broker:
 
         if any(exchange.endswith(nordic) for nordic in nordic_exchanges):
             return min(minimum_fee_nordics, percentage_nordics * price_per_share * number_of_shares)
-        else:
-            return min(minimum_fee, precentage * price_per_share * number_of_shares)
+        return min(minimum_fee, precentage * price_per_share * number_of_shares)
 
     def calculate_number_of_shares(self, ticker: str, buy_threshold: float) -> int:
         """

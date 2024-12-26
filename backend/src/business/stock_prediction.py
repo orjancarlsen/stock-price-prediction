@@ -1,8 +1,8 @@
 """Data class for stock prediction."""
 
-class StockPrediction:
+class StockPrediction: # pylint: disable=too-few-public-methods
     """Store stock prediction data."""
-    def __init__(
+    def __init__( # pylint: disable=too-many-arguments, too-many-positional-arguments
         self,
         ticker: str,
         predicted_low: float,
