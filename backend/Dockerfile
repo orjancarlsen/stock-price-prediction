@@ -14,4 +14,4 @@ COPY . .
 EXPOSE 2000
 
 # Command to run the application
-CMD ["python", "app.py"]
+CMD ["python", "-m", "src.app"]

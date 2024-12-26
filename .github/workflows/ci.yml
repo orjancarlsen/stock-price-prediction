@@ -1,0 +1,20 @@
+name: CI
+
+on: [push]
+
+jobs:
+  build-test-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: |
+          docker build -t backend ./backend
+
+      - name: Run Pytest
+        run: docker run --rm backend sh -c "pytest /app/src/tests"
+
+      - name: Run Pylint
+        run: docker run --rm backend sh -c 'find /app -name "*.py" | xargs pylint --rcfile=/app/.pylintrc'
