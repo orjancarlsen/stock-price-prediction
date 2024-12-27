@@ -4,6 +4,7 @@ on:
   schedule:
     # Schedule to run every weekday at 10:30 PM UTC (11:30 PM CET)
     - cron: '30 22 * * 1-5'
+  workflow_dispatch: # Manually trigger the workflow
 
 jobs:
   trading-job:
