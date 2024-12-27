@@ -172,7 +172,7 @@ class Broker:
             prediction.sell_threshold = sell_threshold
             if prediction.profit > 0:
                 valid_predictions.append(prediction)
-        
+
         # Sort the valid predictions by profitability
         valid_predictions.sort(key=lambda x: x.profit, reverse=True)
 
@@ -230,11 +230,9 @@ class Broker:
                 if order[2] != ticker:
                     continue
 
-                print(f'Todays prices for {ticker}. Open: {todays_prices["Open"].values[0][0]}, Low: {todays_prices["Low"].values[0][0]}, High: {todays_prices["High"].values[0][0]}')
-                
                 if order[1] == 'BUY' and todays_prices['Open'].values[0][0] <= order[3]:
-                    # If the order was a buy order and the open price was lower than the buy threshold,
-                    # the order was executed at opening with the open price
+                    # If the order was a buy order and the open price was lower than the buy 
+                    # threshold, the order was executed at opening with the open price
                     _fee = self.calculate_fee(
                         ticker,
                         todays_prices['Open'].values[0][0],

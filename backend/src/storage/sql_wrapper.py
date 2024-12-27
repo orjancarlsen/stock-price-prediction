@@ -193,14 +193,15 @@ class SQLWrapper:
 
             if status != 'PENDING':
                 raise ValueError("Order is not in a PENDING state and cannot be executed.")
-            
+
             # If the given price in the order is overridden, use it
-            # Can happen if the open price on a stock with a buy order is lower than the price in the order,
-            # or if the open price on a stock with a sell order is higher than the price in the order.
+            # Can happen if the open price on a stock with a buy order is lower than the price in
+            # the order, or if the open price on a stock with a sell order is higher than the price
+            # in the order. 
             # In that case, a new fee should always have be calculated based on the new price.
             if _price_per_share is not None:
                 price_per_share = _price_per_share
-            
+
             if _fee is not None:
                 fee = _fee
 
