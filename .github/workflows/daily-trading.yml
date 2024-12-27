@@ -30,3 +30,15 @@ jobs:
     - name: Run Trading Script
       run: |
         python -m src/business/trading
+
+    - name: Configure Git
+      run: |
+        git config --local user.name "github-actions[bot]"
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+
+    - name: Commit and Push Updated Database
+      run: |
+        git add src/storage/storage.db
+        git commit -m "Update SQLite database from daily-trading workflow"
+        git push origin ${{ github.ref }}
+
