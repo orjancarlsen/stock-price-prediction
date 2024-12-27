@@ -59,12 +59,12 @@ def predict(ticker: str):
 
 
 @app.route('/predict_next/<ticker>', methods=['GET'])
-def predict_next_day(ticker: str):
+def predict_next_period(ticker: str):
     """
     Make stock price prediction for the specified number of days.
     """
     regressor = Regressor.load(ticker)
-    prediction_next_period = regressor.predict_next_day(n_days=N_DAYS)
+    prediction_next_period = regressor.predict_next_period(n_days=N_DAYS)
 
     return jsonify(prediction_next_period.tolist())
 

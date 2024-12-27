@@ -162,12 +162,20 @@ class SQLWrapper:
                   timestamp_created))
             conn.commit()
             print(f"Sell order created for {number_of_shares} shares of {stock_symbol} "
-                  f"at {price_per_share} per share (Fee: ${fee}).")
+                  f"at {price_per_share} per share.")
 
-    def execute_order(self, order_id):
+    def execute_order(self, order_id: int, _price_per_share: float = None, _fee: float =None):
         """
         Executes a buy or sell order by fetching details from the `orders` table
         and updating the corresponding portfolio, transactions, and order status.
+
+        Parameters
+        ----------
+        order_id : int
+            The ID of the order to execute
+        _price_per_share : float, optional
+            The price per share to override the price_per_shar registered for the order. 
+            If not provided, the price per share from the order details is used.
         """
         with self.connect() as conn:
             cursor = conn.cursor()
@@ -185,13 +193,36 @@ class SQLWrapper:
 
             if status != 'PENDING':
                 raise ValueError("Order is not in a PENDING state and cannot be executed.")
+            
+            # If the given price in the order is overridden, use it
+            # Can happen if the open price on a stock with a buy order is lower than the price in the order,
+            # or if the open price on a stock with a sell order is higher than the price in the order.
+            # In that case, a new fee should always have be calculated based on the new price.
+            if _price_per_share is not None:
+                price_per_share = _price_per_share
+            
+            if _fee is not None:
+                fee = _fee
 
             # Execute based on order type
             if order_type == 'BUY':
+                # Update available cash, correct amount is deducted in _execute_buy_order
+                cursor.execute('''
+                    UPDATE portfolio
+                    SET available = available + ?
+                    WHERE asset_type = 'CASH'
+                ''', (amount,))
+
+                print(f"Executing buy order for {number_of_shares} shares of {stock_symbol} "
+                      f"at {price_per_share} per share.")
+                amount = price_per_share * number_of_shares + fee
                 self._execute_buy_order(
                     cursor, stock_symbol, price_per_share, number_of_shares, fee, amount
                 )
             elif order_type == 'SELL':
+                print(f"Executing sell order for {number_of_shares} shares of {stock_symbol} "
+                      f"at {price_per_share} per share.")
+                amount = price_per_share * number_of_shares - fee
                 self._execute_sell_order(
                     cursor, stock_symbol, price_per_share, number_of_shares, fee, amount
                 )
@@ -231,9 +262,10 @@ class SQLWrapper:
         # Deduct the total_value from cash
         cursor.execute('''
             UPDATE portfolio
-            SET total_value = total_value - ?
+            SET total_value = total_value - ?,
+                available = available - ?
             WHERE asset_type = 'CASH'
-        ''', (amount,))
+        ''', (amount, amount))
 
         timestamp = datetime.now(timezone('Europe/Oslo')).strftime('%Y-%m-%d %H:%M:%S')
 
