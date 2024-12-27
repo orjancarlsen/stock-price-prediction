@@ -1,0 +1,44 @@
+name: Daily Trading Logic
+
+on:
+  schedule:
+    # Schedule to run every weekday at 10:30 PM UTC (11:30 PM CET)
+    - cron: '30 22 * * 1-5'
+  workflow_dispatch: # Manually trigger the workflow
+
+jobs:
+  trading-job:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Navigate to Backend Repository
+      run: cd backend
+
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run Trading Script
+      run: |
+        python -m src/business/trading
+
+    - name: Configure Git
+      run: |
+        git config --local user.name "github-actions[bot]"
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+
+    - name: Commit and Push Updated Database
+      run: |
+        git add src/storage/storage.db
+        git commit -m "Update SQLite database from daily-trading workflow"
+        git push origin ${{ github.ref }}
+
