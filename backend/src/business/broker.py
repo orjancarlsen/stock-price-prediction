@@ -231,7 +231,7 @@ class Broker:
                     continue
 
                 if order[1] == 'BUY' and todays_prices['Open'].values[0][0] <= order[3]:
-                    # If the order was a buy order and the open price was lower than the buy 
+                    # If the order was a buy order and the open price was lower than the buy
                     # threshold, the order was executed at opening with the open price
                     _fee = self.calculate_fee(
                         ticker,
@@ -240,7 +240,7 @@ class Broker:
                     )
                     print()
                     self.sql_wrapper.execute_order(
-                        order_id=order[0], 
+                        order_id=order[0],
                         _price_per_share=todays_prices['Open'].values[0][0],
                         _fee=_fee
                     )
