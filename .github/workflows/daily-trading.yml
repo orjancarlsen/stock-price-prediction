@@ -20,10 +20,11 @@ jobs:
       - name: Run Trading Script
         run: |
           docker run --rm \
-            -v ${{ github.workspace }}:/app \
-            -w /app \
-            backend \
-            python -m src.business.trading
+            -v ${{ github.workspace }}/.git:/app/.git \
+            backend sh -c "
+              git config --global --add safe.directory /app && \
+              python -m src.business.trading"
+
       
       - name: Commit and Push Updated Database
         run: |
@@ -32,4 +33,3 @@ jobs:
           git add src/storage/storage.db
           git commit -m 'Update SQLite database from daily-trading workflow' || echo "No changes to commit"
           git push origin ${{ github.ref }}
-      
