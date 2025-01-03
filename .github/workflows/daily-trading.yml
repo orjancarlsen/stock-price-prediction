@@ -6,6 +6,11 @@ on:
     - cron: '30 22 * * 1-5'
   workflow_dispatch:
 
+# Allow the workflow to trigger other worflows
+permissions:
+  contents: write
+
+
 jobs:
   trading-job:
     runs-on: ubuntu-latest
