@@ -21,6 +21,7 @@ jobs:
         run: |
           docker run --rm \
             -v ${{ github.workspace }}/.git:/app/.git \
+            -w /app \
             backend sh -c "
               git config --global --add safe.directory /app && \
               python -m src.business.trading"
