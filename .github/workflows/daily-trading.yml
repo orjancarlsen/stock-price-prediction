@@ -2,35 +2,38 @@ name: Daily Trading Logic
 
 on:
   schedule:
-    # Schedule to run every weekday at 10:30 PM UTC (11:30 PM CET)
+    # Every weekday at 10:30 PM UTC
     - cron: '30 22 * * 1-5'
-  workflow_dispatch: # Manually trigger the workflow
+  workflow_dispatch:
 
 jobs:
   trading-job:
     runs-on: ubuntu-latest
-
+    
     steps:
-      - name: Checkout Repository
+      # 1) Check out your repository so we can modify files (like storage.db)
+      - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Build Docker Image
-        run: docker build -t backend ./backend
+      # 2) Set up Python
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"  # or whichever version you prefer
 
-      - name: Run Trading Script
-        run: |
-          docker run --rm \
-            -v ${{ github.workspace }}:/app \
-            -w /app \
-            backend sh -c "
-              git config --global --add safe.directory /app && \
-              python -m src.business.trading"
+      # 3) Install dependencies
+      - name: Install dependencies
+        run: pip install --no-cache-dir -r backend/requirements.txt
 
-      
-      - name: Commit and Push Updated Database
+      # 4) Run your trading logic
+      - name: Run trading script
+        run: python backend/src/business/trading.py
+
+      # 5) Commit and push updated database
+      - name: Commit and push changes
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
-          git add src/storage/storage.db
+          git add backend/src/storage/storage.db
           git commit -m 'Update SQLite database from daily-trading workflow' || echo "No changes to commit"
           git push origin ${{ github.ref }}
