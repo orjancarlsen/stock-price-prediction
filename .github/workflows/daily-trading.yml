@@ -20,7 +20,7 @@ jobs:
       - name: Run Trading Script
         run: |
           docker run --rm \
-            -v ${{ github.workspace }}/.git:/app/.git \
+            -v ${{ github.workspace }}:/app \
             -w /app \
             backend sh -c "
               git config --global --add safe.directory /app && \
