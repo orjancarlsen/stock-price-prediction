@@ -26,8 +26,10 @@ jobs:
         run: pip install --no-cache-dir -r backend/requirements.txt
 
       # 4) Run your trading logic
-      - name: Run trading script
-        run: python backend/src/business/trading.py
+      - name: Run Trading Script
+        run: |
+          cd backend
+          python -m src.business.trading
 
       # 5) Commit and push updated database
       - name: Commit and push changes
