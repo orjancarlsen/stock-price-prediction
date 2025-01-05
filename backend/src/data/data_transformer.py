@@ -67,7 +67,7 @@ class DataTransformer:
         try:
             self.df = yf.download(self.ticker, end='2024-01-01')
         except Exception as e:
-            raise YFPricesMissingError(self.ticker, f"Error downloading data: {e}")
+            raise YFPricesMissingError(self.ticker, f"Error downloading data: {e}") from e
 
         if self.df.empty:
             raise YFPricesMissingError(self.ticker, "No data available for the ticker.")

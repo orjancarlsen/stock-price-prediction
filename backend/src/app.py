@@ -43,15 +43,10 @@ def train(ticker: str):
         return jsonify({'error': str(e)}), 400
     except ValueError as e:
         return jsonify({'error': f"Data preparation error: {e}"}), 400
-    except Exception as e:
-        return jsonify({'error': f"Unexpected error: {e}"}), 500
 
-    try:
-        regressor = Regressor(ticker=ticker, data=data)
-        regressor.train()
-        regressor.save()
-    except Exception as e:
-        return jsonify({'error': f"Training error: {e}"}), 500
+    regressor = Regressor(ticker=ticker, data=data)
+    regressor.train()
+    regressor.save()
 
     return jsonify({}), 200
 
