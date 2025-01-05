@@ -3,6 +3,7 @@
 from typing import Tuple
 
 import yfinance as yf
+from yfinance.exceptions import YFPricesMissingError
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
@@ -63,7 +64,14 @@ class DataTransformer:
         self.ticker = ticker
 
         # Download data from Yahoo Finance API
-        self.df = yf.download(self.ticker, end='2024-01-01')
+        try:
+            self.df = yf.download(self.ticker, end='2024-01-01')
+        except Exception as e:
+            raise YFPricesMissingError(self.ticker, f"Error downloading data: {e}")
+
+        if self.df.empty:
+            raise YFPricesMissingError(self.ticker, "No data available for the ticker.")
+
 
         # Convert index to a column
         self.df.reset_index(inplace=True)
@@ -84,6 +92,12 @@ class DataTransformer:
         """
         df_train = self.df[self.df['Date'] < date]
         df_test = self.df[self.df['Date'] >= date]
+
+        if df_train.empty or df_test.empty:
+            raise ValueError(
+                f"Insufficient data for splitting: "
+                f"Train shape {df_train.shape}, Test shape {df_test.shape}"
+            )
 
         df_train_x = df_train[self.x_features].copy()
         df_train_y = df_train[self.y_features].copy()

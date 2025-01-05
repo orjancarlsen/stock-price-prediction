@@ -6,6 +6,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from pytickersymbols import PyTickerSymbols
 import yfinance as yf
+from yfinance.exceptions import YFPricesMissingError
 
 from src.data.data_transformer import DataTransformer # pylint: disable=import-error
 from src.model.regressor import Regressor             # pylint: disable=import-error
@@ -35,12 +36,22 @@ def train(ticker: str):
     """
     Train regressor to predict stock prices.
     """
-    data = DataTransformer(ticker=ticker)
-    data.create_train_and_test_data(n_days=N_DAYS)
+    try:
+        data = DataTransformer(ticker=ticker)
+        data.create_train_and_test_data(n_days=N_DAYS)
+    except YFPricesMissingError as e:
+        return jsonify({'error': str(e)}), 400
+    except ValueError as e:
+        return jsonify({'error': f"Data preparation error: {e}"}), 400
+    except Exception as e:
+        return jsonify({'error': f"Unexpected error: {e}"}), 500
 
-    regressor = Regressor(ticker=ticker, data=data)
-    regressor.train()
-    regressor.save()
+    try:
+        regressor = Regressor(ticker=ticker, data=data)
+        regressor.train()
+        regressor.save()
+    except Exception as e:
+        return jsonify({'error': f"Training error: {e}"}), 500
 
     return jsonify({}), 200
 
