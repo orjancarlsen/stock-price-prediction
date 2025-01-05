@@ -5,14 +5,22 @@ import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement
 // Register Chart.js modules
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler);
 
-let previousChartArea;
+let previousChartArea: any;
 
-const Graph = ({ selectedCompany, historicCompanyPrices }) => {
+interface GraphProps {
+  selectedCompany: string;
+  historicCompanyPrices: {
+    dates: string[];
+    prices: number[];
+  };
+}
+
+const Graph: React.FC<GraphProps> = ({ selectedCompany, historicCompanyPrices }) => {
   console.log("Render Graph for", selectedCompany, "with data:", historicCompanyPrices);
 
   // Configuration for the gradient
-  let cachedGradient;
-  const getGradient = (ctx, chartArea, min, max) => {
+  let cachedGradient: CanvasGradient | undefined;
+  const getGradient = (ctx: CanvasRenderingContext2D, chartArea: any, min: number, max: number): CanvasGradient => {
     if (!cachedGradient || chartArea !== previousChartArea) {
       console.log("Render gradient");
       const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
@@ -36,13 +44,13 @@ const Graph = ({ selectedCompany, historicCompanyPrices }) => {
         label: 'Stock Price',
         data: historicCompanyPrices.prices,
         borderColor: 'rgba(64, 105, 225, 1)',
-        backgroundColor: function(context) {
+        backgroundColor: function(context: any) {
           const chart = context.chart;
           const { ctx, chartArea } = chart;
 
           if (!chartArea) {
             // This case happens on initial chart load
-            return null;
+            return undefined;
           }
 
           const yScale = chart.scales.y;
@@ -65,12 +73,12 @@ const Graph = ({ selectedCompany, historicCompanyPrices }) => {
     plugins: {
       legend: {
         display: true,
-        position: 'top',
+        position: 'top' as const,
       },
     },
     interaction: {
       intersect: false,
-      mode: 'index',
+      mode: 'index' as const,
     },
     scales: {
       x: {
@@ -94,7 +102,7 @@ const Graph = ({ selectedCompany, historicCompanyPrices }) => {
     },
   };
   
-  const containerStyle = {
+  const containerStyle: React.CSSProperties = {
     color: '#000',
     backgroundColor: 'rgb(255, 255, 255)',
     padding: '1rem',

@@ -1,11 +1,12 @@
-import React, {useState} from 'react';
-import Graph from './graph';
+import React, { useState, ChangeEvent } from 'react';
+import Graph from './components/GradientGraph';
 import TypingFieldDropdown from './components/TypingFieldDropdown';
 import { useFetchCompanies } from './hooks/useFetchCompanies';
 import useFetchPrices from './hooks/useFetchPrices';
 
+
 function App() {
-  const [selectedCompany, setSelectedCompany] = useState('');
+  const [selectedCompany, setSelectedCompany] = useState<string>('');
 
   const { 
     companies: trainedCompanies, 
@@ -13,28 +14,22 @@ function App() {
     loading: trainedCompaniesLoading 
   } = useFetchCompanies('/companies/trained');
 
-  const { 
-    companies: availableCompanies,
-    error: availableCompaniesError,
-    loading: availableCompaniesLoading 
-  } = useFetchCompanies('/companies/available');
-
   const {
     data: historicCompanyPrices,
     loading: pricesLoading,
     error: pricesError
   } = useFetchPrices(selectedCompany, '2023-01-01', '2023-12-31');
 
-  const handleCompanyChange = (e) => {
+  const handleCompanyChange = (e: ChangeEvent<HTMLSelectElement>) => {
     setSelectedCompany(e.target.value);
     console.log("Selected company:", e.target.value);
   };
 
-  if (trainedCompaniesLoading || availableCompaniesLoading) {
+  if (trainedCompaniesLoading) {
     return <div>Loading...</div>;
   }
 
-  if (trainedCompaniesError || availableCompaniesError) {
+  if (trainedCompaniesError) {
     return <div>Error fetching companies: {trainedCompaniesError}</div>;
   }
 
@@ -44,16 +39,8 @@ function App() {
       <TypingFieldDropdown 
         options={trainedCompanies} 
         value={selectedCompany} 
-        onChange={handleCompanyChange} 
+        onChange={(e: ChangeEvent<HTMLInputElement>) => handleCompanyChange(e as unknown as ChangeEvent<HTMLSelectElement>)}
         placeholder="Select model" 
-      />
-
-      <h1>Available Models</h1>
-      <TypingFieldDropdown 
-        options={availableCompanies} 
-        value={selectedCompany} 
-        onChange={handleCompanyChange} 
-        placeholder="Select a company" 
       />
 
       {selectedCompany && historicCompanyPrices.dates.length > 0 && (

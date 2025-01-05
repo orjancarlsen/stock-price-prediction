@@ -1,11 +1,18 @@
 import { useState, useEffect } from 'react';
+import { Company } from '../types';
 
 const BASE_URL = process.env.REACT_APP_BACKEND_URL;
 
-export const useFetchCompanies = (endpoint) => {
-  const [companies, setCompanies] = useState([]);
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(true);
+interface UseFetchCompaniesResult {
+  companies: Company[];
+  error: string | null;
+  loading: boolean;
+}
+
+export const useFetchCompanies = (endpoint: string): UseFetchCompaniesResult => {
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -24,7 +31,7 @@ export const useFetchCompanies = (endpoint) => {
           setError("Invalid data format");
           setCompanies([]);
         }
-      } catch (err) {
+      } catch (err: any) {
         if (err.name === 'AbortError') {
           console.log("Fetch aborted");
         } else {
@@ -40,7 +47,7 @@ export const useFetchCompanies = (endpoint) => {
     return () => {
       controller.abort(); // Abort the fetch on cleanup
     };
-  }, []);
+  }, [endpoint]);
 
   return { companies, error, loading };
 };

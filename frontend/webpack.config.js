@@ -2,7 +2,7 @@ const HtmlWebPackPlugin = require("html-webpack-plugin");
 const Dotenv = require('dotenv-webpack');
 
 module.exports = {
-  entry: './src/index.js',
+  entry: './src/index.tsx',
   module: {
     rules: [
       {
@@ -14,8 +14,16 @@ module.exports = {
             presets: ["@babel/preset-env", "@babel/preset-react"]
           }
         }
+      },
+      {
+        test: /\.tsx?$/,
+        use: 'ts-loader',
+        exclude: /node_modules/,
       }
     ]
+  },
+  resolve: {
+    extensions: ['.js', '.jsx', '.ts', '.tsx'],
   },
   plugins: [
     new HtmlWebPackPlugin({
@@ -28,5 +36,7 @@ module.exports = {
   ],
   devServer: {
     allowedHosts: 'all',
+    hot: true,
+    port: 2001
   }  
 };

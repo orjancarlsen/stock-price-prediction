@@ -2,10 +2,21 @@ import { useState, useEffect } from 'react';
 
 const BASE_URL = process.env.REACT_APP_BACKEND_URL;
 
-const useFetchPrices = (ticker, fromDate, toDate) => {
-    const [data, setData] = useState({ dates: [], prices: [] });
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+interface PriceData {
+    dates: string[];
+    prices: number[];
+}
+
+interface UseFetchPricesResult {
+    data: PriceData;
+    loading: boolean;
+    error: string | null;
+}
+
+const useFetchPrices = (ticker: string, fromDate: string, toDate: string): UseFetchPricesResult => {
+    const [data, setData] = useState<PriceData>({ dates: [], prices: [] });
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         if (!ticker) {
@@ -33,7 +44,7 @@ const useFetchPrices = (ticker, fromDate, toDate) => {
                     throw new Error('Network response was not ok');
                 }
 
-                const result = await response.json();
+                const result: PriceData = await response.json();
                 setData(result);
             } catch (err) {
                 if (err instanceof Error) {
