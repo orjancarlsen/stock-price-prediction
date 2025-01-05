@@ -568,7 +568,7 @@ class SQLWrapper:
                 SELECT * FROM orders
             ''')
             return cursor.fetchall()
-    
+
     def caclulate_portfolio_value(self):
         """
         Calculate the total value of the portfolio.
