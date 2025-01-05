@@ -52,7 +52,7 @@ class Regressor:
         Load the model parameters from file.
     """
 
-    epochs = 2
+    epochs = 100
     batch_size = 32
 
     y_pred = None
