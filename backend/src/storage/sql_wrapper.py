@@ -569,6 +569,17 @@ class SQLWrapper:
             ''')
             return cursor.fetchall()
 
+    def caclulate_portfolio_value(self):
+        """
+        Calculate the total value of the portfolio.
+        """
+        with self.connect() as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT SUM(total_value) FROM portfolio
+            ''')
+            return cursor.fetchone()[0]
+
 if __name__ == "__main__":
     sql_wrapper = SQLWrapper()
     # sql_wrapper.create_tables()

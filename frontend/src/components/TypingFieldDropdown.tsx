@@ -1,10 +1,18 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, ChangeEvent, KeyboardEvent, FocusEvent } from 'react';
+import { Company } from '../types';
 
-function Dropdown({ options, value, onChange, placeholder }) {
-    const [filterText, setFilterText] = useState(''); // State to manage the input text
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false); // State to manage dropdown visibility
-    const [highlightedIndex, setHighlightedIndex] = useState(-1); // State to track highlighted option
-    const dropdownRef = useRef(null); // Ref to manage clicks outside
+interface DropdownProps {
+    options: Company[];
+    value: string;
+    onChange: (event: ChangeEvent<HTMLInputElement>) => void;
+    placeholder?: string;
+}
+
+const Dropdown: React.FC<DropdownProps> = ({ options, value, onChange, placeholder }) => {
+    const [filterText, setFilterText] = useState<string>(''); // State to manage the input text
+    const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false); // State to manage dropdown visibility
+    const [highlightedIndex, setHighlightedIndex] = useState<number>(-1); // State to track highlighted option
+    const dropdownRef = useRef<HTMLDivElement>(null); // Ref to manage clicks outside
 
     // Filter options based on the input text (case-insensitive)
     const filteredOptions = options.filter(option =>
@@ -12,7 +20,7 @@ function Dropdown({ options, value, onChange, placeholder }) {
         (typeof option.symbol === 'string' && option.symbol.toLowerCase().includes(filterText.toLowerCase()))
     );
 
-    const handleInputChange = (e) => {
+    const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
         setFilterText(e.target.value);
         if (!isDropdownOpen) {
             setIsDropdownOpen(true); // Open dropdown when typing starts
@@ -20,14 +28,14 @@ function Dropdown({ options, value, onChange, placeholder }) {
         setHighlightedIndex(-1); // Reset highlighted index on input change
     };
 
-    const handleOptionClick = (option) => {
+    const handleOptionClick = (option: Company) => {
         setFilterText(option.name ? `${option.name} (${option.symbol})` : option.symbol); // Set clicked value in input
-        onChange({ target: { value: option.symbol } }); // Update value
+        onChange({ target: { value: option.symbol } } as ChangeEvent<HTMLInputElement>); // Update value
         setIsDropdownOpen(false); // Close dropdown after selection
         setHighlightedIndex(-1); // Reset highlighted index
     };
 
-    const handleKeyDown = (e) => {
+    const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
         if (!isDropdownOpen) return;
 
         if (e.key === 'ArrowDown') {
@@ -48,8 +56,8 @@ function Dropdown({ options, value, onChange, placeholder }) {
         }
     };
 
-    const handleClickOutside = (event) => {
-        if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+    const handleClickOutside = (event: MouseEvent) => {
+        if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
             setIsDropdownOpen(false); // Close dropdown if clicked outside
         }
     };
