@@ -144,8 +144,8 @@ class Order:
             self.fee,
             self.amount,
             self.status,
-            self.timestamp_created if self.timestamp_created else None,
-            self.timestamp_updated if self.timestamp_updated else None,
+            self.timestamp_created,
+            self.timestamp_updated,
         )
         cur = conn.execute(query, values)
         self.id = cur.lastrowid
@@ -178,8 +178,8 @@ class Order:
             self.fee,
             self.amount,
             self.status,
-            self.timestamp_created.isoformat() if self.timestamp_created else None,
-            self.timestamp_updated.isoformat() if self.timestamp_updated else None,
+            self.timestamp_created,
+            self.timestamp_updated,
             self.id,
         )
         conn.execute(query, values)
