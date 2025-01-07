@@ -1,4 +1,4 @@
-# src/storage/portfolio.py
+"""Model class for the `portfolio` table."""
 
 import sqlite3
 from typing import Optional, List, Tuple, Any

@@ -441,7 +441,10 @@ disable=raw-checker-failed,
         use-implicit-booleaness-not-comparison-to-zero,
         C0411, # Standard import "x" should be placed before "y".
         C0412, # Imports should be grouped by type.
-        C0413  # Import "x" should be placed at the top of the module.
+        C0413, # Import "x" should be placed at the top of the module.
+        R0902, # Too many instance attributes
+        R0913, # Too many arguments
+        R0917  # Too many positional arguments
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option

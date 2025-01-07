@@ -1,4 +1,4 @@
-# src/storage/orders.py
+"""Model class for the `orders` table."""
 
 import sqlite3
 from datetime import datetime
@@ -62,14 +62,12 @@ class Order:
             t_updated
         ) = row
 
-        # Helper to parse string timestamps if the DB uses text
         def parse_ts(ts: Any) -> Optional[datetime]:
             if not ts:
                 return None
             try:
-                return datetime.fromisoformat(ts)  # Python 3.7+ 
+                return datetime.fromisoformat(ts)
             except ValueError:
-                # fallback if needed for e.g. "YYYY-MM-DD HH:MM:SS"
                 return datetime.strptime(ts, "%Y-%m-%d %H:%M:%S")
 
         return cls(
@@ -108,7 +106,8 @@ class Order:
     @classmethod
     def by_status(cls, conn: sqlite3.Connection, status: str) -> List["Order"]:
         """
-        Returns a list of all orders having the specified status (e.g. 'PENDING', 'EXECUTED', or 'CANCELED').
+        Returns a list of all orders having the specified status
+        (e.g. 'PENDING', 'EXECUTED', or 'CANCELED').
         """
         query = f"SELECT * FROM {cls.TABLE_NAME} WHERE status = ?"
         rows = conn.execute(query, (status,)).fetchall()

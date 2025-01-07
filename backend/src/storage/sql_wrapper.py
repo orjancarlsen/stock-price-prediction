@@ -101,7 +101,8 @@ class SQLWrapper:
 
             # Insert the CASH row if it doesn't exist
             cursor.execute('''
-                INSERT INTO portfolio (asset_type, stock_symbol, number_of_shares, price_per_share, total_value, available)
+                INSERT INTO portfolio (asset_type, stock_symbol, number_of_shares, price_per_share,
+                    total_value, available)
                 SELECT 'CASH', NULL, NULL, NULL, 0, 0
                 WHERE NOT EXISTS (
                     SELECT 1 FROM portfolio WHERE asset_type = 'CASH' AND stock_symbol IS NULL
@@ -245,7 +246,9 @@ class SQLWrapper:
 
             # Mark the order as EXECUTED
             order.status = "EXECUTED"
-            order.timestamp_updated = datetime.now(timezone('Europe/Oslo')).strftime("%Y-%m-%d %H:%M:%S")
+            order.timestamp_updated = datetime.now(
+                timezone('Europe/Oslo')
+            ).strftime("%Y-%m-%d %H:%M:%S")
             order.save(conn)
 
     def _execute_buy_order(self, cursor: sqlite3.Cursor, order: Order, conn: sqlite3.Connection):
@@ -264,13 +267,15 @@ class SQLWrapper:
 
         # Update portfolio for the stock
         cursor.execute('''
-            INSERT INTO portfolio (asset_type, stock_symbol, number_of_shares, price_per_share, total_value)
+            INSERT INTO portfolio (asset_type, stock_symbol, number_of_shares, price_per_share,
+                total_value)
             VALUES ('STOCK', ?, ?, ?, ?)
             ON CONFLICT(asset_type, stock_symbol)
             DO UPDATE SET
                 number_of_shares = portfolio.number_of_shares + excluded.number_of_shares,
                 price_per_share = 
-                    (portfolio.price_per_share * portfolio.number_of_shares + excluded.price_per_share * excluded.number_of_shares) /
+                    (portfolio.price_per_share * portfolio.number_of_shares + 
+                       excluded.price_per_share * excluded.number_of_shares) /
                     (portfolio.number_of_shares + excluded.number_of_shares),
                 total_value = portfolio.total_value + excluded.total_value
         ''', (
@@ -358,7 +363,9 @@ class SQLWrapper:
 
             # Update the Order as CANCELED
             order.status = "CANCELED"
-            order.timestamp_updated = datetime.now(timezone('Europe/Oslo')).strftime('%Y-%m-%d %H:%M:%S')
+            order.timestamp_updated = datetime.now(
+                timezone('Europe/Oslo')
+            ).strftime('%Y-%m-%d %H:%M:%S')
             order.save(conn)
 
     def get_orders(self):

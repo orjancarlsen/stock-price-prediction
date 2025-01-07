@@ -1,4 +1,5 @@
-# transactions.py
+"""Model class for the `transactions` table."""
+
 import sqlite3
 from datetime import datetime
 from typing import Optional, List, Tuple, Any
@@ -36,16 +37,14 @@ class Transaction:
         """
         Convert a row tuple from the DB into a Transaction object.
         """
-        # Helper to parse string timestamps if the DB uses text
         def parse_ts(ts: Any) -> Optional[datetime]:
             if not ts:
                 return None
             try:
-                return datetime.fromisoformat(ts)  # Python 3.7+ 
+                return datetime.fromisoformat(ts)
             except ValueError:
-                # fallback if needed for e.g. "YYYY-MM-DD HH:MM:SS"
                 return datetime.strptime(ts, "%Y-%m-%d %H:%M:%S")
-            
+
         return cls(
             id_=row[0],
             transaction_type=row[1],
@@ -84,7 +83,7 @@ class Transaction:
         if self.id is not None:
             raise ValueError("Cannot insert Transaction because it already has an ID.")
         query = f"""
-        INSERT INTO {self.TABLE_NAME} 
+        INSERT INTO {self.TABLE_NAME}
         (transaction_type, stock_symbol, price_per_share, number_of_shares, fee, amount, timestamp)
         VALUES (?, ?, ?, ?, ?, ?, ?)
         """
