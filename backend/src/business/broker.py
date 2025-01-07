@@ -212,7 +212,7 @@ class Broker:
         List[str]
             The list of tickers for which the exchange was open today.
         """
-        pending_orders = self.sql_wrapper.get_pending_orders()
+        pending_orders = self.sql_wrapper.get_orders_by_status('PENDING')
         open_tickers = []
         for ticker in tickers:
             todays_prices = yf.download(ticker, period='1d')
