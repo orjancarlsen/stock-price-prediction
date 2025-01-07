@@ -8,5 +8,5 @@ CREATE TABLE IF NOT EXISTS transactions (
     number_of_shares INTEGER,
     fee              REAL DEFAULT 0,
     amount           REAL NOT NULL,
-    timestamp        DATETIME DEFAULT CURRENT_TIMESTAMP
+    timestamp        DATETIME DEFAULT (DATETIME('now', '+1 hour')) -- Adjusted for Europe/Oslo
 );

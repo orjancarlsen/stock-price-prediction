@@ -6,6 +6,10 @@ import pprint
 from datetime import datetime
 from pytz import timezone
 
+from src.storage.transactions import Transaction
+from src.storage.orders import Order
+from src.storage.portfolio import Portfolio
+
 
 class SQLWrapper:
     """
@@ -23,18 +27,20 @@ class SQLWrapper:
     create_tables()
         Reads and executes SQL scripts from `portfolio.sql`, `transactions.sql` and `orders.sql` 
         to create the tables in the database.
-    create_buy_order(stock_symbol, price_per_share, number_of_shares, fee=0)
+    create_buy_order(stock_symbol, price_per_share, number_of_shares, fee=0.0)
         Creates a new buy order and stores it in the orders table.
-    create_sell_order(stock_symbol, price_per_share, number_of_shares, fee=0)
+    create_sell_order(stock_symbol, price_per_share, number_of_shares, fee=0.0)
         Creates a new sell order and stores it in the orders table.
-    execute_order(order_id)
+    execute_order(order_id, _price_per_share=None, _fee=None)
         Executes a buy or sell order by fetching details from the `orders` table and updating the
         corresponding portfolio, transactions, and order status.
     cancel_order(order_id)
         Cancels a pending buy order by updating its status to 'CANCELED' and timestamp_updated.
         Restores the available cash for canceled BUY orders.
-    get_pending_orders()
-        Returns a list of all pending orders.
+    get_orders()
+        Retrieve all orders as a list of Order objects.
+    get_orders_by_status(status)
+        Returns a list of orders filtered by a specific status.
     deposit(amount)
         Deposits the specified amount into the cash balance.
     withdraw(amount)
@@ -45,18 +51,20 @@ class SQLWrapper:
         Returns the total cash balance.
     get_cash_available()
         Returns the available cash balance.
+    get_portfolio()
+        Returns all rows in the portfolio as Portfolio objects.
+    get_portfolio_value()
+        Returns the total value of the portfolio.
     get_number_of_shares_for_stock(stock_symbol)
-        Returns the number of shares for the specified stock symbol.
+        Returns the number of shares for a given stock symbol.
     get_number_of_distinct_stocks()
         Returns the number of distinct stocks in the portfolio.
-    get_portfolio()
-        Returns the portfolio details.
+    get_stock_in_portfolio(stock_symbol)
+        Returns the portfolio row for a given stock symbol.
     get_transactions()
-        Returns the transaction history.
-    get_orders()
-        Returns the order history.
+        Returns the transaction history as a list of Transaction objects.
     """
-    def __init__(self, db_path=None):
+    def __init__(self, db_path: str = None):
         if db_path is None:
             base_path = os.path.abspath(os.path.dirname(__file__))
             db_path = os.path.join(base_path, 'storage.db')
@@ -68,6 +76,10 @@ class SQLWrapper:
         If the database file doesn't exist, it creates a new one and initializes the tables.
         """
         return sqlite3.connect(self.db_path)
+
+    # ----------------------------------------------------------------------
+    # Orders
+    # ----------------------------------------------------------------------
 
     def create_tables(self):
         """
@@ -98,7 +110,13 @@ class SQLWrapper:
 
             conn.commit()
 
-    def create_buy_order(self, stock_symbol, price_per_share, number_of_shares, fee=0):
+    def create_buy_order(
+            self,
+            stock_symbol: str,
+            price_per_share: float,
+            number_of_shares: int,
+            fee: float = 0.0
+        ):
         """
         Creates a new buy order and stores it in the orders table.
         Ensures sufficient cash is available before creating the order.
@@ -107,35 +125,41 @@ class SQLWrapper:
         timestamp_created = datetime.now(timezone('Europe/Oslo')).strftime('%Y-%m-%d %H:%M:%S')
 
         with self.connect() as conn:
-            cursor = conn.cursor()
-
             # Check if sufficient cash is available
-            cursor.execute("SELECT available FROM portfolio WHERE asset_type = 'CASH'")
-            available_cash = cursor.fetchone()[0]
-            if available_cash < total_cost:
+            cash = Portfolio.get_by_key(conn, "CASH", None)
+            if not cash or cash.available < total_cost:
                 raise ValueError(
                     f"Insufficient available cash to create buy order. "
-                    f"Available: ${available_cash}, Required: ${total_cost}"
+                    f"Available: ${cash.available if cash else 0}, "
+                    f"Required: ${total_cost}"
                 )
 
-            # Deduct the amount from available cash
-            cursor.execute('''
-                UPDATE portfolio
-                SET available = available - ?
-                WHERE asset_type = 'CASH'
-            ''', (total_cost,))
+            # Deduct from available cash
+            cash.available -= total_cost
+            cash.save(conn)
 
-            # Create the buy order
-            cursor.execute('''
-                INSERT INTO orders (order_type, stock_symbol, price_per_share, number_of_shares, fee, amount, status, timestamp_created)
-                VALUES ('BUY', ?, ?, ?, ?, ?, 'PENDING', ?)
-            ''', (stock_symbol, price_per_share, number_of_shares,
-                  fee, total_cost, timestamp_created))
-            conn.commit()
-            print(f"Buy order created for {number_of_shares} shares of {stock_symbol} "
-                  f"at {price_per_share} per share.")
+            # Create an BUY Order
+            buy_order = Order(
+                order_type="BUY",
+                stock_symbol=stock_symbol,
+                price_per_share=price_per_share,
+                number_of_shares=number_of_shares,
+                fee=fee,
+                amount=total_cost,
+                status="PENDING",
+                timestamp_created=timestamp_created
+            )
+            buy_order.insert(conn)
+            print(f"Buy order created: {buy_order}")
 
-    def create_sell_order(self, stock_symbol, price_per_share, number_of_shares, fee=0):
+
+    def create_sell_order(
+            self,
+            stock_symbol: str,
+            price_per_share: float,
+            number_of_shares: int,
+            fee: float = 0.0
+        ):
         """
         Creates a new sell order and stores it in the orders table.
         Ensures sufficient shares are available before creating the order.
@@ -144,27 +168,30 @@ class SQLWrapper:
         timestamp_created = datetime.now(timezone('Europe/Oslo')).strftime('%Y-%m-%d %H:%M:%S')
 
         with self.connect() as conn:
-            cursor = conn.cursor()
+            # Check if sufficient shares are available
+            stock = Portfolio.get_by_key(conn, "STOCK", stock_symbol)
+            if not stock or stock.number_of_shares < number_of_shares:
+                raise ValueError(
+                    f"Insufficient shares of {stock_symbol} to create sell order. "
+                    f"Available: {stock.number_of_shares if stock else 0}, "
+                    f"Required: {number_of_shares}"
+                )
 
-            # Check if sufficient shares are available to sell
-            cursor.execute('''
-                SELECT number_of_shares FROM portfolio 
-                WHERE asset_type = 'STOCK' AND stock_symbol = ?
-            ''', (stock_symbol,))
-            result = cursor.fetchone()
-            if not result or result[0] < number_of_shares:
-                raise ValueError(f"Insufficient shares of {stock_symbol} to create sell order.")
+            # Create an SELL Order
+            sell_order = Order(
+                order_type="SELL",
+                stock_symbol=stock_symbol,
+                price_per_share=price_per_share,
+                number_of_shares=number_of_shares,
+                fee=fee,
+                amount=total_proceeds,
+                status="PENDING",
+                timestamp_created=timestamp_created
+            )
+            sell_order.insert(conn)
+            print(f"Sell order created: {sell_order}")
 
-            cursor.execute('''
-                INSERT INTO orders (order_type, stock_symbol, price_per_share, number_of_shares, fee, amount, status, timestamp_created)
-                VALUES ('SELL', ?, ?, ?, ?, ?, 'PENDING', ?)
-            ''', (stock_symbol, price_per_share, number_of_shares, fee, total_proceeds,
-                  timestamp_created))
-            conn.commit()
-            print(f"Sell order created for {number_of_shares} shares of {stock_symbol} "
-                  f"at {price_per_share} per share.")
-
-    def execute_order(self, order_id: int, _price_per_share: float = None, _fee: float =None):
+    def execute_order(self, order_id: int, _price_per_share: float = None, _fee: float = None):
         """
         Executes a buy or sell order by fetching details from the `orders` table
         and updating the corresponding portfolio, transactions, and order status.
@@ -178,21 +205,12 @@ class SQLWrapper:
             If not provided, the price per share from the order details is used.
         """
         with self.connect() as conn:
-            cursor = conn.cursor()
-
-            # Fetch order details
-            cursor.execute('''
-                SELECT order_type, stock_symbol, price_per_share, number_of_shares, fee, amount, status 
-                FROM orders WHERE id = ?
-            ''', (order_id,))
-            order = cursor.fetchone()
+            order = Order.get_by_id(conn, order_id)
             if not order:
-                raise ValueError("Order not found.")
+                raise ValueError(f"Order {order_id} not found.")
 
-            order_type, stock_symbol, price_per_share, number_of_shares, fee, amount, status = order
-
-            if status != 'PENDING':
-                raise ValueError("Order is not in a PENDING state and cannot be executed.")
+            if order.status != "PENDING":
+                raise ValueError(f"Order {order_id} is not in PENDING state.")
 
             # If the given price in the order is overridden, use it
             # Can happen if the open price on a stock with a buy order is lower than the price in
@@ -200,53 +218,50 @@ class SQLWrapper:
             # in the order.
             # In that case, a new fee should always have be calculated based on the new price.
             if _price_per_share is not None:
-                price_per_share = _price_per_share
+                order.price_per_share = _price_per_share
 
             if _fee is not None:
-                fee = _fee
+                order.fee = _fee
 
             # Execute based on order type
-            if order_type == 'BUY':
+            cursor = conn.cursor()
+            if order.order_type == 'BUY':
+                order.amount = order.price_per_share * order.number_of_shares + order.fee
+
                 # Update available cash, correct amount is deducted in _execute_buy_order
-                cursor.execute('''
-                    UPDATE portfolio
-                    SET available = available + ?
-                    WHERE asset_type = 'CASH'
-                ''', (amount,))
+                cash_port = Portfolio.get_by_key(conn, "CASH", None)
+                if cash_port:
+                    cash_port.available += order.amount
+                    cash_port.save(conn)
 
-                print(f"Executing buy order for {number_of_shares} shares of {stock_symbol} "
-                      f"at {price_per_share} per share.")
-                amount = price_per_share * number_of_shares + fee
-                self._execute_buy_order(
-                    cursor, stock_symbol, price_per_share, number_of_shares, fee, amount
-                )
-            elif order_type == 'SELL':
-                print(f"Executing sell order for {number_of_shares} shares of {stock_symbol} "
-                      f"at {price_per_share} per share.")
-                amount = price_per_share * number_of_shares - fee
-                self._execute_sell_order(
-                    cursor, stock_symbol, price_per_share, number_of_shares, fee, amount
-                )
+                print(f"Executing buy order: {order}")
+                self._execute_buy_order(cursor, order, conn)
 
-            # Update the order timestamp
-            cursor.execute('''
-                UPDATE orders
-                SET status = 'EXECUTED', timestamp_updated = ?
-                WHERE id = ?
-            ''', (datetime.now(timezone('Europe/Oslo')).strftime("%Y-%m-%d %H:%M:%S"), order_id))
+            elif order.order_type == 'SELL':
+                order.amount = order.price_per_share * order.number_of_shares - order.fee
 
-    def _execute_buy_order( # pylint: disable=too-many-arguments, too-many-positional-arguments
-            self, cursor, stock_symbol, price_per_share, number_of_shares, fee, amount
-        ):
+                print(f"Executing sell order: {order}")
+                self._execute_sell_order(order, conn)
+
+            # Mark the order as EXECUTED
+            order.status = "EXECUTED"
+            order.timestamp_updated = datetime.now(timezone('Europe/Oslo')).strftime("%Y-%m-%d %H:%M:%S")
+            order.save(conn)
+
+    def _execute_buy_order(self, cursor: sqlite3.Cursor, order: Order, conn: sqlite3.Connection):
         """
         Executes a buy order by updating the portfolio, transactions, and cash balance.
         """
 
         # Check if sufficient cash is available
-        cursor.execute("SELECT total_value FROM portfolio WHERE asset_type = 'CASH'")
-        cash = cursor.fetchone()[0]
-        if cash < amount:
-            raise ValueError("Insufficient cash balance to execute buy order.")
+        cash_port = Portfolio.get_by_key(conn, "CASH", None)
+        if not cash_port or cash_port.total_value < order.amount:
+            raise ValueError(
+                f"Insufficient total cash balance to execute buy order. "
+                f"Available: ${cash_port.total_value if cash_port else 0}, "
+                f"Required: ${order.amount}"
+            )
+
         # Update portfolio for the stock
         cursor.execute('''
             INSERT INTO portfolio (asset_type, stock_symbol, number_of_shares, price_per_share, total_value)
@@ -258,238 +273,240 @@ class SQLWrapper:
                     (portfolio.price_per_share * portfolio.number_of_shares + excluded.price_per_share * excluded.number_of_shares) /
                     (portfolio.number_of_shares + excluded.number_of_shares),
                 total_value = portfolio.total_value + excluded.total_value
-        ''', (stock_symbol, number_of_shares, price_per_share, amount - fee))
+        ''', (
+            order.stock_symbol,
+            order.number_of_shares,
+            order.price_per_share,
+            order.amount - order.fee
+        ))
 
         # Deduct the total_value from cash
-        cursor.execute('''
-            UPDATE portfolio
-            SET total_value = total_value - ?,
-                available = available - ?
-            WHERE asset_type = 'CASH'
-        ''', (amount, amount))
+        cash_port.total_value -= order.amount
+        cash_port.available -= order.amount
+        cash_port.save(conn)
 
-        timestamp = datetime.now(timezone('Europe/Oslo')).strftime('%Y-%m-%d %H:%M:%S')
+        # Create and insert a BUY Transaction
+        buy_txn = Transaction(
+            transaction_type="BUY",
+            stock_symbol=order.stock_symbol,
+            price_per_share=order.price_per_share,
+            number_of_shares=order.number_of_shares,
+            fee=order.fee,
+            amount=order.amount,
+            timestamp=datetime.now(timezone('Europe/Oslo')).strftime('%Y-%m-%d %H:%M:%S')
+        )
+        buy_txn.insert(conn)
 
-        # Record the transaction
-        cursor.execute('''
-            INSERT INTO transactions (transaction_type, stock_symbol, price_per_share, number_of_shares, fee, amount, timestamp)
-            VALUES ('BUY', ?, ?, ?, ?, ?, ?)
-        ''', (stock_symbol, price_per_share, number_of_shares, fee, amount, timestamp))
-
-    def _execute_sell_order( # pylint: disable=too-many-arguments, too-many-positional-arguments
-        self, cursor, stock_symbol, price_per_share, number_of_shares, fee, amount
-    ):
+    def _execute_sell_order(self, order: Order, conn: sqlite3.Connection):
         """
         Executes a sell order by updating the portfolio, transactions, and cash balance.
         """
 
         # Check if sufficient shares are available
-        cursor.execute('''
-            SELECT number_of_shares FROM portfolio 
-            WHERE asset_type = 'STOCK' AND stock_symbol = ?
-        ''', (stock_symbol,))
-        result = cursor.fetchone()
-        if not result or result[0] < number_of_shares:
-            raise ValueError("Insufficient shares to execute sell order.")
+        stock_port = Portfolio.get_by_key(conn, "STOCK", order.stock_symbol)
+        if not stock_port or stock_port.number_of_shares < order.number_of_shares:
+            raise ValueError(
+                f"Insufficient shares to execute sell order, "
+                f"Available: {stock_port.number_of_shares if stock_port else 0}, "
+                f"Required: {order.number_of_shares}"
+            )
 
         # Update portfolio for the stock
-        cursor.execute('''
-            UPDATE portfolio
-            SET number_of_shares = number_of_shares - ?, 
-                total_value = total_value - (? * price_per_share)
-            WHERE asset_type = 'STOCK' AND stock_symbol = ?
-        ''', (number_of_shares, number_of_shares, stock_symbol))
-
-        # Remove stock entry if all shares are sold
-        cursor.execute('''
-            DELETE FROM portfolio
-            WHERE asset_type = 'STOCK' AND stock_symbol = ? AND number_of_shares <= 0
-        ''', (stock_symbol,))
+        stock_port.number_of_shares -= order.number_of_shares
+        stock_port.total_value -= (order.number_of_shares * stock_port.price_per_share)
+        if stock_port.number_of_shares <= 0:
+            stock_port.delete(conn)
+        else:
+            stock_port.save(conn)
 
         # Update cash
-        cursor.execute('''
-            UPDATE portfolio
-            SET total_value = total_value + ?, 
-                available = available + ?
-            WHERE asset_type = 'CASH'
-        ''', (amount, amount))
+        cash_port = Portfolio.get_by_key(conn, "CASH", None)
+        cash_port.total_value += order.amount
+        cash_port.available += order.amount
+        cash_port.save(conn)
 
-        timestamp = datetime.now(timezone('Europe/Oslo')).strftime('%Y-%m-%d %H:%M:%S')
+        # Create and insert a SELL Transaction
+        sell_txn = Transaction(
+            transaction_type="SELL",
+            stock_symbol=order.stock_symbol,
+            price_per_share=order.price_per_share,
+            number_of_shares=order.number_of_shares,
+            fee=order.fee,
+            amount=order.amount,
+            timestamp=datetime.now(timezone('Europe/Oslo')).strftime('%Y-%m-%d %H:%M:%S')
+        )
+        sell_txn.insert(conn)
 
-        # Record the transaction
-        cursor.execute('''
-            INSERT INTO transactions (transaction_type, stock_symbol, price_per_share, number_of_shares, fee, amount, timestamp)
-            VALUES ('SELL', ?, ?, ?, ?, ?, ?)
-        ''', (stock_symbol, price_per_share, number_of_shares, fee, amount, timestamp))
-
-    def cancel_order(self, order_id):
+    def cancel_order(self, order_id: int):
         """
         Cancels a pending buy order by updating its status to 'CANCELED' and timestamp_updated.
         Restores the available cash for canceled BUY orders.
         """
         with self.connect() as conn:
-            cursor = conn.cursor()
-
-            # Fetch order details
-            cursor.execute('''
-                SELECT order_type, price_per_share, number_of_shares, fee, amount, status 
-                FROM orders WHERE id = ?
-            ''', (order_id,))
-            order = cursor.fetchone()
+            order = Order.get_by_id(conn, order_id)
             if not order:
-                raise ValueError("Order not found.")
+                raise ValueError(f"Order {order_id} not found.")
+            if order.status != "PENDING":
+                raise ValueError("Order is not in PENDING state; cannot cancel.")
 
-            order_type, _, _, _, amount, status = order
+            # If it's a BUY, restore the previously-deducted cash
+            if order.order_type == "BUY":
+                cash_port = Portfolio.get_by_key(conn, "CASH", None)
+                if cash_port:
+                    cash_port.available += order.amount
+                    cash_port.save(conn)
 
-            if status != 'PENDING':
-                raise ValueError("Order is not in a PENDING state and cannot be canceled.")
+            # Update the Order as CANCELED
+            order.status = "CANCELED"
+            order.timestamp_updated = datetime.now(timezone('Europe/Oslo')).strftime('%Y-%m-%d %H:%M:%S')
+            order.save(conn)
 
-            # Restore available cash for canceled BUY orders
-            if order_type == 'BUY':
-                cursor.execute('''
-                    UPDATE portfolio
-                    SET available = available + ?
-                    WHERE asset_type = 'CASH'
-                ''', (amount,))
-
-            # Update the order status and timestamp
-            cursor.execute('''
-                UPDATE orders
-                SET status = 'CANCELED', timestamp_updated = ?
-                WHERE id = ?
-            ''', (datetime.now(timezone('Europe/Oslo')), order_id))
-
-    def get_pending_orders(self):
+    def get_orders(self):
         """
-        Returns a list of all pending orders.
+        Retrieve all orders as a list of Order objects.
         """
         with self.connect() as conn:
-            cursor = conn.cursor()
-            cursor.execute('''
-                SELECT * FROM orders WHERE status = 'PENDING'
-            ''')
-            return cursor.fetchall()
+            return Order.all(conn)
 
-    def deposit(self, amount):
+    def get_orders_by_status(self, status: str):
+        """
+        Returns a list of orders filtered by a specific status.
+        """
+        with self.connect() as conn:
+            return Order.by_status(conn, status)
+
+    # ----------------------------------------------------------------------
+    # Transactions & Cash
+    # ----------------------------------------------------------------------
+
+    def deposit(self, amount: float):
         """
         Deposits the specified amount into the cash balance.
         """
         if amount <= 0:
-            raise ValueError("Deposit amount must be positive.")
+            raise ValueError(f"Deposit amount must be positive, amount: {amount}")
 
         with self.connect() as conn:
-            cursor = conn.cursor()
-
             # Update cash
-            cursor.execute('''
-                UPDATE portfolio
-                SET total_value = total_value + ?,
-                    available = available + ?
-                WHERE asset_type = 'CASH'
-            ''', (amount,amount))
+            cash_port = Portfolio.get_by_key(conn, "CASH", None)
+            cash_port.total_value += amount
+            cash_port.available += amount
+            cash_port.save(conn)
 
-            # Record the transaction
-            cursor.execute('''
-                INSERT INTO transactions (transaction_type, amount)
-                VALUES ('DEPOSIT', ?)
-            ''', (amount,))
+            # Create and insert a DEPOSIT
+            dep_txn = Transaction(
+                transaction_type="DEPOSIT",
+                amount=amount,
+                timestamp=datetime.now(timezone('Europe/Oslo')).strftime('%Y-%m-%d %H:%M:%S')
+            )
+            dep_txn.insert(conn)
 
-    def withdraw(self, amount):
+    def withdraw(self, amount: float):
         """
         Withdraws the specified amount from the cash balance.
         """
         if amount <= 0:
-            raise ValueError("Withdrawal amount must be positive.")
+            raise ValueError(f"Withdrawal amount must be positive, amount: {amount}.")
 
         with self.connect() as conn:
-            cursor = conn.cursor()
-
-            # Check if sufficient cash is available
-            cursor.execute("SELECT total_value FROM portfolio WHERE asset_type = 'CASH'")
-            cash = cursor.fetchone()[0]
-            if cash < amount:
-                raise ValueError("Insufficient cash balance to withdraw.")
+            cash_port = Portfolio.get_by_key(conn, "CASH", None)
+            if not cash_port or cash_port.total_value < amount or cash_port.available < amount:
+                raise ValueError(
+                    f"Insufficient cash balance to withdraw, "
+                    f"Available: ${cash_port.available if cash_port else 0}, "
+                    f"Total: ${cash_port.total_value if cash_port else 0}, "
+                    f"Required: ${amount}"
+                )
 
             # Update cash
-            cursor.execute('''
-                UPDATE portfolio
-                SET total_value = total_value - ?,
-                    available = available - ?
-                WHERE asset_type = 'CASH'
-            ''', (amount,amount))
+            cash_port.total_value -= amount
+            cash_port.available -= amount
+            cash_port.save(conn)
 
-            # Record the transaction
-            cursor.execute('''
-                INSERT INTO transactions (transaction_type, amount)
-                VALUES ('WITHDRAW', ?)
-            ''', (amount,))
+            # Create and insert a Transaction (WITHDRAW)
+            withdraw_txn = Transaction(
+                transaction_type="WITHDRAW",
+                amount=amount,
+                timestamp=datetime.now(timezone('Europe/Oslo')).strftime('%Y-%m-%d %H:%M:%S')
+            )
+            withdraw_txn.insert(conn)
 
-    def receive_dividend(self, stock_symbol, dividend_per_share):
+    def receive_dividend(self, stock_symbol: str, dividend_per_share: float):
         """
         Receives dividend for a stock and updates the cash balance.
         """
         if dividend_per_share <= 0:
-            raise ValueError("Dividend amount must be positive.")
+            raise ValueError(
+                f"Dividend amount must be positive, dividend_per_share: {dividend_per_share}."
+            )
 
         with self.connect() as conn:
-            cursor = conn.cursor()
-
             # Check if the stock exists in the portfolio
-            cursor.execute('''
-                SELECT number_of_shares FROM portfolio 
-                WHERE asset_type = 'STOCK' AND stock_symbol = ?
-            ''', (stock_symbol,))
-            result = cursor.fetchone()
-            if not result:
+            stock_port = Portfolio.get_by_key(conn, "STOCK", stock_symbol)
+            if not stock_port or not stock_port.number_of_shares:
                 raise ValueError(f"No shares of {stock_symbol} found in the portfolio.")
 
-            number_of_shares = result[0]
-            total_dividend = number_of_shares * dividend_per_share
+            total_dividend = stock_port.number_of_shares * dividend_per_share
 
             # Update cash
-            cursor.execute('''
-                UPDATE portfolio
-                SET total_value = total_value + ?,
-                    available = available + ?
-                WHERE asset_type = 'CASH'
-            ''', (total_dividend,total_dividend))
+            cash_port = Portfolio.get_by_key(conn, "CASH", None)
+            cash_port.total_value += total_dividend
+            cash_port.available += total_dividend
+            cash_port.save(conn)
 
-            # Record the transaction
-            cursor.execute('''
-                INSERT INTO transactions (transaction_type, stock_symbol, price_per_share, number_of_shares, amount)
-                VALUES ('DIVIDEND', ?, ?, ?, ?)
-            ''', (stock_symbol, dividend_per_share, number_of_shares, total_dividend))
+            # Create a DIVIDEND transaction
+            dividend_txn = Transaction(
+                transaction_type="DIVIDEND",
+                stock_symbol=stock_symbol,
+                price_per_share=dividend_per_share,
+                number_of_shares=stock_port.number_of_shares,
+                amount=total_dividend,
+                timestamp=datetime.now(timezone('Europe/Oslo')).strftime('%Y-%m-%d %H:%M:%S')
+            )
+            dividend_txn.insert(conn)
+
+    # ----------------------------------------------------------------------
+    # Portfolio
+    # ----------------------------------------------------------------------
 
     def get_cash_balance(self):
         """
         Returns the total cash balance.
         """
         with self.connect() as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT total_value FROM portfolio WHERE asset_type = 'CASH'")
-            return cursor.fetchone()[0]
+            cash_row = Portfolio.get_by_key(conn, "CASH", None)
+            return cash_row.total_value if cash_row else 0.0
 
     def get_cash_available(self):
         """
         Returns the available cash balance.
         """
         with self.connect() as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT available FROM portfolio WHERE asset_type = 'CASH'")
-            return cursor.fetchone()[0]
+            cash_row = Portfolio.get_by_key(conn, "CASH", None)
+            return cash_row.available if cash_row else 0.0
+
+    def get_portfolio(self):
+        """
+        Returns all rows in the portfolio as Portfolio objects.
+        """
+        with self.connect() as conn:
+            return Portfolio.all(conn)
+
+    def get_portfolio_value(self):
+        """
+        Returns the total value of the portfolio.
+        """
+        with self.connect() as conn:
+            portfolio_rows = Portfolio.all(conn)
+            return sum(row.total_value for row in portfolio_rows)
 
     def get_number_of_shares_for_stock(self, stock_symbol):
         """
         Returns the number of shares for a given stock symbol.
         """
         with self.connect() as conn:
-            cursor = conn.cursor()
-            cursor.execute('''
-                SELECT number_of_shares FROM portfolio 
-                WHERE asset_type = 'STOCK' AND stock_symbol = ?
-            ''', (stock_symbol,))
-            result = cursor.fetchone()
-            return result[0] if result else 0
+            stock_port = Portfolio.get_by_key(conn, "STOCK", stock_symbol)
+            return stock_port.number_of_shares if stock_port else 0
 
     def get_number_of_distinct_stocks(self):
         """
@@ -503,97 +520,38 @@ class SQLWrapper:
             ''')
             return cursor.fetchone()[0]
 
-    def get_portfolio_value(self):
-        """
-        Returns the total value of the portfolio.
-        """
-        with self.connect() as conn:
-            cursor = conn.cursor()
-            cursor.execute('''
-                SELECT SUM(total_value) FROM portfolio
-            ''')
-            return cursor.fetchone()[0]
-
-    def get_stock_in_portfolio(self, stock_symbol):
+    def get_stock_in_portfolio(self, stock_symbol: str):
         """
         Returns the portfolio row for a given stock symbol.
-
-        Parameters
-        ----------
-        stock_symbol : str
-            The stock symbol to retrieve the portfolio row for.
-
-        Returns
-        -------
-        tuple
-            The portfolio row for the given stock symbol, or None if not found.
         """
         with self.connect() as conn:
-            cursor = conn.cursor()
-            cursor.execute('''
-                SELECT * FROM portfolio 
-                WHERE asset_type = 'STOCK' AND stock_symbol = ?
-            ''', (stock_symbol,))
-            return cursor.fetchone()
+            return Portfolio.get_by_key(conn, "STOCK", stock_symbol)
 
-    def get_portfolio(self):
-        """
-        Returns the portfolio details.
-        """
-        with self.connect() as conn:
-            cursor = conn.cursor()
-            cursor.execute('''
-                SELECT * FROM portfolio
-            ''')
-            return cursor.fetchall()
+    # ----------------------------------------------------------------------
+    # Transactions
+    # ----------------------------------------------------------------------
 
     def get_transactions(self):
         """
-        Returns the transaction details.
+        Now return Transaction objects instead of raw tuples.
         """
         with self.connect() as conn:
-            cursor = conn.cursor()
-            cursor.execute('''
-                SELECT * FROM transactions
-            ''')
-            return cursor.fetchall()
-
-    def get_orders(self):
-        """
-        Returns the order details.
-        """
-        with self.connect() as conn:
-            cursor = conn.cursor()
-            cursor.execute('''
-                SELECT * FROM orders
-            ''')
-            return cursor.fetchall()
-
-    def caclulate_portfolio_value(self):
-        """
-        Calculate the total value of the portfolio.
-        """
-        with self.connect() as conn:
-            cursor = conn.cursor()
-            cursor.execute('''
-                SELECT SUM(total_value) FROM portfolio
-            ''')
-            return cursor.fetchone()[0]
+            return Transaction.all(conn)
 
 if __name__ == "__main__":
     sql_wrapper = SQLWrapper()
-    # sql_wrapper.create_tables()
+    sql_wrapper.create_tables()
 
     # Initial cash deposit
     # sql_wrapper.deposit(100000)
 
     # sql_wrapper.create_buy_order('AAPL', 258, 10, 15)
 
-    # sql_wrapper.execute_order(3)
+    # sql_wrapper.execute_order(1)
 
     # sql_wrapper.create_sell_order('AAPL', 200, 10, 20)
 
-    # sql_wrapper.execute_order(6)
+    # sql_wrapper.execute_order(2)
 
     # sql_wrapper.create_buy_order('NOD.OL', 180, 10, 5)
 
@@ -601,7 +559,7 @@ if __name__ == "__main__":
 
     # sql_wrapper.create_buy_order('AAPL', 180, 10)
 
-    # print(sql_wrapper.get_pending_orders())
+    # print(sql_wrapper.get_orders_by_status('PENDING'))
 
     # sql_wrapper.cancel_order(8)
 

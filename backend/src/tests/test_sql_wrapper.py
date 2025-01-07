@@ -2,7 +2,11 @@
 
 import os
 import pytest
+
 from src.storage.sql_wrapper import SQLWrapper
+from src.storage.portfolio import Portfolio
+from src.storage.transactions import Transaction
+from src.storage.orders import Order
 
 @pytest.fixture
 def wrapper():
@@ -59,18 +63,15 @@ def test_sql_wrapper_sequence(wrapper): # pylint: disable=too-many-statements, r
     # 1. Init SQLWrapper and create tables
     wrapper.create_tables()
     with wrapper.connect() as conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM portfolio")
-        portfolio = cursor.fetchall()
-        cursor.execute("SELECT * FROM transactions")
-        transactions = cursor.fetchall()
-        cursor.execute("SELECT * FROM orders")
-        orders = cursor.fetchall()
+        portfolio = Portfolio.all(conn)
+        transactions = Transaction.all(conn)
+        orders = Order.all(conn)
 
     assert len(portfolio) == 1
-    assert portfolio[0][0] == 'CASH'
-    assert portfolio[0][4] == 0  # total_value
-    assert portfolio[0][5] == 0  # available
+    cash_row = portfolio[0]
+    assert cash_row.asset_type == 'CASH'
+    assert cash_row.total_value == 0
+    assert cash_row.available == 0
     assert len(transactions) == 0
     assert len(orders) == 0
 
@@ -80,7 +81,8 @@ def test_sql_wrapper_sequence(wrapper): # pylint: disable=too-many-statements, r
     assert wrapper.get_cash_available() == 110000
     transactions = wrapper.get_transactions()
     assert len(transactions) == 1
-    assert transactions[0][1] == 'DEPOSIT'
+    assert transactions[0].transaction_type == 'DEPOSIT'
+    assert transactions[0].amount == 110000
 
     # 3. Withdraw 10000
     wrapper.withdraw(10000)
@@ -88,36 +90,45 @@ def test_sql_wrapper_sequence(wrapper): # pylint: disable=too-many-statements, r
     assert wrapper.get_cash_available() == 100000
     transactions = wrapper.get_transactions()
     assert len(transactions) == 2
-    assert transactions[1][1] == 'WITHDRAW'
+    assert transactions[1].transaction_type == 'WITHDRAW'
+    assert transactions[1].amount == 10000
 
     # 4. Create a buy order of 100 AAPL shares to 200kr each
     wrapper.create_buy_order("AAPL", price_per_share=200, number_of_shares=100)
     assert wrapper.get_cash_available() == 80000
-    orders = wrapper.get_pending_orders()
+    orders = wrapper.get_orders_by_status('PENDING')
     assert len(orders) == 1
-    assert orders[0][1] == 'BUY'
+    buy_order = orders[0]
+    assert buy_order.order_type == 'BUY'
+    assert buy_order.stock_symbol == 'AAPL'
+    assert buy_order.number_of_shares == 100
+    assert buy_order.price_per_share == 200
 
     # 5. Execute the buy order
-    wrapper.execute_order(orders[0][0])
+    wrapper.execute_order(buy_order.id)
     portfolio = wrapper.get_portfolio()
     assert any(row[1] == "AAPL" and row[2] == 100 for row in portfolio)  # Check AAPL in portfolio
     assert wrapper.get_cash_balance() == 80000
     transactions = wrapper.get_transactions()
-    assert len(transactions) == 3  # Includes 1 deposit, 1 withdraw and 1 buy
+    assert len(transactions) == 3  # DEPOSIT, WITHDRAW, BUY
+    buy_txn = [t for t in transactions if t.transaction_type == "BUY"]
+    assert len(buy_txn) == 1
+    assert buy_txn[0].stock_symbol == "AAPL"
+    assert buy_txn[0].number_of_shares == 100
 
     # 6. Create a buy order of 10 NOD shares to 100kr each
     wrapper.create_buy_order("NOD", price_per_share=100, number_of_shares=10)
     assert wrapper.get_cash_available() == 79000
-    orders = wrapper.get_pending_orders()
-    assert len(orders) == 1
+    orders_pending = wrapper.get_orders_by_status('PENDING')
+    assert len(orders_pending) == 1
 
     # 7. Execute the buy order
-    wrapper.execute_order(orders[0][0])
+    wrapper.execute_order(orders_pending[0].id)
     portfolio = wrapper.get_portfolio()
     assert any(row[1] == "NOD" and row[2] == 10 for row in portfolio)  # Check NOD in portfolio
     assert wrapper.get_cash_balance() == 79000
     transactions = wrapper.get_transactions()
-    assert len(transactions) == 4  # Includes 1 deposit, 1 withdraw and 2 buys
+    assert len(transactions) == 4  # DEPOSIT, WITHDRAW, BUY(AAPL), BUY(NOD)
 
     # 8. Try to sell 150 AAPL shares
     with pytest.raises(ValueError):
@@ -133,17 +144,27 @@ def test_sql_wrapper_sequence(wrapper): # pylint: disable=too-many-statements, r
 
     # 11. Place a sell order for 50 AAPL shares
     wrapper.create_sell_order("AAPL", price_per_share=250, number_of_shares=50)
-    orders = wrapper.get_pending_orders()
+    orders = wrapper.get_orders_by_status('PENDING')
     assert len(orders) == 1
-    assert orders[0][1] == 'SELL'
-    assert orders[0][2] == "AAPL"
+    sell_order = orders[0]
+    assert sell_order.order_type == 'SELL'
+    assert sell_order.stock_symbol == "AAPL"
+    assert sell_order.number_of_shares == 50
     assert wrapper.get_cash_available() == 79000
+    assert wrapper.get_cash_balance() == 79000
 
     # 12. Execute the sell order
-    wrapper.execute_order(orders[0][0])
+    wrapper.execute_order(sell_order.id)
     portfolio = wrapper.get_portfolio()
     assert any(row[1] == "AAPL" and row[2] == 50 for row in portfolio)
     assert wrapper.get_cash_balance() == 91500
     assert wrapper.get_cash_available() == 91500
+    
     transactions = wrapper.get_transactions()
-    assert len(transactions) == 5  # Includes 1 deposit, 1 withdraw, 2 buys and 1 sell
+    assert len(transactions) == 5  # DEPOSIT, WITHDRAW, BUY(AAPL), BUY(NOD), SELL(AAPL)
+    sell_txn = [t for t in transactions if t.transaction_type == "SELL"]
+    assert len(sell_txn) == 1
+    assert sell_txn[0].stock_symbol == "AAPL"
+    assert sell_txn[0].number_of_shares == 50
+    assert sell_txn[0].price_per_share == 250
+
