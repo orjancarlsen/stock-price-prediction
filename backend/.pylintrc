@@ -442,6 +442,7 @@ disable=raw-checker-failed,
         C0411, # Standard import "x" should be placed before "y".
         C0412, # Imports should be grouped by type.
         C0413, # Import "x" should be placed at the top of the module.
+        R0801, # Similar lines in %s files
         R0902, # Too many instance attributes
         R0913, # Too many arguments
         R0917  # Too many positional arguments
