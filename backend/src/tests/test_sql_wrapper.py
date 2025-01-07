@@ -167,4 +167,3 @@ def test_sql_wrapper_sequence(wrapper): # pylint: disable=too-many-statements, r
     assert sell_txn[0].stock_symbol == "AAPL"
     assert sell_txn[0].number_of_shares == 50
     assert sell_txn[0].price_per_share == 250
-
