@@ -107,7 +107,7 @@ def test_sql_wrapper_sequence(wrapper): # pylint: disable=too-many-statements, r
     # 5. Execute the buy order
     wrapper.execute_order(buy_order.id)
     portfolio = wrapper.get_portfolio()
-    assert any(row[1] == "AAPL" and row[2] == 100 for row in portfolio)  # Check AAPL in portfolio
+    assert any(row.stock_symbol == "AAPL" and row.number_of_shares == 100 for row in portfolio)  # Check AAPL in portfolio
     assert wrapper.get_cash_balance() == 80000
     transactions = wrapper.get_transactions()
     assert len(transactions) == 3  # DEPOSIT, WITHDRAW, BUY
@@ -125,7 +125,7 @@ def test_sql_wrapper_sequence(wrapper): # pylint: disable=too-many-statements, r
     # 7. Execute the buy order
     wrapper.execute_order(orders_pending[0].id)
     portfolio = wrapper.get_portfolio()
-    assert any(row[1] == "NOD" and row[2] == 10 for row in portfolio)  # Check NOD in portfolio
+    assert any(row.stock_symbol == "NOD" and row.number_of_shares == 10 for row in portfolio)  # Check NOD in portfolio
     assert wrapper.get_cash_balance() == 79000
     transactions = wrapper.get_transactions()
     assert len(transactions) == 4  # DEPOSIT, WITHDRAW, BUY(AAPL), BUY(NOD)
@@ -156,10 +156,10 @@ def test_sql_wrapper_sequence(wrapper): # pylint: disable=too-many-statements, r
     # 12. Execute the sell order
     wrapper.execute_order(sell_order.id)
     portfolio = wrapper.get_portfolio()
-    assert any(row[1] == "AAPL" and row[2] == 50 for row in portfolio)
+    assert any(row.stock_symbol == "AAPL" and row.number_of_shares == 50 for row in portfolio)
     assert wrapper.get_cash_balance() == 91500
     assert wrapper.get_cash_available() == 91500
-    
+
     transactions = wrapper.get_transactions()
     assert len(transactions) == 5  # DEPOSIT, WITHDRAW, BUY(AAPL), BUY(NOD), SELL(AAPL)
     sell_txn = [t for t in transactions if t.transaction_type == "SELL"]
