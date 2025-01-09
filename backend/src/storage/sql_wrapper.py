@@ -552,9 +552,11 @@ if __name__ == "__main__":
     # Initial cash deposit
     # sql_wrapper.deposit(100000)
 
-    # sql_wrapper.create_buy_order('AAPL', 258, 10, 15)
+    # sql_wrapper.create_buy_order('AAPL', 250, 10, 15)
 
     # sql_wrapper.execute_order(1)
+    # sql_wrapper.execute_order(3)
+    # sql_wrapper.execute_order(5)
 
     # sql_wrapper.create_sell_order('AAPL', 200, 10, 20)
 
@@ -577,10 +579,10 @@ if __name__ == "__main__":
 
     # sql_wrapper.create_buy_order('NOD', 110, 40)
     # sql_wrapper.execute_order(11)
-    # sql_wrapper.receive_dividend('AAPL', 2)
+    # sql_wrapper.receive_dividend('NHY.OL', 10)
 
-    # sql_wrapper.create_sell_order('AAPL', 200, 10, 20)
-    # sql_wrapper.execute_order(12)
+    # sql_wrapper.create_sell_order('MOWI.OL', 200, 55, 0)
+    # sql_wrapper.execute_order(11)
 
     # sql_wrapper.create_buy_order('AAPL', 180, 10)
     # sql_wrapper.execute_order(13)

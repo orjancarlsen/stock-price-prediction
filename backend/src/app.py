@@ -10,6 +10,7 @@ from yfinance.exceptions import YFPricesMissingError
 
 from src.data.data_transformer import DataTransformer # pylint: disable=import-error
 from src.model.regressor import Regressor             # pylint: disable=import-error
+from src.storage.sql_wrapper import SQLWrapper
 
 N_DAYS = 200
 
@@ -122,6 +123,16 @@ def get_stock_price(ticker: str):
     print("Number of dates: ", len(dates))
 
     return jsonify({'dates': dates, 'prices': prices})
+
+
+@app.route('/transactions', methods=['GET'])
+def get_transactions():
+    """
+    Get all transactions from the database.
+    """
+    sql_wrapper = SQLWrapper()
+    transactions = sql_wrapper.get_transactions()
+    return jsonify([transaction.__dict__ for transaction in transactions])
 
 
 if __name__ == '__main__':

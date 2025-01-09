@@ -13,7 +13,7 @@ interface UseFetchPricesResult {
     error: string | null;
 }
 
-const useFetchPrices = (ticker: string, fromDate: string, toDate: string): UseFetchPricesResult => {
+export const useFetchPrices = (ticker: string, fromDate: string, toDate: string): UseFetchPricesResult => {
     const [data, setData] = useState<PriceData>({ dates: [], prices: [] });
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
