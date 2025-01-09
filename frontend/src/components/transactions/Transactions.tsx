@@ -84,7 +84,7 @@ const Transactions: React.FC<TransactionsProps> = ({ transactions }) => {
     <div
       style={{
         width: '350px',
-        height: '500px',
+        height: '464px',
         display: 'flex',
         flexDirection: 'column',
         margin: '1rem',
