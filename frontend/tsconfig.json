@@ -1,22 +1,26 @@
 {
-    "compilerOptions": {
-      "target": "ES6",                        // Target ECMAScript 6
-      "module": "ESNext",                     // Use ESNext module system
-      "lib": ["DOM", "DOM.Iterable", "ESNext"], // Include browser-specific libraries
-      "allowJs": true,                        // Allow JavaScript files to be compiled
-      "jsx": "react",                         // Use React JSX
-      "moduleResolution": "node",            // Resolve modules as Node.js does
-      "esModuleInterop": true,                // Enable compatibility with ES module systems
-      "skipLibCheck": true,                   // Skip type checks on declaration files
-      "forceConsistentCasingInFileNames": true, // Enforce case-sensitive imports
-      "strict": true                          // Enable strict type checking
-    },
-    "include": [
-      "src"                                   // Include all files in the `src` directory
-    ],
-    "exclude": [
-      "node_modules",                         // Exclude `node_modules`
-      "dist"                                  // Exclude build output
-    ]
-  }
-  
+  "compilerOptions": {
+    "target": "ES6",                        // Target ECMAScript 6
+    "module": "ESNext",                     // Use ESNext module system
+    "lib": ["DOM", "DOM.Iterable", "ESNext"], // Include browser-specific libraries
+    "allowJs": true,                        // Allow JavaScript files to be compiled
+    "jsx": "react",                         // Use React JSX
+    "moduleResolution": "node",            // Resolve modules as Node.js does
+    "esModuleInterop": true,                // Enable compatibility with ES module systems
+    "skipLibCheck": true,                   // Skip type checks on declaration files
+    "forceConsistentCasingInFileNames": true, // Enforce case-sensitive imports
+    "strict": true,                          // Enable strict type checking
+    "baseUrl": ".",            
+    "paths": {
+      "@assets/*": ["src/assets/*"] 
+    }
+  },
+  "include": [
+    "src",                                  // Include all files in the `src` directory
+    "src/@types"                            // Include all files in the `src/@types` directory
+  ],
+  "exclude": [
+    "node_modules",                         // Exclude `node_modules`
+    "dist"                                  // Exclude build output
+  ]
+}
