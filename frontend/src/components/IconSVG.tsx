@@ -5,7 +5,7 @@ import AddToCartIcon from '@assets/add-to-cart.svg';
 import RemoveFromCartIcon from '@assets/remove-from-cart.svg';
 import DepositIcon from '@assets/deposit.svg';
 import WithdrawIcon from '@assets/withdraw.svg';
-
+import DividendIcon from '@assets/dollar.svg';
 
 interface IconSVGProps {
     icon: IconSVGType;
@@ -25,6 +25,8 @@ export const IconSVG = ({ icon, width = 20, height = 20 }: IconSVGProps) => {
             return <DepositIcon width={width} height={height} />;
         case IconSVGType.Withdraw:
             return <WithdrawIcon width={width} height={height} />;
+        case IconSVGType.Dividend:
+            return <DividendIcon width={width} height={height} />;
         default:
             return null;
     }
