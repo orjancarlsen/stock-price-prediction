@@ -579,7 +579,7 @@ if __name__ == "__main__":
 
     # sql_wrapper.create_buy_order('NOD', 110, 40)
     # sql_wrapper.execute_order(11)
-    # sql_wrapper.receive_dividend('AAPL', 2)
+    # sql_wrapper.receive_dividend('NHY.OL', 10)
 
     # sql_wrapper.create_sell_order('MOWI.OL', 200, 55, 0)
     # sql_wrapper.execute_order(11)
