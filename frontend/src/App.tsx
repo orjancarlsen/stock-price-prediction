@@ -2,9 +2,11 @@ import React, { useState, ChangeEvent } from 'react';
 import Graph from './components/GradientGraph';
 import TypingFieldDropdown from './components/TypingFieldDropdown';
 import Transactions from './components/transactions/Transactions';
+import Orders from './components/orders/Orders';
 import { useFetchCompanies } from './hooks/useFetchCompanies';
 import { useFetchPrices } from './hooks/useFetchPrices';
 import { useFetchTransactions } from './hooks/useFetchTransactions';
+import { useFetchOrders } from './hooks/useFetchOrders';
 
 function App() {
   const [selectedCompany, setSelectedCompany] = useState<string>('');
@@ -23,6 +25,9 @@ function App() {
 
   const transactions = useFetchTransactions();
   console.log("Transactions:", transactions);
+
+  const orders = useFetchOrders();
+  console.log("Orders:", orders);
 
   const handleCompanyChange = (e: ChangeEvent<HTMLSelectElement>) => {
     setSelectedCompany(e.target.value);
@@ -49,6 +54,10 @@ function App() {
 
       {transactions && transactions.length > 0 && (
         <Transactions transactions={transactions} />
+      )}
+
+      {orders && orders.length > 0 && (
+        <Orders orders={orders} />
       )}
 
       {selectedCompany && historicCompanyPrices.dates.length > 0 && (

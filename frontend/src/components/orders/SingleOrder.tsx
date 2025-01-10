@@ -1,22 +1,18 @@
-import React from 'react';
-import { Transaction, IconSVGType } from '../../types';
+import React from "react";
+import { Order, IconSVGType } from "../../types";
+import { formatSingleDecimal } from './Orders';
 import { IconSVG } from './../IconSVG';
-import { formatSingleDecimal } from './Transactions';
 
-interface StockTransactionProps {
-    transaction: Transaction;
+interface SingleOrderProps {
+    order: Order;
 }
 
-/**
- * Displays a transaction row for BUY, SELL, or DIVIDEND, i.e. transactions with stock-related fields.
- */
-const StockTransaction: React.FC<StockTransactionProps> = ({ transaction }) => {
-    const formattedPrice = `${transaction.price_per_share?.toLocaleString()} NOK`
-
-    const formattedAmount = formatSingleDecimal(transaction.amount);
+const SingleOrder: React.FC<SingleOrderProps> = ({ order }) => {
+    const formattedAmount = formatSingleDecimal(order.amount);
+    const formattedPrice = `${order.price_per_share.toLocaleString()} NOK`
 
     return (
-        <tr
+        <div
             style={{
                 backgroundColor: '#f9f9f9',
                 border: '1px solid #ccc',
@@ -27,12 +23,12 @@ const StockTransaction: React.FC<StockTransactionProps> = ({ transaction }) => {
         >
             <div style={{ padding: '8px', textAlign: 'center', marginRight: '10px' }}>
                 <IconSVG
-                    icon={transaction.transaction_type as IconSVGType}
+                    icon={order.status as IconSVGType}
                     width={28}
                     height={28}
                 />
-                <div style={{ fontSize: '0.7rem', marginTop: '4px' }}>
-                    {transaction.transaction_type}
+                    <div style={{ fontSize: '0.7rem', marginTop: '4px' }}>
+                    {order.status}
                 </div>
             </div>
 
@@ -46,13 +42,10 @@ const StockTransaction: React.FC<StockTransactionProps> = ({ transaction }) => {
                     marginRight: '10px',
                 }}
             >
-                <div>
-                        {transaction.stock_symbol}
-                </div>
-                <div>
-                        {formattedAmount}
-                </div>
+                <div>{order.stock_symbol}</div>
+                <div>{formattedAmount}</div>
             </div>
+            
             <div
                 style={{
                     padding: '8px',
@@ -66,7 +59,7 @@ const StockTransaction: React.FC<StockTransactionProps> = ({ transaction }) => {
                     <span style={{ minWidth: '48px', display: 'inline-block' }}>
                         Antall:
                     </span>
-                    {transaction.number_of_shares}
+                    {order.number_of_shares}
                 </div>
                 <div>
                     <span style={{ minWidth: '48px', display: 'inline-block' }}>
@@ -75,8 +68,9 @@ const StockTransaction: React.FC<StockTransactionProps> = ({ transaction }) => {
                     {formattedPrice}
                 </div>
             </div>
-        </tr>
-    );
+
+        </div>
+      );
 };
 
-export default StockTransaction;
+export default SingleOrder;
