@@ -2,6 +2,7 @@ import React from 'react';
 import { Order, IconSVGType } from '../../types';
 import { IconSVG } from './../IconSVG';
 import SingleOrder from './SingleOrder';
+import PageFlipper from '../PageFlipper';
 
 export function formatSingleDecimal(value: number | null | undefined): string {
     if (value == null) return 'N/A';
@@ -81,7 +82,7 @@ const Orders: React.FC<OrderProps> = ({ orders }) => {
     return (
         <div
             style={{
-                width: '350px',
+                width: '380px',
                 height: '464px',
                 display: 'flex',
                 flexDirection: 'column',
@@ -140,40 +141,11 @@ const Orders: React.FC<OrderProps> = ({ orders }) => {
                 </table>
             </div>
 
-            {/* PAGE FLIPPER - At the Bottom */}
-            <div
-                style={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                gap: '1rem',
-                borderTop: '1px solid #ccc',
-                padding: '0.5rem 0',
-                }}
-            >
-                {/* Left Arrow */}
-                <button
-                onClick={() => setPage((prev) => Math.max(prev - 1, 0))}
-                disabled={page === 0}
-                style={{ fontSize: '1.1rem', padding: '0.25rem 0.5rem' }}
-                >
-                &larr; {/* or "←" */}
-                </button>
-
-                {/* Page Indicator, e.g. "1 / 4" */}
-                <span style={{ fontSize: '1rem' }}>
-                {page + 1} / {totalPages}
-                </span>
-
-                {/* Right Arrow */}
-                <button
-                onClick={() => setPage((prev) => Math.min(prev + 1, totalPages - 1))}
-                disabled={page === totalPages - 1}
-                style={{ fontSize: '1.1rem', padding: '0.25rem 0.5rem' }}
-                >
-                &rarr; {/* or "→" */}
-                </button>
-            </div>
+            <PageFlipper
+                currentPage={page}
+                totalPages={totalPages}
+                onPageChange={setPage}
+            />
         </div>
     );
 };
