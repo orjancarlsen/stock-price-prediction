@@ -135,5 +135,15 @@ def get_transactions():
     return jsonify([transaction.__dict__ for transaction in transactions])
 
 
+@app.route('/orders', methods=['GET'])
+def get_orders():
+    """
+    Get all orders from the database.
+    """
+    sql_wrapper = SQLWrapper()
+    orders = sql_wrapper.get_orders()
+    return jsonify([order.__dict__ for order in orders])
+
+
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=2000)

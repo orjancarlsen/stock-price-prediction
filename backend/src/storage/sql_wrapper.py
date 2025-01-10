@@ -570,7 +570,7 @@ if __name__ == "__main__":
 
     # print(sql_wrapper.get_orders_by_status('PENDING'))
 
-    # sql_wrapper.cancel_order(8)
+    # sql_wrapper.cancel_order(9)
 
     # sql_wrapper.withdraw(1178.01)
 

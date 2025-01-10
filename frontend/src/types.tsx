@@ -16,6 +16,21 @@ export interface Transaction {
     timestamp: Date;
 }
 
+export type OrderStatus = 'PENDING' | 'EXECUTED' | 'CANCELED';
+
+export interface Order {
+  id: number;
+  order_type: string;
+  stock_symbol: string;
+  price_per_share: number;
+  number_of_shares: number;
+  fee: number;
+  amount: number;
+  status: OrderStatus;
+  timestamp_created: Date;
+  timestamp_updated?: Date;
+}
+
 export enum IconSVGType {
   Calendar = 'CALENDAR',
   Buy = 'BUY',
@@ -23,4 +38,7 @@ export enum IconSVGType {
   Deposit = 'DEPOSIT',
   Withdraw = 'WITHDRAW',
   Dividend = 'DIVIDEND',
+  Pending = 'PENDING',
+  Executed = 'EXECUTED',
+  Canceled = 'CANCELED',
 }
