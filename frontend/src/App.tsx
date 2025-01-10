@@ -10,7 +10,7 @@ import { useFetchOrders } from './hooks/useFetchOrders';
 import ContentSwitch from './components/ContentSwitch';
 
 function App() {
-  const [view, setView] = useState<'orders' | 'transactions'>('orders');
+  const [view, setView] = useState<'orders' | 'transactions'>('transactions');
   const [selectedCompany, setSelectedCompany] = useState<string>('');
 
   // Fetch calls
