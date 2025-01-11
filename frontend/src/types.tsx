@@ -31,6 +31,20 @@ export interface Order {
   timestamp_updated?: Date;
 }
 
+export enum AssetType {
+  STOCK = 'STOCK',
+  CASH = 'CASH',
+}
+
+export interface Asset {
+  asset_type: AssetType;
+  stock_symbol?: string;
+  number_of_shares?: number;
+  price_per_share?: number;
+  total_value: number;
+  available?: number;
+}
+
 export enum IconSVGType {
   Calendar = 'CALENDAR',
   Buy = 'BUY',

@@ -25,7 +25,7 @@ class Portfolio:
     ):
         # The primary key is (asset_type, stock_symbol)
         self.asset_type = asset_type  # e.g. 'CASH' or 'STOCK'
-        self.stock_symbol = stock_symbol  # can be None for 'CASH'
+        self.stock_symbol = stock_symbol
         self.number_of_shares = number_of_shares
         self.price_per_share = price_per_share
         self.total_value = total_value

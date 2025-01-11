@@ -4,17 +4,6 @@ import { IconSVG } from './../IconSVG';
 import SingleOrder from './SingleOrder';
 import PageFlipper from '../PageFlipper';
 
-export function formatSingleDecimal(value: number | null | undefined): string {
-    if (value == null) return 'N/A';
-    const rounded = Math.round(value * 10) / 10;
-    return Number.isInteger(rounded)
-        ? `${rounded.toLocaleString()} NOK`
-        : `${rounded.toLocaleString(undefined, {
-            minimumFractionDigits: 1,
-            maximumFractionDigits: 1,
-        })} NOK`;
-}
-
 function getDateString(date: Date): string {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');

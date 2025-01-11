@@ -145,5 +145,15 @@ def get_orders():
     return jsonify([order.__dict__ for order in orders])
 
 
+@app.route('/portfolio', methods=['GET'])
+def get_portfolio():
+    """
+    Get the portfolio from the database.
+    """
+    sql_wrapper = SQLWrapper()
+    portfolio = sql_wrapper.get_portfolio()
+    return jsonify([port.__dict__ for port in portfolio])
+
+
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=2000)

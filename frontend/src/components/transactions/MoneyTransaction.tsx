@@ -1,7 +1,7 @@
 import React from 'react';
 import { Transaction, IconSVGType } from '../../types';
 import { IconSVG } from './../IconSVG';
-import { formatSingleDecimal } from './Transactions';
+import { formatSingleDecimal } from '../../utils';
 
 interface MoneyTransactionProps {
   transaction: Transaction;
