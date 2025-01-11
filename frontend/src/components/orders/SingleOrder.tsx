@@ -1,6 +1,6 @@
 import React from "react";
 import { Order, IconSVGType } from "../../types";
-import { formatSingleDecimal } from './Orders';
+import { formatSingleDecimal } from '../../utils';
 import { IconSVG } from './../IconSVG';
 
 interface SingleOrderProps {
