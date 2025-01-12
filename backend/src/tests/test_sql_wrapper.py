@@ -38,10 +38,11 @@ def test_sql_wrapper_create_tables(wrapper): # pylint: disable=redefined-outer-n
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
         tables = cursor.fetchall()
     tables = [table for table in tables if table[0] != 'sqlite_sequence']
-    assert len(tables) == 3
+    assert len(tables) == 4
     assert ('portfolio',) in tables
     assert ('transactions',) in tables
     assert ('orders',) in tables
+    assert ('portfolio_values',) in tables
 
 def test_sql_wrapper_sequence(wrapper): # pylint: disable=too-many-statements, redefined-outer-name
     """
