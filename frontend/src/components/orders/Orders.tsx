@@ -98,7 +98,7 @@ const Orders: React.FC<OrderProps> = ({ orders }) => {
                                 <tr>
                                     <td
                                         style={{
-                                            padding: '4px 0',
+                                            padding: '8px 0',
                                             fontWeight: 'normal',
                                             textAlign: 'left',
                                             fontSize: '0.7rem',

@@ -33,6 +33,8 @@ def trading():
     # Decide orders to create
     broker.create_orders(predictions)
 
+    broker.update_portfolio_value()
+
 
 if __name__ == "__main__":
     trading()

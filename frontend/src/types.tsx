@@ -43,6 +43,12 @@ export interface Asset {
   price_per_share?: number;
   total_value: number;
   available?: number;
+  todays_value?: number;
+}
+
+export interface PortfolioValue {
+    date: Date;
+    value: number;
 }
 
 export enum IconSVGType {
