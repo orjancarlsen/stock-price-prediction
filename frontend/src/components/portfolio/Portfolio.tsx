@@ -2,7 +2,7 @@ import React from 'react';
 import { singleDecimal } from '../../utils';
 import { Asset, AssetType, PortfolioValue } from '../../types';
 import StockRow from './StockRow';
-import Graph from '../GradientGraph';
+import GraphWithTimeFrame from '../graph/GraphWithTimeFrame';
 
 interface PortfolioProps {
   portfolio: Asset[];
@@ -64,7 +64,7 @@ const Portfolio: React.FC<PortfolioProps> = ({ portfolio, portfolioValues }) => 
             </div>
 
             <div style={{ flex: 1}}>
-                <Graph 
+                <GraphWithTimeFrame 
                     historicCompanyPrices={{ 
                         dates: portfolioValues.map(v => new Date(v.date).toISOString().split('T')[0]), 
                         prices: portfolioValues.map(v => v.value) 

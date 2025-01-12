@@ -1,5 +1,5 @@
 import React, { useState, ChangeEvent } from 'react';
-import Graph from './components/GradientGraph';
+import Graph from './components/graph/GradientGraph';
 import TypingFieldDropdown from './components/TypingFieldDropdown';
 import Transactions from './components/transactions/Transactions';
 import Orders from './components/orders/Orders';
