@@ -92,5 +92,13 @@ class PortfolioValue:
         )
         conn.execute(query, values)
 
+    @classmethod
+    def delete(self, conn: sqlite3.Connection, date: datetime) -> None:
+        """
+        Delete this PortfolioValue from the DB.
+        """
+        query = f"DELETE FROM {self.TABLE_NAME} WHERE date = ?"
+        conn.execute(query, (date,))
+
     def __repr__(self):
         return f"PortfolioValue(date={self.date}, value={self.value})"

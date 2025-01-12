@@ -1,6 +1,7 @@
 """Broker module to handle trading"""
 
-from datetime import datetime
+from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
 from typing import List
 import yfinance as yf
 from pytz import timezone
@@ -196,7 +197,7 @@ class Broker:
         tick_size = 0.1
         return round(round(number / tick_size) * tick_size, 1)
 
-    def conclude_pending_orders_for_traded_stocks(self, tickers: List[str]) -> List[tuple]:
+    def conclude_pending_orders_for_traded_stocks(self, tickers: List[str], todays_date: datetime) -> List[tuple]:
         """
         Checks if the exchange was open today for the given list of tickers.
         If it was open, all pending orders for the tickers are checked and executed if the price
@@ -214,12 +215,16 @@ class Broker:
         """
         open_tickers = []
         for ticker in tickers:
-            todays_prices = yf.download(ticker, period='1d')
-            todays_prices.reset_index(inplace=True)
-            last_traded_date = todays_prices['Date'].iloc[-1].to_pydatetime().date()
+            end_date = todays_date + relativedelta(days=1)
+            try:
+                todays_prices = yf.download(ticker, start=todays_date, end=end_date, auto_adjust=False)
+                todays_prices.reset_index(inplace=True)
+                last_traded_date = todays_prices['Date'].iloc[-1].to_pydatetime().date()
+            except IndexError:
+                continue
 
             # Check if the exchange was open today and stock was traded
-            if last_traded_date != datetime.now(timezone('Europe/Oslo')).date():
+            if last_traded_date != todays_date:
                 continue
 
             open_tickers.append(ticker)
@@ -242,13 +247,14 @@ class Broker:
                     self.sql_wrapper.execute_order(
                         order_id=order.id,
                         _price_per_share=todays_prices['Open'].values[0][0],
-                        _fee=_fee
+                        _fee=_fee,
+                        _date=todays_date
                     )
                 elif (order.order_type == 'BUY'
                       and todays_prices['Low'].values[0][0] <= order.price_per_share):
                     # If the order was a buy order and the lowest price was lower than the buy
                     # threshold, the order was executed
-                    self.sql_wrapper.execute_order(order.id)
+                    self.sql_wrapper.execute_order(order.id, _date=todays_date)
                 elif (order.order_type == 'SELL'
                       and todays_prices['Open'].values[0][0] >= order.price_per_share):
                     # If the order was a sell order and the open price was higher than the sell
@@ -260,20 +266,21 @@ class Broker:
                             ticker,
                             todays_prices['Open'].values[0][0],
                             order.number_of_shares
-                        )
+                        ),
+                        _date=todays_date
                     )
                 elif (order.order_type == 'SELL' and
                       todays_prices['High'].values[0][0] >= order.price_per_share):
                     # If the order was a sell order and the highest price was higher than the sell
                     # threshold, the order was executed
-                    self.sql_wrapper.execute_order(order.id)
+                    self.sql_wrapper.execute_order(order.id, _date=todays_date)
                 else:
                     # If the price threshold was not met, the order is cancelled
-                    self.sql_wrapper.cancel_order(order.id)
+                    self.sql_wrapper.cancel_order(order.id, date=todays_date)
                 break
         return open_tickers
 
-    def create_orders(self, predictions: List[StockPrediction]) -> None:
+    def create_orders(self, predictions: List[StockPrediction], date: datetime = None) -> None:
         """
         Creates orders for the top predictions.
         """
@@ -289,21 +296,45 @@ class Broker:
                         prediction.ticker,
                         prediction.sell_threshold,
                         number_of_shares
-                    )
+                    ),
+                    date=date
                 )
             else:
-                self.sql_wrapper.create_buy_order(
-                    stock_symbol=prediction.ticker,
-                    price_per_share=prediction.buy_threshold,
-                    number_of_shares=prediction.number_of_shares,
-                    fee=self.calculate_fee(
-                        prediction.ticker,
-                        prediction.buy_threshold,
-                        prediction.number_of_shares
+                try:
+                    self.sql_wrapper.create_buy_order(
+                        stock_symbol=prediction.ticker,
+                        price_per_share=prediction.buy_threshold,
+                        number_of_shares=prediction.number_of_shares,
+                        fee=self.calculate_fee(
+                            prediction.ticker,
+                            prediction.buy_threshold,
+                            prediction.number_of_shares
+                        ),
+                        date=date
                     )
-                )
+                except ValueError as e:
+                    print(f"Error creating buy order for {prediction.ticker}: {e}")
+                    continue
 
-    def get_market_value_of_stocks_in_portfolio(self) -> float:
+    def dividend_payout(self, date: datetime) -> None:
+        """
+        Pays out dividends to the user.
+        """
+        portfolio = self.sql_wrapper.get_portfolio()
+        for stock in portfolio:
+            if stock.stock_symbol is not None:
+                try:
+                    dividend_per_share = yf.Ticker(stock.stock_symbol).history(start=date, end=date + timedelta(days=1), auto_adjust=False)['Dividends'].values[0]
+                except KeyError:
+                    continue
+                if dividend_per_share > 0:
+                    self.sql_wrapper.receive_dividend(
+                        stock.stock_symbol,
+                        dividend_per_share,
+                        date
+                    )
+
+    def get_market_value_of_stocks_in_portfolio(self, date: datetime = datetime.now(timezone('Europe/Oslo'))) -> float:
         """
         Calculates the market value of the stocks in the portfolio.
 
@@ -315,15 +346,21 @@ class Broker:
         market_value = 0
         portfolio = self.sql_wrapper.get_portfolio()
         for stock in portfolio:
-            share_value = yf.Ticker(stock.stock_symbol).history(period='1d')['Close'].values[0]
-            market_value += stock.number_of_shares * share_value
+            if stock.stock_symbol is not None:
+                # Adjust start date by 1+0 days to be sure we get a period with a valid close price
+                share_value = yf.Ticker(stock.stock_symbol).history(start=date - timedelta(days=10), end=date + timedelta(days=1), auto_adjust=False)['Close'].values[-1]
+                market_value += stock.number_of_shares * share_value
         return market_value
 
-    def update_portfolio_value(self) -> None:
+    def update_portfolio_value(self, date: datetime) -> None:
         """
         Updates the portfolio value in the database.
         """
         cash = self.sql_wrapper.get_cash_balance()
-        stock_value = self.get_market_value_of_stocks_in_portfolio()
-        date = datetime.now(timezone('Europe/Oslo')).date()
-        self.sql_wrapper.set_portfolio_values(date, cash + stock_value)
+        try:
+            stock_value = self.get_market_value_of_stocks_in_portfolio(date)
+            self.sql_wrapper.set_portfolio_values(date, cash + stock_value)
+            print(f"PORTFOLIO VALUE UPDATED TO {cash + stock_value} ON {date}")
+        except IndexError:
+            print(f"Error updating portfolio value on {date}")
+            pass

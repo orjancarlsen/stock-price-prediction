@@ -140,8 +140,9 @@ def get_orders():
     """
     Get all orders from the database.
     """
+    limit = request.args.get('limit', default=100, type=int)
     sql_wrapper = SQLWrapper()
-    orders = sql_wrapper.get_orders()
+    orders = sql_wrapper.get_orders()[-limit:]
     return jsonify([order.__dict__ for order in orders])
 
 

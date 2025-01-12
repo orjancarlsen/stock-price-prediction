@@ -2,8 +2,8 @@ name: Daily Trading Logic
 
 on:
   schedule:
-    # Every weekday at 10:30 PM UTC
-    - cron: '30 22 * * 1-5'
+    # Every weekday at 8:00 PM UTC
+    - cron: '0 20 * * 1-5'
   workflow_dispatch:
 
 jobs:

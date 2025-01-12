@@ -1,5 +1,6 @@
 """Module providing class to process stock data"""
 
+from datetime import datetime
 from typing import Tuple
 
 import yfinance as yf
@@ -164,7 +165,7 @@ class DataTransformer:
         self.x_test = np.array(self.x_test)
         self.y_test = np.array(self.y_test)
 
-    def get_past_n_days(self, n_days: int) -> np.ndarray:
+    def get_past_n_days(self, n_days: int, start_date: datetime = None, end_date: datetime = None) -> np.ndarray:
         """
         Get the last n_days of data from the dataset to do a prediction.
 
@@ -172,13 +173,18 @@ class DataTransformer:
         ----------
         n_days : int
             Number of days to retrieve.
+        start_date : datetime
+            A date which is a year ago from the date to predict.
 
         Returns
         -------
         np.ndarray
             Array containing the last n_days of data.
         """
-        past_n_days = yf.download(self.ticker, period='1y').tail(n_days)
+        if start_date:
+            past_n_days = yf.download(self.ticker, start=start_date, end=end_date).tail(n_days)
+        else:
+            past_n_days = yf.download(self.ticker, period='1y').tail(n_days)
         past_n_days = past_n_days[self.x_features].copy()
 
         # Apply the stored scales to the past n days data

@@ -1,8 +1,10 @@
 """Trading logic to be ran daily."""
 
+from datetime import datetime
 from src.app import N_DAYS
 from src.business.broker import Broker, StockPrediction
 from src.model.regressor import Regressor
+from pytz import timezone
 
 
 def trading():
@@ -12,7 +14,7 @@ def trading():
 
     # Checking orders and making predictions is only necessary if there have been
     # activity in the stock since last time. Either set existing orders as executed or cancel them.
-    tickers = broker.conclude_pending_orders_for_traded_stocks(tickers)
+    tickers = broker.conclude_pending_orders_for_traded_stocks(tickers, todays_date=datetime.now(timezone('Europe/Oslo')).date())
 
     # Make prediction for next N_DAYS
     predictions = []
@@ -33,7 +35,7 @@ def trading():
     # Decide orders to create
     broker.create_orders(predictions)
 
-    broker.update_portfolio_value()
+    broker.update_portfolio_value(date = datetime.now(timezone('Europe/Oslo')).date())
 
 
 if __name__ == "__main__":
