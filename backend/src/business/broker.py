@@ -212,7 +212,6 @@ class Broker:
         List[str]
             The list of tickers for which the exchange was open today.
         """
-        pending_orders = self.sql_wrapper.get_orders_by_status('PENDING')
         open_tickers = []
         for ticker in tickers:
             todays_prices = yf.download(ticker, period='1d')
@@ -226,47 +225,47 @@ class Broker:
             open_tickers.append(ticker)
 
             # Check if there are pending orders for the stock
+            pending_orders = self.sql_wrapper.get_orders_by_status('PENDING')
             for order in pending_orders:
-                if order[2] != ticker:
+                if order.stock_symbol != ticker:
                     continue
 
-                if order[1] == 'BUY' and todays_prices['Open'].values[0][0] <= order[3]:
+                if order.order_type == 'BUY' and todays_prices['Open'].values[0][0] <= order.price_per_share:
                     # If the order was a buy order and the open price was lower than the buy
                     # threshold, the order was executed at opening with the open price
                     _fee = self.calculate_fee(
                         ticker,
                         todays_prices['Open'].values[0][0],
-                        order[4]
+                        order.number_of_shares
                     )
-                    print()
                     self.sql_wrapper.execute_order(
-                        order_id=order[0],
+                        order_id=order.id,
                         _price_per_share=todays_prices['Open'].values[0][0],
                         _fee=_fee
                     )
-                elif order[1] == 'BUY' and todays_prices['Low'].values[0][0] <= order[3]:
+                elif order.order_type == 'BUY' and todays_prices['Low'].values[0][0] <= order.price_per_share:
                     # If the order was a buy order and the lowest price was lower than the buy
                     # threshold, the order was executed
-                    self.sql_wrapper.execute_order(order[0])
-                elif order[1] == 'SELL' and todays_prices['Open'].values[0][0] >= order[3]:
+                    self.sql_wrapper.execute_order(order.id)
+                elif order.order_type == 'SELL' and todays_prices['Open'].values[0][0] >= order.price_per_share:
                     # If the order was a sell order and the open price was higher than the sell
                     # threshold, the order was executed at opening with the open price
                     self.sql_wrapper.execute_order(
-                        order_id=order[0],
+                        order_id=order.id,
                         _price_per_share=todays_prices['Open'].values[0][0],
                         _fee=self.calculate_fee(
                             ticker,
                             todays_prices['Open'].values[0][0],
-                            order[4]
+                            order.number_of_shares
                         )
                     )
-                elif order[1] == 'SELL' and todays_prices['High'].values[0][0] >= order[3]:
+                elif order.order_type == 'SELL' and todays_prices['High'].values[0][0] >= order.price_per_share:
                     # If the order was a sell order and the highest price was higher than the sell
                     # threshold, the order was executed
-                    self.sql_wrapper.execute_order(order[0])
+                    self.sql_wrapper.execute_order(order.id)
                 else:
                     # If the price threshold was not met, the order is cancelled
-                    self.sql_wrapper.cancel_order(order[0])
+                    self.sql_wrapper.cancel_order(order.id)
                 break
         return open_tickers
 
@@ -277,7 +276,7 @@ class Broker:
         for prediction in predictions:
             stock_in_portfolio = self.sql_wrapper.get_stock_in_portfolio(prediction.ticker)
             if stock_in_portfolio:
-                number_of_shares = stock_in_portfolio[2]
+                number_of_shares = stock_in_portfolio.number_of_shares
                 self.sql_wrapper.create_sell_order(
                     stock_symbol=prediction.ticker,
                     price_per_share=prediction.sell_threshold,
@@ -299,3 +298,27 @@ class Broker:
                         prediction.number_of_shares
                     )
                 )
+    
+    def get_market_value_of_stocks_in_portfolio(self) -> float:
+        """
+        Calculates the market value of the stocks in the portfolio.
+
+        Returns
+        -------
+        float
+            The market value of the stocks in the portfolio.
+        """
+        market_value = 0
+        portfolio = self.sql_wrapper.get_portfolio()
+        for stock in portfolio:
+            market_value += stock.number_of_shares * yf.Ticker(stock.stock_symbol).history(period='1d')['Close'].values[0]
+        return market_value
+    
+    def update_portfolio_value(self) -> None:
+        """
+        Updates the portfolio value in the database.
+        """
+        cash = self.sql_wrapper.get_cash_balance()
+        stock_value = self.get_market_value_of_stocks_in_portfolio()
+        date = datetime.now(timezone('Europe/Oslo')).date()
+        self.sql_wrapper.set_portfolio_values(date, cash + stock_value)

@@ -8,15 +8,14 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip,
 let previousChartArea: any;
 
 interface GraphProps {
-  selectedCompany: string;
   historicCompanyPrices: {
     dates: string[];
     prices: number[];
   };
 }
 
-const Graph: React.FC<GraphProps> = ({ selectedCompany, historicCompanyPrices }) => {
-  console.log("Render Graph for", selectedCompany, "with data:", historicCompanyPrices);
+const Graph: React.FC<GraphProps> = ({ historicCompanyPrices }) => {
+  console.log("Render Graph with data:", historicCompanyPrices);
 
   // Configuration for the gradient
   let cachedGradient: CanvasGradient | undefined;
@@ -72,8 +71,7 @@ const Graph: React.FC<GraphProps> = ({ selectedCompany, historicCompanyPrices })
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        display: true,
-        position: 'top' as const,
+        display: false, // Disable the legend display
       },
     },
     interaction: {
@@ -105,7 +103,6 @@ const Graph: React.FC<GraphProps> = ({ selectedCompany, historicCompanyPrices })
   const containerStyle: React.CSSProperties = {
     color: '#000',
     backgroundColor: 'rgb(255, 255, 255)',
-    padding: '1rem',
     transition: '0.3s ease-in-out',
     width: '100%',
     height: '400px',
@@ -114,7 +111,6 @@ const Graph: React.FC<GraphProps> = ({ selectedCompany, historicCompanyPrices })
 
   return (
     <div style={containerStyle}>
-      <h1>{selectedCompany} Stock Price Changes</h1>
       <Line data={data} options={options} />
     </div>
   );

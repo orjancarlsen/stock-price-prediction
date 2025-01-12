@@ -152,7 +152,20 @@ def get_portfolio():
     """
     sql_wrapper = SQLWrapper()
     portfolio = sql_wrapper.get_portfolio()
+    for port in portfolio:
+        if port.asset_type != "CASH":
+            port.todays_value = yf.Ticker(port.stock_symbol).history(period='1d')['Close'].values[0]
     return jsonify([port.__dict__ for port in portfolio])
+
+
+@app.route('/portfolio/values', methods=['GET'])
+def get_portfolio_values():
+    """
+    Get the portfolio values from the database.
+    """
+    sql_wrapper = SQLWrapper()
+    portfolio_values = sql_wrapper.get_portfolio_values()
+    return jsonify([value.__dict__ for value in portfolio_values])
 
 
 if __name__ == '__main__':

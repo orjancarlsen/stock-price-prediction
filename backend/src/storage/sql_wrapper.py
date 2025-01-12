@@ -3,12 +3,14 @@
 import os
 import sqlite3
 import pprint
+import random
 from datetime import datetime
 from pytz import timezone
 
 from src.storage.transactions import Transaction
 from src.storage.orders import Order
 from src.storage.portfolio import Portfolio
+from backend.src.storage.portfolio_values import PortfolioValue
 
 
 class SQLWrapper:
@@ -77,16 +79,12 @@ class SQLWrapper:
         """
         return sqlite3.connect(self.db_path)
 
-    # ----------------------------------------------------------------------
-    # Orders
-    # ----------------------------------------------------------------------
-
     def create_tables(self):
         """
         Reads and executes SQL scripts from `portfolio.sql`, `transactions.sql` and `orders.sql`
         to create the tables in the database.
         """
-        sql_files = ["portfolio.sql", "transactions.sql", "orders.sql"]
+        sql_files = ["portfolio.sql", "transactions.sql", "orders.sql", "portfolio_values.sql"]
         base_path = os.path.abspath(os.path.dirname(__file__))
 
         with self.connect() as conn:
@@ -110,6 +108,10 @@ class SQLWrapper:
             ''')
 
             conn.commit()
+
+    # ----------------------------------------------------------------------
+    # Orders
+    # ----------------------------------------------------------------------
 
     def create_buy_order(
             self,
@@ -506,6 +508,21 @@ class SQLWrapper:
         with self.connect() as conn:
             portfolio_rows = Portfolio.all(conn)
             return sum(row.total_value for row in portfolio_rows)
+    
+    def get_portfolio_values(self):
+        """
+        Returns all portfolio values as PortfolioValue objects.
+        """
+        with self.connect() as conn:
+            return PortfolioValue.all(conn)
+
+    def set_portfolio_values(self, date: datetime, value: float):
+        """
+        Sets the total value of the portfolio.
+        """
+        with self.connect() as conn:
+            new_value = PortfolioValue(date=date, value=value)
+            new_value.insert(conn)
 
     def get_number_of_shares_for_stock(self, stock_symbol):
         """
@@ -552,17 +569,27 @@ if __name__ == "__main__":
     # Initial cash deposit
     # sql_wrapper.deposit(100000)
 
-    # sql_wrapper.create_buy_order('AAPL', 250, 10, 15)
+    # sql_wrapper.create_buy_order('NOD.OL', 100, 99, 20)
 
-    # sql_wrapper.execute_order(1)
     # sql_wrapper.execute_order(3)
-    # sql_wrapper.execute_order(5)
+    # for i in range(4, 32):
+    #     sql_wrapper.set_portfolio_values(datetime(2025, 1, i, tzinfo=timezone('Europe/Oslo')).date(), 120000 + i*1000 + random.randint(-20000, 10000))
 
-    # sql_wrapper.create_sell_order('AAPL', 200, 10, 20)
+    # sql_wrapper.create_sell_order('NOD.OL', 300, 10, 20)
 
     # sql_wrapper.execute_order(2)
 
-    # sql_wrapper.create_buy_order('NOD.OL', 180, 10, 5)
+    # sql_wrapper.create_buy_order('ABG.OL', 180, 30, 5)
+    # sql_wrapper.create_buy_order('BRG.OL', 20, 3000, 5)
+    # sql_wrapper.create_buy_order('DNB.OL', 200, 40, 5)
+    # sql_wrapper.create_buy_order('KIT.OL', 180, 10, 5)
+    # sql_wrapper.create_buy_order('KOG.OL', 300, 10, 5)
+
+    # sql_wrapper.execute_order(4)
+    # sql_wrapper.execute_order(5)
+    # sql_wrapper.execute_order(6)
+    # sql_wrapper.cancel_order(7)
+    # sql_wrapper.execute_order(8)
 
     # sql_wrapper.cancel_order(7)
 
@@ -593,3 +620,4 @@ if __name__ == "__main__":
     pprint.pp(sql_wrapper.get_portfolio())
     pprint.pp(sql_wrapper.get_transactions())
     pprint.pp(sql_wrapper.get_orders())
+    pprint.pp(sql_wrapper.get_portfolio_values())

@@ -9,6 +9,7 @@ import { useFetchPrices } from './hooks/useFetchPrices';
 import { useFetchTransactions } from './hooks/useFetchTransactions';
 import { useFetchOrders } from './hooks/useFetchOrders';
 import { useFetchPortfolio } from './hooks/useFetchPortfolio';
+import { useFetchPortfolioValues } from './hooks/useFetchPortfolioValues';
 import ContentSwitch from './components/ContentSwitch';
 
 function App() {
@@ -31,6 +32,7 @@ function App() {
   const transactions = useFetchTransactions();
   const orders = useFetchOrders();
   const portfolio = useFetchPortfolio();
+  const portfolioValues = useFetchPortfolioValues();
 
   const handleCompanyChange = (e: ChangeEvent<HTMLSelectElement>) => {
     setSelectedCompany(e.target.value);
@@ -52,9 +54,10 @@ function App() {
                 style={{
                 flex: 1,
                 padding: '1rem',
+                // borderRight: '1px solid #ccc',
                 }}
             >
-                <Portfolio portfolio={portfolio} />
+                <Portfolio portfolio={portfolio} portfolioValues={portfolioValues} />
             </div>
 
             {/* RIGHT COLUMN */}
@@ -88,8 +91,8 @@ function App() {
             placeholder="Select model"
         />
 
-        {selectedCompany && historicCompanyPrices?.dates?.length > 0 && (
-            <Graph selectedCompany={selectedCompany} historicCompanyPrices={historicCompanyPrices} />
+        {historicCompanyPrices?.dates?.length > 0 && (
+            <Graph historicCompanyPrices={historicCompanyPrices} />
         )}
     </div>
   );
