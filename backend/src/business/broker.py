@@ -230,7 +230,8 @@ class Broker:
                 if order.stock_symbol != ticker:
                     continue
 
-                if order.order_type == 'BUY' and todays_prices['Open'].values[0][0] <= order.price_per_share:
+                if (order.order_type == 'BUY'
+                    and todays_prices['Open'].values[0][0] <= order.price_per_share):
                     # If the order was a buy order and the open price was lower than the buy
                     # threshold, the order was executed at opening with the open price
                     _fee = self.calculate_fee(
@@ -243,11 +244,13 @@ class Broker:
                         _price_per_share=todays_prices['Open'].values[0][0],
                         _fee=_fee
                     )
-                elif order.order_type == 'BUY' and todays_prices['Low'].values[0][0] <= order.price_per_share:
+                elif (order.order_type == 'BUY'
+                      and todays_prices['Low'].values[0][0] <= order.price_per_share):
                     # If the order was a buy order and the lowest price was lower than the buy
                     # threshold, the order was executed
                     self.sql_wrapper.execute_order(order.id)
-                elif order.order_type == 'SELL' and todays_prices['Open'].values[0][0] >= order.price_per_share:
+                elif (order.order_type == 'SELL'
+                      and todays_prices['Open'].values[0][0] >= order.price_per_share):
                     # If the order was a sell order and the open price was higher than the sell
                     # threshold, the order was executed at opening with the open price
                     self.sql_wrapper.execute_order(
@@ -259,7 +262,8 @@ class Broker:
                             order.number_of_shares
                         )
                     )
-                elif order.order_type == 'SELL' and todays_prices['High'].values[0][0] >= order.price_per_share:
+                elif (order.order_type == 'SELL' and
+                      todays_prices['High'].values[0][0] >= order.price_per_share):
                     # If the order was a sell order and the highest price was higher than the sell
                     # threshold, the order was executed
                     self.sql_wrapper.execute_order(order.id)
@@ -298,7 +302,7 @@ class Broker:
                         prediction.number_of_shares
                     )
                 )
-    
+
     def get_market_value_of_stocks_in_portfolio(self) -> float:
         """
         Calculates the market value of the stocks in the portfolio.
@@ -311,9 +315,10 @@ class Broker:
         market_value = 0
         portfolio = self.sql_wrapper.get_portfolio()
         for stock in portfolio:
-            market_value += stock.number_of_shares * yf.Ticker(stock.stock_symbol).history(period='1d')['Close'].values[0]
+            share_value = yf.Ticker(stock.stock_symbol).history(period='1d')['Close'].values[0]
+            market_value += stock.number_of_shares * share_value
         return market_value
-    
+
     def update_portfolio_value(self) -> None:
         """
         Updates the portfolio value in the database.

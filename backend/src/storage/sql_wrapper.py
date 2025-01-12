@@ -13,7 +13,7 @@ from src.storage.portfolio import Portfolio
 from src.storage.portfolio_values import PortfolioValue
 
 
-class SQLWrapper:
+class SQLWrapper: # pylint: disable=too-many-public-methods
     """
     Class for interacting with the SQLite database.
 
@@ -508,7 +508,7 @@ class SQLWrapper:
         with self.connect() as conn:
             portfolio_rows = Portfolio.all(conn)
             return sum(row.total_value for row in portfolio_rows)
-    
+
     def get_portfolio_values(self):
         """
         Returns all portfolio values as PortfolioValue objects.
@@ -573,7 +573,9 @@ if __name__ == "__main__":
 
     # sql_wrapper.execute_order(3)
     # for i in range(4, 32):
-    #     sql_wrapper.set_portfolio_values(datetime(2025, 1, i, tzinfo=timezone('Europe/Oslo')).date(), 120000 + i*1000 + random.randint(-20000, 10000))
+    #     sql_wrapper.set_portfolio_values(datetime(2025, 1, i, 
+            # tzinfo=timezone('Europe/Oslo')).date(), 
+            # 120000 + i*1000 + random.randint(-20000, 10000))
 
     # sql_wrapper.create_sell_order('NOD.OL', 300, 10, 20)
 

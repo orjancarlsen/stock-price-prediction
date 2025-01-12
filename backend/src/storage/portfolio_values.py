@@ -35,7 +35,7 @@ class PortfolioValue:
             date=date,
             value=value,
         )
-    
+
     @classmethod
     def get_by_id(cls, conn: sqlite3.Connection, date_: datetime) -> Optional["PortfolioValue"]:
         """
@@ -55,7 +55,7 @@ class PortfolioValue:
         query = f"SELECT * FROM {cls.TABLE_NAME} ORDER BY date ASC"
         rows = conn.execute(query).fetchall()
         return [cls.from_db_row(row) for row in rows]
-        
+
     def insert(self, conn: sqlite3.Connection) -> None:
         """
         Insert this PortfolioValue as a new row into the DB.
@@ -73,8 +73,7 @@ class PortfolioValue:
             self.value,
         )
         cur = conn.execute(query, values)
-        self.id = cur.lastrowid
-    
+
     def update(self, conn: sqlite3.Connection) -> None:
         """
         Update this PortfolioValue in the DB (matching by `id`).
@@ -92,6 +91,6 @@ class PortfolioValue:
             self.date.isoformat(),
         )
         conn.execute(query, values)
-    
+
     def __repr__(self):
         return f"PortfolioValue(date={self.date}, value={self.value})"
