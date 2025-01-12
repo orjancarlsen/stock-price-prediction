@@ -72,7 +72,7 @@ class PortfolioValue:
             self.date.isoformat(),
             self.value,
         )
-        cur = conn.execute(query, values)
+        conn.execute(query, values)
 
     def update(self, conn: sqlite3.Connection) -> None:
         """

@@ -573,8 +573,8 @@ if __name__ == "__main__":
 
     # sql_wrapper.execute_order(3)
     # for i in range(4, 32):
-    #     sql_wrapper.set_portfolio_values(datetime(2025, 1, i, 
-            # tzinfo=timezone('Europe/Oslo')).date(), 
+    #     sql_wrapper.set_portfolio_values(datetime(2025, 1, i,
+            # tzinfo=timezone('Europe/Oslo')).date(),
             # 120000 + i*1000 + random.randint(-20000, 10000))
 
     # sql_wrapper.create_sell_order('NOD.OL', 300, 10, 20)
