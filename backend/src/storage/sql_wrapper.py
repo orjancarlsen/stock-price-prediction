@@ -10,7 +10,7 @@ from pytz import timezone
 from src.storage.transactions import Transaction
 from src.storage.orders import Order
 from src.storage.portfolio import Portfolio
-from backend.src.storage.portfolio_values import PortfolioValue
+from src.storage.portfolio_values import PortfolioValue
 
 
 class SQLWrapper:
