@@ -19,28 +19,40 @@ const Graph: React.FC<GraphProps> = ({ historicCompanyPrices }) => {
 
   // Configuration for the gradient
   let cachedGradient: CanvasGradient | undefined;
-  const getGradient = (ctx: CanvasRenderingContext2D, chartArea: any, min: number, max: number): CanvasGradient => {
+  const getGradient = (ctx: CanvasRenderingContext2D, chartArea: any): CanvasGradient => {
     if (!cachedGradient || chartArea !== previousChartArea) {
       console.log("Render gradient");
       const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
   
-      // Position gradient stops
+      // Gradients
       gradient.addColorStop(1, 'rgba(64, 105, 225, 0.8)'); // Strongest blue at the top
-      gradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)'); // Midway fade slower (higher up)
-      // gradient.addColorStop(0, 'rgba(255, 255, 255, 0)'); // Fully transparent below
+      gradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)'); // Fully transparent below
   
       cachedGradient = gradient;
       previousChartArea = chartArea;
     }
     return cachedGradient;
   };
-    
-  // Chart data
+  const tooltipCallbacks = {
+    callbacks: {
+      label: function(context: any) {
+        let label = context.dataset.label || '';
+        if (label) {
+          label += ': ';
+        }
+        if (context.parsed.y !== null) {
+          label += context.parsed.y.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+        }
+        return label;
+      }
+    }
+  };
+
   const data = {
     labels: historicCompanyPrices.dates,
     datasets: [
       {
-        label: 'Stock Price',
+        // label: 'Stock Price',
         data: historicCompanyPrices.prices,
         borderColor: 'rgba(64, 105, 225, 1)',
         backgroundColor: function(context: any) {
@@ -52,11 +64,7 @@ const Graph: React.FC<GraphProps> = ({ historicCompanyPrices }) => {
             return undefined;
           }
 
-          const yScale = chart.scales.y;
-          const min = yScale.min;
-          const max = yScale.max;
-        
-          return getGradient(ctx, chartArea, min, max);
+          return getGradient(ctx, chartArea);
         
         },
         fill: true,
@@ -73,6 +81,7 @@ const Graph: React.FC<GraphProps> = ({ historicCompanyPrices }) => {
       legend: {
         display: false, // Disable the legend display
       },
+      tooltip: tooltipCallbacks,
     },
     interaction: {
       intersect: false,
@@ -95,6 +104,14 @@ const Graph: React.FC<GraphProps> = ({ historicCompanyPrices }) => {
         },
         title: {
           display: true,
+        },
+        ticks: {
+          callback: function(tickValue: string | number) {
+            if (typeof tickValue === 'number') {
+              return tickValue.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+            }
+            return tickValue;
+          }
         },
       },
     },
