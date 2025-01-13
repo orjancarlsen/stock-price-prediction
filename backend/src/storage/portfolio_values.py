@@ -92,7 +92,6 @@ class PortfolioValue:
         )
         conn.execute(query, values)
 
-    @classmethod
     def delete(self, conn: sqlite3.Connection, date: datetime) -> None:
         """
         Delete this PortfolioValue from the DB.

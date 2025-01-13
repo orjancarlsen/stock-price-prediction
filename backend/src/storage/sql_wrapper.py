@@ -4,7 +4,7 @@ import os
 import sqlite3
 import pprint
 # import random
-from datetime import datetime, date
+from datetime import datetime
 from pytz import timezone
 
 from src.storage.transactions import Transaction
@@ -450,7 +450,12 @@ class SQLWrapper: # pylint: disable=too-many-public-methods
             )
             withdraw_txn.insert(conn)
 
-    def receive_dividend(self, stock_symbol: str, dividend_per_share: float, _date: datetime = datetime.now(timezone('Europe/Oslo'))):
+    def receive_dividend(
+            self,
+            stock_symbol: str,
+            dividend_per_share: float,
+            _date: datetime = datetime.now(timezone('Europe/Oslo'))
+        ):
         """
         Receives dividend for a stock and updates the cash balance.
         """
@@ -571,7 +576,7 @@ class SQLWrapper: # pylint: disable=too-many-public-methods
         """
         with self.connect() as conn:
             return Transaction.all(conn)
-    
+
     def delete_portfolio_value(self, date: datetime):
         """
         Deletes all rows from the portfolio table.

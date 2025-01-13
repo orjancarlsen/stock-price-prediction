@@ -1,10 +1,8 @@
 """Trading logic to be ran daily."""
 
-from datetime import datetime
 from src.app import N_DAYS
 from src.business.broker import Broker, StockPrediction
 from src.model.regressor import Regressor
-from pytz import timezone
 
 
 def trading():

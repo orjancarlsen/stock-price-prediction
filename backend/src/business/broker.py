@@ -197,7 +197,11 @@ class Broker:
         tick_size = 0.1
         return round(round(number / tick_size) * tick_size, 1)
 
-    def conclude_pending_orders_for_traded_stocks(self, tickers: List[str], todays_date: datetime = datetime.now(timezone('Europe/Oslo')).date()) -> List[tuple]:
+    def conclude_pending_orders_for_traded_stocks(
+            self,
+            tickers: List[str],
+            todays_date: datetime = datetime.now(timezone('Europe/Oslo')).date()
+        ) -> List[tuple]:
         """
         Checks if the exchange was open today for the given list of tickers.
         If it was open, all pending orders for the tickers are checked and executed if the price
@@ -217,7 +221,8 @@ class Broker:
         for ticker in tickers:
             end_date = todays_date + relativedelta(days=1)
             try:
-                todays_prices = yf.download(ticker, start=todays_date, end=end_date, auto_adjust=False)
+                todays_prices = yf.download(ticker, start=todays_date, end=end_date,
+                                            auto_adjust=False)
                 todays_prices.reset_index(inplace=True)
                 last_traded_date = todays_prices['Date'].iloc[-1].to_pydatetime().date()
             except IndexError:
@@ -316,7 +321,10 @@ class Broker:
                     print(f"Error creating buy order for {prediction.ticker}: {e}")
                     continue
 
-    def dividend_payout(self, date: datetime = datetime.now(timezone('Europe/Oslo')).date()) -> None:
+    def dividend_payout(
+            self,
+            date: datetime = datetime.now(timezone('Europe/Oslo')).date()
+        ) -> None:
         """
         Pays out dividends to the user.
         """
@@ -324,7 +332,11 @@ class Broker:
         for stock in portfolio:
             if stock.stock_symbol is not None:
                 try:
-                    dividend_per_share = yf.Ticker(stock.stock_symbol).history(start=date, end=date + timedelta(days=1), auto_adjust=False)['Dividends'].values[0]
+                    dividend_per_share = yf.Ticker(stock.stock_symbol).history(
+                        start=date,
+                        end=date + timedelta(days=1),
+                        auto_adjust=False
+                    )['Dividends'].values[0]
                 except KeyError:
                     continue
                 if dividend_per_share > 0:
@@ -334,7 +346,10 @@ class Broker:
                         date
                     )
 
-    def get_market_value_of_stocks_in_portfolio(self, date: datetime = datetime.now(timezone('Europe/Oslo'))) -> float:
+    def get_market_value_of_stocks_in_portfolio(
+            self,
+            date: datetime = datetime.now(timezone('Europe/Oslo'))
+        ) -> float:
         """
         Calculates the market value of the stocks in the portfolio.
 
@@ -348,11 +363,18 @@ class Broker:
         for stock in portfolio:
             if stock.stock_symbol is not None:
                 # Adjust start date by 1+0 days to be sure we get a period with a valid close price
-                share_value = yf.Ticker(stock.stock_symbol).history(start=date - timedelta(days=10), end=date + timedelta(days=1), auto_adjust=False)['Close'].values[-1]
+                share_value = yf.Ticker(stock.stock_symbol).history(
+                    start=date - timedelta(days=10),
+                    end=date + timedelta(days=1),
+                    auto_adjust=False
+                )['Close'].values[-1]
                 market_value += stock.number_of_shares * share_value
         return market_value
 
-    def update_portfolio_value(self, date: datetime = datetime.now(timezone('Europe/Oslo')).date()) -> None:
+    def update_portfolio_value(
+            self,
+            date: datetime = datetime.now(timezone('Europe/Oslo')).date()
+        ) -> None:
         """
         Updates the portfolio value in the database.
         """
@@ -363,4 +385,3 @@ class Broker:
             print(f"PORTFOLIO VALUE UPDATED TO {cash + stock_value} ON {date}")
         except IndexError:
             print(f"Error updating portfolio value on {date}")
-            pass

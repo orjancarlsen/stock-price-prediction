@@ -165,7 +165,12 @@ class DataTransformer:
         self.x_test = np.array(self.x_test)
         self.y_test = np.array(self.y_test)
 
-    def get_past_n_days(self, n_days: int, start_date: datetime = None, end_date: datetime = None) -> np.ndarray:
+    def get_past_n_days(
+            self,
+            n_days: int,
+            start_date: datetime = None,
+            end_date: datetime = None
+        ) -> np.ndarray:
         """
         Get the last n_days of data from the dataset to do a prediction.
 

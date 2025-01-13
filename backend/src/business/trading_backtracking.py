@@ -1,11 +1,12 @@
-from datetime import datetime, date, timedelta
+"""Module for backtracking trading logic to test performance."""
+
+from datetime import date, timedelta
 from dateutil.relativedelta import relativedelta
 
 # Make sure these imports match your actual project structure
 from src.app import N_DAYS
 from src.business.broker import Broker, StockPrediction
 from src.model.regressor import Regressor
-from pytz import timezone
 
 # Improvements:
 # - Load n_days in the beginning, and use that thgoughout the loop
@@ -31,12 +32,12 @@ def backtrack_trading():
 
         # Check if it's Monday (0) through Friday (4)
         if current_day.weekday() < 5:
-            # Handle dividend payouts for all stocks that were in the portfolio at the start of the day
+            # Handle dividend payouts for all stocks in the portfolio at the start of the day
             broker.dividend_payout(date=current_day)
 
             # --- 1) Conclude/cancel/execute any pending orders ---
             tickers = broker.conclude_pending_orders_for_traded_stocks(
-                all_tickers, 
+                all_tickers,
                 todays_date=current_day
             )
 
@@ -45,14 +46,14 @@ def backtrack_trading():
             for ticker in tickers:
                 try:
                     regressor = Regressor.load(ticker)
-                    
-                    # Optional start_date 1 year before "current_day"                
+
+                    # Optional start_date 1 year before "current_day"
                     prediction_next_period = regressor.predict_next_period(
-                        n_days=N_DAYS, 
+                        n_days=N_DAYS,
                         start_date=current_day - relativedelta(years=1),
                         end_date=current_day + relativedelta(days=1)
                     )
-                    
+
                     predictions.append(
                         StockPrediction(
                             ticker,
