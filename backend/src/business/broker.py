@@ -197,7 +197,7 @@ class Broker:
         tick_size = 0.1
         return round(round(number / tick_size) * tick_size, 1)
 
-    def conclude_pending_orders_for_traded_stocks(self, tickers: List[str], todays_date: datetime) -> List[tuple]:
+    def conclude_pending_orders_for_traded_stocks(self, tickers: List[str], todays_date: datetime = datetime.now(timezone('Europe/Oslo')).date()) -> List[tuple]:
         """
         Checks if the exchange was open today for the given list of tickers.
         If it was open, all pending orders for the tickers are checked and executed if the price
@@ -316,7 +316,7 @@ class Broker:
                     print(f"Error creating buy order for {prediction.ticker}: {e}")
                     continue
 
-    def dividend_payout(self, date: datetime) -> None:
+    def dividend_payout(self, date: datetime = datetime.now(timezone('Europe/Oslo')).date()) -> None:
         """
         Pays out dividends to the user.
         """
@@ -352,7 +352,7 @@ class Broker:
                 market_value += stock.number_of_shares * share_value
         return market_value
 
-    def update_portfolio_value(self, date: datetime) -> None:
+    def update_portfolio_value(self, date: datetime = datetime.now(timezone('Europe/Oslo')).date()) -> None:
         """
         Updates the portfolio value in the database.
         """

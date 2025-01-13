@@ -181,7 +181,7 @@ class DataTransformer:
         np.ndarray
             Array containing the last n_days of data.
         """
-        if start_date:
+        if start_date and end_date:
             past_n_days = yf.download(self.ticker, start=start_date, end=end_date).tail(n_days)
         else:
             past_n_days = yf.download(self.ticker, period='1y').tail(n_days)
