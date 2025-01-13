@@ -84,10 +84,10 @@ const Portfolio: React.FC<PortfolioProps> = ({ portfolio, portfolioValues }) => 
                     gap: '8px',
                 }}
             >
-                <div style={{ width: '176px', textAlign: 'right' }}>Verdi</div> {/* 8 (padding) + 80 + 8 (gap) + 80 */}
+                <div style={{ width: '186px', textAlign: 'right' }}>Verdi</div> {/* 8 (padding) + 80 + 8 (gap) + 90 */}
                 <div style={{ width: '50px', textAlign: 'right' }}>Antall</div> {/* 50 */}
-                <div style={{ width: '80px', textAlign: 'right' }}>Pris</div>   {/* 80 */}
                 <div style={{ width: '80px', textAlign: 'right' }}>Kurs</div>   {/* 80 */}
+                <div style={{ width: '80px', textAlign: 'right' }}>Pris</div>   {/* 80 */}
                 <div style={{ width: '80px', textAlign: 'right' }}>Avkastning</div>   {/* 80 */}
             </div>
 

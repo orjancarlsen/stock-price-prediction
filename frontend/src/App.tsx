@@ -73,11 +73,11 @@ function App() {
                 <ContentSwitch currentView={view} onSwitchView={setView} />
 
                 {view === 'orders' && orders && orders.length > 0 && (
-                <Orders orders={orders} />
+                    <Orders orders={orders} />
                 )}
 
                 {view === 'transactions' && transactions && transactions.length > 0 && (
-                <Transactions transactions={transactions} />
+                    <Transactions transactions={transactions} />
                 )}
             </div>
         </div>
