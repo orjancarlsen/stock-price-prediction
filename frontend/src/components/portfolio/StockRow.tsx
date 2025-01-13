@@ -7,7 +7,9 @@ interface StockRowProps {
 }
 
 const StockRow: React.FC<StockRowProps> = ({ asset }) => {
-    const formattedValue = formatSingleDecimal(asset.total_value);
+    const formattedValue = asset.number_of_shares !== undefined && asset.todays_value !== undefined
+        ? formatSingleDecimal(asset.todays_value * asset.number_of_shares) 
+        : 'N/A';
     const formattedPrice = `${asset.price_per_share?.toLocaleString()} NOK`
     const formattedTodaysValue = `${asset.todays_value?.toLocaleString()} NOK`
     const profit = asset.todays_value !== undefined && asset.price_per_share !== undefined && asset.number_of_shares !== undefined
@@ -31,17 +33,17 @@ const StockRow: React.FC<StockRowProps> = ({ asset }) => {
             <div style={{ textAlign: 'left', alignItems: 'center', display: 'flex', width: '80px' }}>
                 {asset.stock_symbol}
             </div>
-            <div style={{ textAlign: 'right', width: '80px' }}>
+            <div style={{ textAlign: 'right', width: '90px' }}>
                 <div> {formattedValue} </div>
             </div>
             <div style={{ textAlign: 'right', width: '50px' }}>
                 <div> {asset.number_of_shares} </div>
             </div>
             <div style={{ textAlign: 'right', width: '80px' }}>
-                <div> {formattedPrice} </div>
+                <div> {formattedTodaysValue} </div>
             </div>
             <div style={{ textAlign: 'right', width: '80px' }}>
-                <div> {formattedTodaysValue} </div>
+                <div> {formattedPrice} </div>
             </div>
             <div style={{ textAlign: 'right', width: '80px', color: profit >= 0 ? 'green' : 'red' }}>
                 <div> {formattedProfit}% </div>
