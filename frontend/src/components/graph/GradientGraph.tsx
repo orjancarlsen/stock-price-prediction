@@ -36,12 +36,9 @@ const Graph: React.FC<GraphProps> = ({ historicCompanyPrices }) => {
   const tooltipCallbacks = {
     callbacks: {
       label: function(context: any) {
-        let label = context.dataset.label || '';
-        if (label) {
-          label += ': ';
-        }
+        let label = '';
         if (context.parsed.y !== null) {
-          label += context.parsed.y.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+          label = Math.round(context.parsed.y).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
         }
         return label;
       }

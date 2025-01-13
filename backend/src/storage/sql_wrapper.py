@@ -118,14 +118,15 @@ class SQLWrapper: # pylint: disable=too-many-public-methods
             stock_symbol: str,
             price_per_share: float,
             number_of_shares: int,
-            fee: float = 0.0
+            fee: float = 0.0,
+            date: datetime = datetime.now(timezone('Europe/Oslo'))
         ):
         """
         Creates a new buy order and stores it in the orders table.
         Ensures sufficient cash is available before creating the order.
         """
         total_cost = price_per_share * number_of_shares + fee
-        timestamp_created = datetime.now(timezone('Europe/Oslo')).strftime('%Y-%m-%d %H:%M:%S')
+        timestamp_created = date.strftime('%Y-%m-%d %H:%M:%S')
 
         with self.connect() as conn:
             # Check if sufficient cash is available
@@ -161,14 +162,15 @@ class SQLWrapper: # pylint: disable=too-many-public-methods
             stock_symbol: str,
             price_per_share: float,
             number_of_shares: int,
-            fee: float = 0.0
+            fee: float = 0.0,
+            date: datetime = datetime.now(timezone('Europe/Oslo'))
         ):
         """
         Creates a new sell order and stores it in the orders table.
         Ensures sufficient shares are available before creating the order.
         """
         total_proceeds = price_per_share * number_of_shares - fee
-        timestamp_created = datetime.now(timezone('Europe/Oslo')).strftime('%Y-%m-%d %H:%M:%S')
+        timestamp_created = date.strftime('%Y-%m-%d %H:%M:%S')
 
         with self.connect() as conn:
             # Check if sufficient shares are available
@@ -194,7 +196,13 @@ class SQLWrapper: # pylint: disable=too-many-public-methods
             sell_order.insert(conn)
             print(f"Sell order created: {sell_order}")
 
-    def execute_order(self, order_id: int, _price_per_share: float = None, _fee: float = None):
+    def execute_order(
+            self,
+            order_id: int,
+            _price_per_share: float = None,
+            _fee: float = None,
+            _date: datetime = datetime.now(timezone('Europe/Oslo'))
+        ):
         """
         Executes a buy or sell order by fetching details from the `orders` table
         and updating the corresponding portfolio, transactions, and order status.
@@ -238,22 +246,26 @@ class SQLWrapper: # pylint: disable=too-many-public-methods
                     cash_port.save(conn)
 
                 print(f"Executing buy order: {order}")
-                self._execute_buy_order(cursor, order, conn)
+                self._execute_buy_order(cursor, order, conn, _date)
 
             elif order.order_type == 'SELL':
                 order.amount = order.price_per_share * order.number_of_shares - order.fee
 
                 print(f"Executing sell order: {order}")
-                self._execute_sell_order(order, conn)
+                self._execute_sell_order(order, conn, _date)
 
             # Mark the order as EXECUTED
             order.status = "EXECUTED"
-            order.timestamp_updated = datetime.now(
-                timezone('Europe/Oslo')
-            ).strftime("%Y-%m-%d %H:%M:%S")
+            order.timestamp_updated = _date.strftime("%Y-%m-%d %H:%M:%S")
             order.save(conn)
 
-    def _execute_buy_order(self, cursor: sqlite3.Cursor, order: Order, conn: sqlite3.Connection):
+    def _execute_buy_order(
+            self,
+            cursor: sqlite3.Cursor,
+            order: Order,
+            conn: sqlite3.Connection,
+            _date: datetime
+        ):
         """
         Executes a buy order by updating the portfolio, transactions, and cash balance.
         """
@@ -300,11 +312,11 @@ class SQLWrapper: # pylint: disable=too-many-public-methods
             number_of_shares=order.number_of_shares,
             fee=order.fee,
             amount=order.amount,
-            timestamp=datetime.now(timezone('Europe/Oslo')).strftime('%Y-%m-%d %H:%M:%S')
+            timestamp=_date.strftime('%Y-%m-%d %H:%M:%S')
         )
         buy_txn.insert(conn)
 
-    def _execute_sell_order(self, order: Order, conn: sqlite3.Connection):
+    def _execute_sell_order(self, order: Order, conn: sqlite3.Connection, _date: datetime):
         """
         Executes a sell order by updating the portfolio, transactions, and cash balance.
         """
@@ -340,11 +352,11 @@ class SQLWrapper: # pylint: disable=too-many-public-methods
             number_of_shares=order.number_of_shares,
             fee=order.fee,
             amount=order.amount,
-            timestamp=datetime.now(timezone('Europe/Oslo')).strftime('%Y-%m-%d %H:%M:%S')
+            timestamp=_date.strftime('%Y-%m-%d %H:%M:%S')
         )
         sell_txn.insert(conn)
 
-    def cancel_order(self, order_id: int):
+    def cancel_order(self, order_id: int, date: datetime = datetime.now(timezone('Europe/Oslo'))):
         """
         Cancels a pending buy order by updating its status to 'CANCELED' and timestamp_updated.
         Restores the available cash for canceled BUY orders.
@@ -365,9 +377,7 @@ class SQLWrapper: # pylint: disable=too-many-public-methods
 
             # Update the Order as CANCELED
             order.status = "CANCELED"
-            order.timestamp_updated = datetime.now(
-                timezone('Europe/Oslo')
-            ).strftime('%Y-%m-%d %H:%M:%S')
+            order.timestamp_updated = date.strftime('%Y-%m-%d %H:%M:%S')
             order.save(conn)
 
     def get_orders(self):
@@ -388,7 +398,7 @@ class SQLWrapper: # pylint: disable=too-many-public-methods
     # Transactions & Cash
     # ----------------------------------------------------------------------
 
-    def deposit(self, amount: float):
+    def deposit(self, amount: float, _date: datetime = datetime.now(timezone('Europe/Oslo'))):
         """
         Deposits the specified amount into the cash balance.
         """
@@ -406,7 +416,7 @@ class SQLWrapper: # pylint: disable=too-many-public-methods
             dep_txn = Transaction(
                 transaction_type="DEPOSIT",
                 amount=amount,
-                timestamp=datetime.now(timezone('Europe/Oslo')).strftime('%Y-%m-%d %H:%M:%S')
+                timestamp=_date.strftime('%Y-%m-%d %H:%M:%S')
             )
             dep_txn.insert(conn)
 
@@ -440,7 +450,12 @@ class SQLWrapper: # pylint: disable=too-many-public-methods
             )
             withdraw_txn.insert(conn)
 
-    def receive_dividend(self, stock_symbol: str, dividend_per_share: float):
+    def receive_dividend(
+            self,
+            stock_symbol: str,
+            dividend_per_share: float,
+            _date: datetime = datetime.now(timezone('Europe/Oslo'))
+        ):
         """
         Receives dividend for a stock and updates the cash balance.
         """
@@ -470,7 +485,7 @@ class SQLWrapper: # pylint: disable=too-many-public-methods
                 price_per_share=dividend_per_share,
                 number_of_shares=stock_port.number_of_shares,
                 amount=total_dividend,
-                timestamp=datetime.now(timezone('Europe/Oslo')).strftime('%Y-%m-%d %H:%M:%S')
+                timestamp=_date.strftime('%Y-%m-%d %H:%M:%S')
             )
             dividend_txn.insert(conn)
 
@@ -562,12 +577,22 @@ class SQLWrapper: # pylint: disable=too-many-public-methods
         with self.connect() as conn:
             return Transaction.all(conn)
 
+    def delete_portfolio_value(self, date: datetime):
+        """
+        Deletes all rows from the portfolio table.
+        """
+        print(f"DELETING PORTFOLIO VALUE FOR {date}")
+        with self.connect() as conn:
+            PortfolioValue.delete(conn, date)
+
 if __name__ == "__main__":
     sql_wrapper = SQLWrapper()
     sql_wrapper.create_tables()
 
+    # sql_wrapper.delete_portfolio_value(datetime(2024, 2, 12).date())
+
     # Initial cash deposit
-    # sql_wrapper.deposit(100000)
+    # sql_wrapper.deposit(100000, date(2024, 1, 1))
 
     # sql_wrapper.create_buy_order('NOD.OL', 100, 99, 20)
 
@@ -621,5 +646,5 @@ if __name__ == "__main__":
     # Summary
     pprint.pp(sql_wrapper.get_portfolio())
     pprint.pp(sql_wrapper.get_transactions())
-    pprint.pp(sql_wrapper.get_orders())
+    # pprint.pp(sql_wrapper.get_orders())
     pprint.pp(sql_wrapper.get_portfolio_values())

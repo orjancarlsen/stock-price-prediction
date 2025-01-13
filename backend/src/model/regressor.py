@@ -140,7 +140,12 @@ class Regressor:
         self.y_true[:, 1] = self.data.scales['High'].inverse_transform(
             self.y_true[:, 1].reshape(-1, 1)).reshape(-1)
 
-    def predict_next_period(self, n_days) -> np.ndarray:
+    def predict_next_period(
+            self,
+            n_days: int,
+            start_date: datetime = None,
+            end_date: datetime = None
+        ) -> np.ndarray:
         """
         Predict the lowest and highest stock price in the next 10 days.
 
@@ -148,13 +153,15 @@ class Regressor:
         ----------
         n_days : int
             Number of days used for prediction.
+        start_date : datetime
+            A date which is a year ago from the date to predict.
 
         Returns
         -------
         np.ndarray
             Array containing the predicted stock prices for the next period.
         """
-        past_n_days = self.data.get_past_n_days(n_days)
+        past_n_days = self.data.get_past_n_days(n_days, start_date=start_date, end_date=end_date)
         prediction_next_period = self.model.predict(past_n_days.reshape(1, n_days, 5))
 
         prediction_next_period[:, 0] = self.data.scales['Low'].inverse_transform(
