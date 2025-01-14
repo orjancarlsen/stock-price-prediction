@@ -285,7 +285,11 @@ class Broker:
                 break
         return open_tickers
 
-    def create_orders(self, predictions: List[StockPrediction], date: datetime = None) -> None:
+    def create_orders(
+            self,
+            predictions: List[StockPrediction],
+            date: datetime = datetime.now(timezone('Europe/Oslo')).date()
+        ) -> None:
         """
         Creates orders for the top predictions.
         """
