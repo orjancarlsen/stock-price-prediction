@@ -47,6 +47,36 @@ function getSortedTransactionsDesc(transactions: Transaction[]): Transaction[] {
   return flattened;
 }
 
+function getMaxTransactionsThatFit(transactions: Transaction[], containerHeight = 510): number {
+  const dateRowHeight = 48;
+  const transactionRowHeight = 66.4 + 12; // transaction row + spacer row
+
+  let maxFit = 0;
+
+  for (let i = 1; i <= transactions.length; i++) {
+    // Take the first i transactions
+    const slice = transactions.slice(0, i);
+
+    // How many unique date rows in this slice?
+    const grouped = groupTransactionsByDate(slice);
+    const dateKeys = Object.keys(grouped);
+    const d = dateKeys.length;
+
+    // Compute total needed height
+    const totalHeight = d * dateRowHeight + i * transactionRowHeight;
+
+    // Check if we still fit within containerHeight
+    if (totalHeight <= containerHeight) {
+      maxFit = i;
+    } else {
+      break;
+    }
+  }
+
+  return maxFit;
+}
+
+
 interface TransactionsProps {
   transactions: Transaction[];
 }
@@ -55,8 +85,10 @@ const Transactions: React.FC<TransactionsProps> = ({ transactions }) => {
   // Flatten + sort all transactions by date/time descending
   const allSortedTx = getSortedTransactionsDesc(transactions);
 
+  // Dynamically determine how many transactions fit in 510px
+  const PER_PAGE = getMaxTransactionsThatFit(allSortedTx, 510);
+
   // Pagination state
-  const PER_PAGE = 4;
   const [page, setPage] = React.useState(0);
   const totalPages = Math.ceil(allSortedTx.length / PER_PAGE);
 
@@ -74,7 +106,7 @@ const Transactions: React.FC<TransactionsProps> = ({ transactions }) => {
     <div
       style={{
         width: '380px',
-        height: '464px',
+        height: '510px',
         display: 'flex',
         flexDirection: 'column',
         margin: '1rem',
@@ -115,7 +147,7 @@ const Transactions: React.FC<TransactionsProps> = ({ transactions }) => {
 
                   {/* Transactions for this date */}
                   {dateTransactions.map((transaction) => {
-                    const isStockTransaction =
+                    const isStockTransaction = 
                       ['BUY', 'SELL', 'DIVIDEND'].includes(transaction.transaction_type);
 
                     return (
@@ -140,9 +172,9 @@ const Transactions: React.FC<TransactionsProps> = ({ transactions }) => {
       </div>
 
       <PageFlipper
-          currentPage={page}
-          totalPages={totalPages}
-          onPageChange={setPage}
+        currentPage={page}
+        totalPages={totalPages}
+        onPageChange={setPage}
       />
     </div>
   );
