@@ -3,12 +3,11 @@ import { Company } from '../types';
 
 interface DropdownProps {
     options: Company[];
-    value: string;
     onChange: (event: ChangeEvent<HTMLInputElement>) => void;
     placeholder?: string;
 }
 
-const Dropdown: React.FC<DropdownProps> = ({ options, value, onChange, placeholder }) => {
+const Dropdown: React.FC<DropdownProps> = ({ options, onChange, placeholder }) => {
     const [filterText, setFilterText] = useState<string>(''); // State to manage the input text
     const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false); // State to manage dropdown visibility
     const [highlightedIndex, setHighlightedIndex] = useState<number>(-1); // State to track highlighted option

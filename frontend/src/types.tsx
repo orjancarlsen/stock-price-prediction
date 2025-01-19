@@ -62,3 +62,5 @@ export enum IconSVGType {
   Executed = 'EXECUTED',
   Canceled = 'CANCELED',
 }
+
+export type TimeFrame = '1w' | '1m' | '3m' | '1y' | 'max';

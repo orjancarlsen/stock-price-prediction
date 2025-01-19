@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import Graph from './GradientGraph';
-import TimeFrameSelector, { TimeFrame } from './TimeFrameSelector';
+import TimeFrameSelector from './TimeFrameSelector';
+import { Transaction, TimeFrame } from 'src/types';
 
 type HistoricData = {
   dates: string[];
@@ -9,13 +10,14 @@ type HistoricData = {
 
 function filterDataByTimeFrame(
     data: HistoricData,
+    transactions: Transaction[],
     timeframe: '1w' | '1m' | '3m' | '1y' | 'max'
-): HistoricData {
+): { filteredData: HistoricData, filteredTransactions: Transaction[] } {
     const { dates, prices } = data;
 
-    // If 'max', simply return all data
+    // If 'max', simply return all data and transactions
     if (timeframe === 'max') {
-        return data;
+        return { filteredData: data, filteredTransactions: transactions };
     }
 
     const now = new Date(dates[dates.length - 1]).getTime();
@@ -42,6 +44,7 @@ function filterDataByTimeFrame(
     // Filter the data
     const filteredDates: string[] = [];
     const filteredPrices: number[] = [];
+    const filteredTransactions: Transaction[] = transactions.filter(transaction => new Date(transaction.timestamp).getTime() >= cutoffDate);
 
     for (let i = 0; i < dates.length; i++) {
         const dateMs = new Date(dates[i]).getTime();
@@ -51,7 +54,7 @@ function filterDataByTimeFrame(
         }
     }
 
-    return { dates: filteredDates, prices: filteredPrices };
+    return { filteredData: { dates: filteredDates, prices: filteredPrices }, filteredTransactions };
 }
 
 export function computePercentageProfit(dates: string[], prices: number[]): number {
@@ -66,14 +69,18 @@ export function computePercentageProfit(dates: string[], prices: number[]): numb
 }
 
 interface GraphWithTimeFrameProps {
-    historicCompanyPrices: HistoricData;
+    graphData: HistoricData;
+    transactions?: Transaction[];
+    defaultTimeframe?: TimeFrame;
 }
 
 const GraphWithTimeFrame: React.FC<GraphWithTimeFrameProps> = ({
-    historicCompanyPrices,
+    graphData,
+    transactions = [],
+    defaultTimeframe = 'max'
 }) => {
     const [timeFrame, setTimeFrame] = useState<TimeFrame>(
-        'max'
+        defaultTimeframe
   );
 
     const profitsMap = useMemo(() => {
@@ -83,24 +90,24 @@ const GraphWithTimeFrame: React.FC<GraphWithTimeFrameProps> = ({
         };
 
         timeFrames.forEach((tf) => {
-            const filteredData = filterDataByTimeFrame(historicCompanyPrices, tf);
-            result[tf] = computePercentageProfit(filteredData.dates, filteredData.prices);
+            const filteredData = filterDataByTimeFrame(graphData, transactions, tf);
+            result[tf] = computePercentageProfit(filteredData.filteredData.dates, filteredData.filteredData.prices);
         });
 
         return result;
-    }, [historicCompanyPrices]);
+    }, [graphData]);
 
     const filteredData = useMemo(
-        () => filterDataByTimeFrame(historicCompanyPrices, timeFrame),
-        [historicCompanyPrices, timeFrame]
+        () => filterDataByTimeFrame(graphData, transactions, timeFrame),
+        [graphData, timeFrame, transactions]
     );
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <div style={{ marginLeft: '60px'}}>
-                <TimeFrameSelector onChange={setTimeFrame} profitsMap={profitsMap} />
+                <TimeFrameSelector onChange={setTimeFrame} profitsMap={profitsMap} defaultTimeFrame={defaultTimeframe} />
             </div>
-            <Graph historicCompanyPrices={filteredData} />
+            <Graph graphData={filteredData.filteredData} transactions={transactions} />
         </div>
     );
 };

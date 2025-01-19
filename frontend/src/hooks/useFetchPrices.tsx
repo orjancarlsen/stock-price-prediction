@@ -13,7 +13,7 @@ interface UseFetchPricesResult {
     error: string | null;
 }
 
-export const useFetchPrices = (ticker: string, fromDate: string, toDate: string): UseFetchPricesResult => {
+export const useFetchPrices = (ticker: string, fromDate?: string, toDate?: string): UseFetchPricesResult => {
     const [data, setData] = useState<PriceData>({ dates: [], prices: [] });
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
@@ -32,7 +32,11 @@ export const useFetchPrices = (ticker: string, fromDate: string, toDate: string)
             setLoading(true);
 
             try {
-                const response = await fetch(`${BASE_URL}/companies/price/${ticker}?fromDate=${fromDate}&toDate=${toDate}`, {
+                const url = new URL(`${BASE_URL}/companies/price/${ticker}`);
+                if (fromDate) url.searchParams.append('fromDate', fromDate);
+                if (toDate) url.searchParams.append('toDate', toDate);
+
+                const response = await fetch(url.toString(), {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',

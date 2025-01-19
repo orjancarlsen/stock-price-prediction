@@ -1,123 +1,170 @@
 import React from 'react';
 import { Line } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler } from 'chart.js';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Tooltip,
+  Legend,
+  Filler
+} from 'chart.js';
+import { Transaction } from 'src/types';
 
-// Register Chart.js modules
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler);
 
 let previousChartArea: any;
+let cachedGradient: CanvasGradient | undefined;
 
 interface GraphProps {
-  historicCompanyPrices: {
+  graphData: {
     dates: string[];
     prices: number[];
   };
+  transactions?: Transaction[];
 }
 
-const Graph: React.FC<GraphProps> = ({ historicCompanyPrices }) => {
-  console.log("Render Graph with data:", historicCompanyPrices);
+const Graph: React.FC<GraphProps> = ({ graphData, transactions }) => {
+  const transactionMap = new Map<number, { realValue: number; type: string }>();
 
-  // Configuration for the gradient
-  let cachedGradient: CanvasGradient | undefined;
-  const getGradient = (ctx: CanvasRenderingContext2D, chartArea: any): CanvasGradient => {
+  (transactions || []).forEach(tx => {
+    const dateStr = new Date(tx.timestamp).toISOString().split('T')[0];
+    const dateIndex = graphData.dates.indexOf(dateStr);
+    if (dateIndex !== -1) {
+      // You could store multiple transactions per day if needed, or just overwrite
+      transactionMap.set(dateIndex, {
+        realValue: tx.price_per_share ?? 0,
+        type: tx.transaction_type,
+      });
+    }
+  });
+
+  // Build an array of length == graphData.dates
+  // If there's a transaction on that date, we put the line's price so the dot appears on the line
+  // If not, we put null so no point is drawn
+  const transactionData = graphData.dates.map((_, i) => {
+    return transactionMap.has(i)
+      ? graphData.prices[i] // Dot at this day's line price
+      : null;              // No transaction dot this day
+  });
+
+  // Gradient background for the line
+  const getGradient = (
+    ctx: CanvasRenderingContext2D,
+    chartArea: { top: number; bottom: number }
+  ) => {
     if (!cachedGradient || chartArea !== previousChartArea) {
-      console.log("Render gradient");
       const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
-  
-      // Gradients
-      gradient.addColorStop(1, 'rgba(64, 105, 225, 0.8)'); // Strongest blue at the top
-      gradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)'); // Fully transparent below
-  
+      gradient.addColorStop(1, 'rgba(64, 105, 225, 0.8)');
+      gradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
       cachedGradient = gradient;
       previousChartArea = chartArea;
     }
     return cachedGradient;
   };
+
+  // Tooltips
   const tooltipCallbacks = {
     callbacks: {
-      label: function(context: any) {
+      label: function (context: any) {
+        if (context.dataset.label === 'Transactions') {
+          const idx = context.dataIndex;
+          const txInfo = transactionMap.get(idx);
+          
+          if (txInfo) {
+            const txLabel = txInfo.type === 'BUY' ? 'Kjøp' : txInfo.type === 'SELL' ? 'Salg' : txInfo.type === 'DIVIDEND' ? 'Utbytte' : 'Ukjent';
+            return `${txLabel}: ${txInfo.realValue}`;
+          }
+          return ''; 
+        }
+
         let label = '';
         if (context.parsed.y !== null) {
-          label = Math.round(context.parsed.y).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+            const value = context.parsed.y;
+            if (value >= 1000) {
+                label = Math.round(value)
+                    .toString()
+                    .replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+            } else if (value >= 100) {
+                label = value.toFixed(1);
+            } else if (value >= 10) {
+                label = value.toFixed(2);
+            } else {
+                label = value.toFixed(3);
+            }
         }
-        return label;
-      }
-    }
+        return `Kurs: ${label}`;
+      },
+    },
   };
 
+  // Combine both "line" datasets
   const data = {
-    labels: historicCompanyPrices.dates,
+    labels: graphData.dates,
     datasets: [
       {
-        // label: 'Stock Price',
-        data: historicCompanyPrices.prices,
-        borderColor: 'rgba(64, 105, 225, 1)',
-        backgroundColor: function(context: any) {
-          const chart = context.chart;
-          const { ctx, chartArea } = chart;
-
-          if (!chartArea) {
-            // This case happens on initial chart load
-            return undefined;
-          }
-
-          return getGradient(ctx, chartArea);
-        
+        label: 'Stock Price',
+        data: graphData.prices, // pure number[]
+        borderColor: 'rgba(64,105,225,1)',
+        backgroundColor: (context: any) => {
+            const { chart } = context;
+            const { ctx, chartArea } = chart;
+            if (!chartArea) return undefined;
+            return getGradient(ctx, chartArea);
         },
         fill: true,
         tension: 0.1,
-        pointRadius: 0, // Disable circles at data points
-      }
-    ]
+        pointRadius: 0,
+        order: 2,
+        z: 2,
+      },
+      {
+        label: 'Transactions',
+        data: transactionData,
+        showLine: false,
+        pointRadius: 5,   // bigger dots
+        pointBackgroundColor: (ctx: any) => {
+            const idx = ctx.dataIndex;
+            const txInfo = transactionMap.get(idx);
+            if (!txInfo) return 'gray';
+            return txInfo.type === 'BUY' ? 'blue' : txInfo.type === 'SELL' ? 'red' : 'gray';
+        },
+        order: 1,
+        z: 1,
+      },
+    ],
   };
 
   const options = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: {
-        display: false, // Disable the legend display
-      },
-      tooltip: tooltipCallbacks,
+        legend: { display: false },
+        tooltip: tooltipCallbacks,
     },
     interaction: {
-      intersect: false,
-      mode: 'index' as const,
+        intersect: false,
+        mode: 'index' as const,
     },
     scales: {
-      x: {
-        grid: {
-          color: 'rgba(0, 0, 0, 0.2)',
-          lineWidth: 1,
+        x: {
+            type: 'category' as const,
         },
-        title: {
-          display: true,
+        y: {
+            type: 'linear' as const,
         },
-      },
-      y: {
-        grid: {
-          color: 'rgba(0, 0, 0, 0.2)',
-          lineWidth: 1,
+    },
+    elements: {
+        line: {
+            borderWidth: 1,
         },
-        title: {
-          display: true,
-        },
-        ticks: {
-          callback: function(tickValue: string | number) {
-            if (typeof tickValue === 'number') {
-              return tickValue.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-            }
-            return tickValue;
-          }
-        },
-      },
     },
   };
-  
+
   const containerStyle: React.CSSProperties = {
     color: '#000',
-    backgroundColor: 'rgb(255, 255, 255)',
-    transition: '0.3s ease-in-out',
+    backgroundColor: '#fff',
     width: '100%',
     height: '400px',
     boxSizing: 'border-box',
