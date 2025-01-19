@@ -1,11 +1,8 @@
 import React, { useState, ChangeEvent } from 'react';
-import Graph from './components/graph/GradientGraph';
-import TypingFieldDropdown from './components/TypingFieldDropdown';
 import Transactions from './components/transactions/Transactions';
 import Orders from './components/orders/Orders';
 import Portfolio from './components/portfolio/Portfolio';
 import { useFetchCompanies } from './hooks/useFetchCompanies';
-import { useFetchPrices } from './hooks/useFetchPrices';
 import { useFetchTransactions } from './hooks/useFetchTransactions';
 import { useFetchOrders } from './hooks/useFetchOrders';
 import { useFetchPortfolio } from './hooks/useFetchPortfolio';
@@ -14,7 +11,7 @@ import ContentSwitch from './components/ContentSwitch';
 
 function App() {
   const [view, setView] = useState<'orders' | 'transactions'>('transactions');
-  const [selectedCompany, setSelectedCompany] = useState<string>('');
+  // const [selectedCompany, setSelectedCompany] = useState<string>('');
 
   // Fetch calls
   const {
@@ -23,20 +20,20 @@ function App() {
     loading: trainedCompaniesLoading,
   } = useFetchCompanies('/companies/trained');
 
-  const {
-    data: historicCompanyPrices,
-    loading: pricesLoading,
-    error: pricesError,
-  } = useFetchPrices(selectedCompany, '2023-01-01', '2023-12-31');
+  // const {
+  //   data: historicCompanyPrices,
+  //   loading: pricesLoading,
+  //   error: pricesError,
+  // } = useFetchPrices(selectedCompany, '2023-01-01', '2023-12-31');
 
   const transactions = useFetchTransactions();
   const orders = useFetchOrders();
   const portfolio = useFetchPortfolio();
   const portfolioValues = useFetchPortfolioValues();
 
-  const handleCompanyChange = (e: ChangeEvent<HTMLSelectElement>) => {
-    setSelectedCompany(e.target.value);
-  };
+  // const handleCompanyChange = (e: ChangeEvent<HTMLSelectElement>) => {
+  //   setSelectedCompany(e.target.value);
+  // };
 
   if (trainedCompaniesLoading) {
     return <div>Loading...</div>;
@@ -57,7 +54,7 @@ function App() {
                 // borderRight: '1px solid #ccc',
                 }}
             >
-                <Portfolio portfolio={portfolio} portfolioValues={portfolioValues} />
+                <Portfolio portfolio={portfolio} portfolioValues={portfolioValues} trainedCompanies={trainedCompanies} transactions={transactions} />
             </div>
 
             {/* RIGHT COLUMN */}
@@ -82,7 +79,7 @@ function App() {
             </div>
         </div>
 
-        <TypingFieldDropdown
+        {/* <TypingFieldDropdown
             options={trainedCompanies}
             value={selectedCompany}
             onChange={(e: ChangeEvent<HTMLInputElement>) =>
@@ -93,7 +90,7 @@ function App() {
 
         {historicCompanyPrices?.dates?.length > 0 && (
             <Graph historicCompanyPrices={historicCompanyPrices} />
-        )}
+        )} */}
     </div>
   );
 }

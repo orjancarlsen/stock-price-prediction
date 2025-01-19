@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
-
-export type TimeFrame = '1w' | '1m' | '3m' | '1y' | 'max';
+import { TimeFrame } from 'src/types';
 
 interface TimeFrameSelectorProps {
     onChange: (timeFrame: TimeFrame) => void;
     profitsMap: { [key in TimeFrame]: number };
+    defaultTimeFrame?: TimeFrame;
 }
 
-const TimeFrameSelector: React.FC<TimeFrameSelectorProps> = ({ onChange, profitsMap  }) => {
-    const [selectedTimeFrame, setSelectedTimeFrame] = useState<TimeFrame>('max');
+const TimeFrameSelector: React.FC<TimeFrameSelectorProps> = ({ onChange, profitsMap, defaultTimeFrame = 'max'  }) => {
+    const [selectedTimeFrame, setSelectedTimeFrame] = useState<TimeFrame>(defaultTimeFrame);
     const timeFrames: TimeFrame[] = ['1w', '1m', '3m', '1y', 'max'];
 
     const handleClick = (timeFrame: TimeFrame) => {

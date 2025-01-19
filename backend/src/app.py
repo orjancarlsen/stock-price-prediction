@@ -116,7 +116,11 @@ def get_stock_price(ticker: str):
     to_date = request.args.get('toDate')
 
     stock = yf.Ticker(ticker)
-    price_data = stock.history(start=from_date, end=to_date)
+    if from_date and to_date:
+        price_data = stock.history(start=from_date, end=to_date)
+    else:
+        price_data = stock.history(period='max')
+
     prices = price_data['Close'].tolist()
     dates = price_data.index.strftime('%Y-%m-%d').tolist()
 
