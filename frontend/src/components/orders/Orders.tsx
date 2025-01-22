@@ -13,7 +13,7 @@ function getDateString(date: Date): string {
 
 function groupOrdersByDate(orders: Order[]) {
   return orders.reduce<Record<string, Order[]>>((acc, order) => {
-    const dateKey = getDateString(new Date(order.timestamp_created  + ' GMT+0100'));
+    const dateKey = getDateString(new Date(order.timestamp_created));
     if (!acc[dateKey]) {
       acc[dateKey] = [];
     }
