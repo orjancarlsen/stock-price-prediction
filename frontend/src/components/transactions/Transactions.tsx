@@ -22,7 +22,7 @@ function formatNorwegianDate(date: Date): string {
 
 function groupTransactionsByDate(transactions: Transaction[]) {
   return transactions.reduce<Record<string, Transaction[]>>((acc, transaction) => {
-    const dateKey = getDateString(new Date(transaction.timestamp  + ' GMT+0100'));
+    const dateKey = getDateString(new Date(transaction.timestamp));
     if (!acc[dateKey]) {
       acc[dateKey] = [];
     }
