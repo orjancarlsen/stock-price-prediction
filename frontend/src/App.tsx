@@ -20,12 +20,6 @@ function App() {
     loading: trainedCompaniesLoading,
   } = useFetchCompanies('/companies/trained');
 
-  // const {
-  //   data: historicCompanyPrices,
-  //   loading: pricesLoading,
-  //   error: pricesError,
-  // } = useFetchPrices(selectedCompany, '2023-01-01', '2023-12-31');
-
   const transactions = useFetchTransactions();
   const orders = useFetchOrders();
   const portfolio = useFetchPortfolio();
@@ -78,19 +72,6 @@ function App() {
                 )}
             </div>
         </div>
-
-        {/* <TypingFieldDropdown
-            options={trainedCompanies}
-            value={selectedCompany}
-            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-            handleCompanyChange(e as unknown as ChangeEvent<HTMLSelectElement>)
-            }
-            placeholder="Select model"
-        />
-
-        {historicCompanyPrices?.dates?.length > 0 && (
-            <Graph historicCompanyPrices={historicCompanyPrices} />
-        )} */}
     </div>
   );
 }
