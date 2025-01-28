@@ -92,9 +92,9 @@ const Portfolio: React.FC<PortfolioProps> = ({
   }, [portfolio]);
 
   return (
-    <div style={{ display: 'flex' }}>
+    <div style={{ display: 'flex', gap: '20px' }}>
       {/* Left Column */}
-      <div style={{ flex: 1, padding: '0 1rem' }}>
+      <div style={{ flex: 1, padding: '1rem 1rem', backgroundColor: 'white', borderRadius: '8px' }} >
         {/* Equity and Daily Development */}
         <div
           style={{
@@ -191,7 +191,7 @@ const Portfolio: React.FC<PortfolioProps> = ({
       </div>
 
       {/* Right Column */}
-      <div style={{ flex: 1, padding: '0 20px', fontSize: '0.9rem' }}>
+      <div style={{ flex: 1, padding: '20px 20px', fontSize: '0.9rem', backgroundColor: 'white', borderRadius: '8px' }}>
         {/* Holdings Header */}
         <p style={{ fontSize: '2rem', fontWeight: 'bold', marginTop: 0 }}>
           Beholdning

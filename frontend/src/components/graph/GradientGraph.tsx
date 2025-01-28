@@ -164,7 +164,7 @@ const Graph: React.FC<GraphProps> = ({
             if (!chartArea) return undefined;
             return getGradient(ctx, chartArea);
         },
-        fill: true,
+        fill: 'start',
         tension: 0.1,
         pointRadius: 0,
         order: 3,
@@ -221,7 +221,7 @@ const Graph: React.FC<GraphProps> = ({
         maintainAspectRatio: false,
         plugins: {
             legend: { 
-                display: true
+                display: false
             },
             tooltip: tooltipCallbacks,
         },

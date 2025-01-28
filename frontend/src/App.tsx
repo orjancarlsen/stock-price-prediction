@@ -38,8 +38,8 @@ function App() {
   }
 
   return (
-    <div style={{ display: 'flex', height: '100vh', flexDirection: 'column' }}>
-        <div style={{ display: 'flex', flex: 1 }}>
+    <div style={{ display: 'flex', height: '100vh', flexDirection: 'column', backgroundColor: '#f5f5f5' }}>
+        <div style={{ display: 'flex', flex: 1, gap: '20px' }}>
             {/* LEFT COLUMN (flexible width) */}
             <div
                 style={{
@@ -53,22 +53,22 @@ function App() {
 
             {/* RIGHT COLUMN */}
             <div
-                style={{
+              style={{
                 width: '400px',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 padding: '1rem',
-                }}
+              }}
             >
                 <ContentSwitch currentView={view} onSwitchView={setView} />
 
                 {view === 'orders' && orders && orders.length > 0 && (
-                    <Orders orders={orders} />
+                  <Orders orders={orders} />
                 )}
 
                 {view === 'transactions' && transactions && transactions.length > 0 && (
-                    <Transactions transactions={transactions} />
+                  <Transactions transactions={transactions} />
                 )}
             </div>
         </div>
