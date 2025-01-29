@@ -155,7 +155,7 @@ const Graph: React.FC<GraphProps> = ({
 
     // ----- Build datasets -----
     const mainDataset = {
-        label: 'Stock Price',
+        label: 'Verdi',
         data: mainDataPoints,
         borderColor: 'rgba(64,105,225,1)',
         backgroundColor: (context: any) => {

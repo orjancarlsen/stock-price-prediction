@@ -2,6 +2,7 @@ import React, { useState, ChangeEvent } from 'react';
 import Transactions from './components/transactions/Transactions';
 import Orders from './components/orders/Orders';
 import Portfolio from './components/portfolio/Portfolio';
+import LoadingAnimation from './components/LoadingAnimation';
 import { useFetchCompanies } from './hooks/useFetchCompanies';
 import { useFetchTransactions } from './hooks/useFetchTransactions';
 import { useFetchOrders } from './hooks/useFetchOrders';
@@ -11,7 +12,6 @@ import ContentSwitch from './components/ContentSwitch';
 
 function App() {
   const [view, setView] = useState<'orders' | 'transactions'>('transactions');
-  // const [selectedCompany, setSelectedCompany] = useState<string>('');
 
   // Fetch calls
   const {
@@ -25,12 +25,8 @@ function App() {
   const portfolio = useFetchPortfolio();
   const portfolioValues = useFetchPortfolioValues();
 
-  // const handleCompanyChange = (e: ChangeEvent<HTMLSelectElement>) => {
-  //   setSelectedCompany(e.target.value);
-  // };
-
   if (trainedCompaniesLoading) {
-    return <div>Loading...</div>;
+    return <LoadingAnimation/>;
   }
 
   if (trainedCompaniesError) {

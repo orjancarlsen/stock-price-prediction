@@ -22,6 +22,10 @@ module.exports = {
         exclude: /node_modules/,
       },
       {
+        test: /\.css$/,
+        use: ["style-loader", "css-loader"],
+      },
+      {
         test: /\.svg$/,
         use: [
           {
@@ -29,6 +33,10 @@ module.exports = {
           },
         ],
       },
+      {
+        test: /\.(png|jpe?g|gif|ico)$/i,
+        type: 'asset/resource',
+      }
     ]
   },
   resolve: {

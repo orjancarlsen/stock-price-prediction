@@ -1,0 +1,55 @@
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background-color: #f5f5f5;
+  }
+  
+  .animation-wrapper {
+    position: relative;
+    width: 600px;
+    height: 300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .graph-svg {
+    width: 100%;
+    height: auto;
+  }
+  
+  /* Graph zigzag line */
+  .line-path {
+    fill: none;
+    stroke: #4caf50;
+    stroke-width: 4;
+    stroke-dasharray: 1200;
+    stroke-dashoffset: 1200;
+    animation: drawLine 1s linear infinite;
+  }
+  
+  @keyframes drawLine {
+    0% {
+      stroke-dashoffset: 1200;
+    }
+    100% {
+      stroke-dashoffset: 0;
+    }
+  }
+  
+  /* The rocket follows a straight diagonal */
+  .rocket {
+    transform: translate(-24px, -24px);
+  }
+  
+  .animation-wrapper p {
+    margin-top: 20px;
+    font-size: 18px;
+    color: #333;
+    font-weight: bold;
+    text-align: center;
+  }
+  
