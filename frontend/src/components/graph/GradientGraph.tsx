@@ -8,11 +8,23 @@ import {
   LineElement,
   Tooltip,
   Legend,
-  Filler
+  Filler,
+  TimeScale,
+  ChartOptions
 } from 'chart.js';
+import 'chartjs-adapter-date-fns';
 import { Transaction } from 'src/types';
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler);
+ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    TimeScale,
+    PointElement,
+    LineElement,
+    Tooltip,
+    Legend,
+    Filler
+);
 
 let previousChartArea: any;
 let cachedGradient: CanvasGradient | undefined;
@@ -23,37 +35,72 @@ interface GraphProps {
     prices: number[];
   };
   transactions?: Transaction[];
+  compareData?: {
+    dates: string[];
+    prices: number[];
+  };
+  compareName: string;
 }
 
-const Graph: React.FC<GraphProps> = ({ graphData, transactions }) => {
-  const transactionMap = new Map<number, { realValue: number; type: string }>();
+const Graph: React.FC<GraphProps> = ({
+  graphData,
+  transactions,
+  compareData,
+  compareName
+}) => {
+    console.log('graphData', graphData);
+    console.log('compareData', compareData);
 
-  (transactions || []).forEach(tx => {
-    const dateStr = new Date(tx.timestamp).toISOString().split('T')[0];
-    const dateIndex = graphData.dates.indexOf(dateStr);
-    if (dateIndex !== -1) {
-      // You could store multiple transactions per day if needed, or just overwrite
-      transactionMap.set(dateIndex, {
-        realValue: tx.price_per_share ?? 0,
-        type: tx.transaction_type,
-      });
+    const mainBasePrice = graphData.prices[0];
+    const mainPercentData = graphData.prices.map(
+        (price) => ((price - mainBasePrice) / mainBasePrice) * 100
+    );
+
+    let comparePercentData: number[] = [];
+    if (compareData && compareData.dates && compareData.prices) {
+        const indexBasePrice = compareData.prices[0];
+        comparePercentData = compareData.prices.map(
+            (price) => ((price - indexBasePrice) / indexBasePrice) * 100
+        );
     }
-  });
 
-  // Build an array of length == graphData.dates
-  // If there's a transaction on that date, we put the line's price so the dot appears on the line
-  // If not, we put null so no point is drawn
-  const transactionData = graphData.dates.map((_, i) => {
-    return transactionMap.has(i)
-      ? graphData.prices[i] // Dot at this day's line price
-      : null;              // No transaction dot this day
-  });
+    const transactionMap = new Map<number, { realValue: number; type: string }>();
+    (transactions || []).forEach((tx) => {
+        const dateStr = new Date(tx.timestamp).toISOString().split('T')[0];
+        const dateIndex = graphData.dates.indexOf(dateStr);
+        if (dateIndex !== -1) {
+        transactionMap.set(dateIndex, {
+            realValue: tx.price_per_share ?? 0,
+            type: tx.transaction_type,
+        });
+        }
+    });
 
-  // Gradient background for the line
-  const getGradient = (
-    ctx: CanvasRenderingContext2D,
-    chartArea: { top: number; bottom: number }
-  ) => {
+    const mainDataPoints = graphData.dates.map((dateStr, i) => ({
+        x: dateStr,
+        y: mainPercentData[i],
+    }));
+
+    const compareDataPoints =
+    compareData && compareData.dates
+      ? compareData.dates.map((dateStr, i) => ({
+          x: dateStr,
+          y: comparePercentData[i],
+        }))
+      : [];
+
+    const transactionDataPoints = graphData.dates
+        .map((dateStr, i) => {
+            if (!transactionMap.has(i)) return null;
+            return {
+                x: dateStr,
+                y: mainPercentData[i],
+            };
+        })
+        .filter((pt): pt is { x: string; y: number } => pt !== null);
+
+  // ----- Gradient for main line fill -----
+  const getGradient = (ctx: CanvasRenderingContext2D, chartArea: { top: number; bottom: number }) => {
     if (!cachedGradient || chartArea !== previousChartArea) {
       const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
       gradient.addColorStop(1, 'rgba(64, 105, 225, 0.8)');
@@ -64,48 +111,52 @@ const Graph: React.FC<GraphProps> = ({ graphData, transactions }) => {
     return cachedGradient;
   };
 
-  // Tooltips
-  const tooltipCallbacks = {
-    callbacks: {
-      label: function (context: any) {
-        if (context.dataset.label === 'Transactions') {
-          const idx = context.dataIndex;
-          const txInfo = transactionMap.get(idx);
-          
-          if (txInfo) {
-            const txLabel = txInfo.type === 'BUY' ? 'Kjøp' : txInfo.type === 'SELL' ? 'Salg' : txInfo.type === 'DIVIDEND' ? 'Utbytte' : 'Ukjent';
-            return `${txLabel}: ${txInfo.realValue}`;
-          }
-          return ''; 
-        }
+  function formatAsLocalYYYYMMDD(dateObj: Date): string {
+    // Get local year/month/day
+    const year = dateObj.getFullYear();
+    // Note: getMonth() is zero-based, so add 1
+    const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
+    const day = dateObj.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`; // e.g. "2025-01-21"
+  }
+  
 
-        let label = '';
-        if (context.parsed.y !== null) {
-            const value = context.parsed.y;
-            if (value >= 1000) {
-                label = Math.round(value)
-                    .toString()
-                    .replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-            } else if (value >= 100) {
-                label = value.toFixed(1);
-            } else if (value >= 10) {
-                label = value.toFixed(2);
-            } else {
-                label = value.toFixed(3);
-            }
-        }
-        return `Kurs: ${label}`;
-      },
-    },
-  };
+    // ----- Tooltip handling -----
+    const tooltipCallbacks = {
+        callbacks: {
+            label: function (context: any) {
+                const datasetLabel = context.dataset.label;
+                const value = context.parsed.y;
 
-  // Combine both "line" datasets
-  const data = {
-    labels: graphData.dates,
-    datasets: [
-      {
-        label: 'Stock Price',
-        data: graphData.prices, // pure number[]
+                if (datasetLabel === 'Transactions') {
+                    const rawX = context.parsed.x;  // e.g. 1735603200000
+                    const dateObj = new Date(rawX); // convert to JS Date
+                    const dayOnly = formatAsLocalYYYYMMDD(dateObj);
+                    const idx = graphData.dates.indexOf(dayOnly);
+                    if (idx === -1) return '';
+
+                    const txInfo = transactionMap.get(idx);
+                    if (!txInfo) return '';
+                    const txLabel =
+                        txInfo.type === 'BUY'
+                            ? 'Kjøp'
+                            : txInfo.type === 'SELL'
+                            ? 'Salg'
+                            : txInfo.type === 'DIVIDEND'
+                            ? 'Utbytte'
+                            : 'Ukjent';
+                    return `${txLabel}: ${txInfo.realValue.toFixed(2)}`;
+                }
+                if (value == null) return '';
+                return `${datasetLabel}: ${value.toFixed(2)}%`;
+            },
+        },
+    };
+
+    // ----- Build datasets -----
+    const mainDataset = {
+        label: 'Verdi',
+        data: mainDataPoints,
         borderColor: 'rgba(64,105,225,1)',
         backgroundColor: (context: any) => {
             const { chart } = context;
@@ -113,68 +164,119 @@ const Graph: React.FC<GraphProps> = ({ graphData, transactions }) => {
             if (!chartArea) return undefined;
             return getGradient(ctx, chartArea);
         },
-        fill: true,
+        fill: 'start',
         tension: 0.1,
         pointRadius: 0,
-        order: 2,
-        z: 2,
-      },
-      {
-        label: 'Transactions',
-        data: transactionData,
-        showLine: false,
-        pointRadius: 5,   // bigger dots
-        pointBackgroundColor: (ctx: any) => {
-            const idx = ctx.dataIndex;
-            const txInfo = transactionMap.get(idx);
-            if (!txInfo) return 'gray';
-            return txInfo.type === 'BUY' ? 'blue' : txInfo.type === 'SELL' ? 'red' : 'gray';
-        },
-        order: 1,
-        z: 1,
-      },
-    ],
+        order: 3,
+        z: 3,
+    };
+
+  // Dataset for transaction points (optional)
+  const transactionsDataset = {
+    label: 'Transactions',
+    data: transactionDataPoints,
+    showLine: false,
+    pointRadius: 5,
+    pointBackgroundColor: (ctx: any) => {
+        if (!ctx.raw || !ctx.raw.x) {
+            return 'gray';
+        }
+        const dateStr = ctx.raw.x; // the x date
+        const idx = graphData.dates.indexOf(dateStr);
+        const txInfo = transactionMap.get(idx);
+        if (!txInfo) return 'gray';
+        return txInfo.type === 'BUY'
+            ? 'green'
+            : txInfo.type === 'SELL'
+            ? 'red'
+            : 'gray';
+    },
+    order: 1,
+    z: 1,
   };
 
-  const options = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-        legend: { display: false },
-        tooltip: tooltipCallbacks,
-    },
-    interaction: {
-        intersect: false,
-        mode: 'index' as const,
-    },
-    scales: {
-        x: {
-            type: 'category' as const,
-        },
-        y: {
-            type: 'linear' as const,
-        },
-    },
-    elements: {
-        line: {
-            borderWidth: 1,
-        },
-    },
-  };
+    const datasets: any[] = [mainDataset, transactionsDataset];
 
-  const containerStyle: React.CSSProperties = {
-    color: '#000',
-    backgroundColor: '#fff',
-    width: '100%',
-    height: '400px',
-    boxSizing: 'border-box',
-  };
+    if (compareDataPoints.length > 0) {
+        datasets.push({
+            label: compareName,
+            data: compareDataPoints,
+            borderColor: 'rgb(255, 200, 0)',
+            backgroundColor: 'rgb(255, 200, 0)',
+            fill: false,
+            tension: 0.1,
+            pointRadius: 0,
+            order: 2,
+            z: 2,
+        });
+    }
 
-  return (
-    <div style={containerStyle}>
-      <Line data={data} options={options} />
-    </div>
-  );
+    const data = {
+        datasets,
+    };
+
+    // Chart options
+    const options: ChartOptions<'line'> = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { 
+                display: false
+            },
+            tooltip: tooltipCallbacks,
+        },
+        interaction: {
+            intersect: false,
+            mode: 'nearest' as const,
+            axis: 'x' as const,
+        },
+        scales: {
+            x: {
+                type: 'time' as const,
+                time: {
+                    unit: 'day',
+                    tooltipFormat: 'MMM d, yyyy',
+                    displayFormats: {
+                        day: 'MMM d, yyyy'
+                    },
+                },
+                adapters: {
+                    date: {
+                    // e.g., dayjs or luxon adapter
+                    },
+                },
+            },
+            y: { 
+                type: 'linear' as const,
+                ticks: {
+                    callback: function (this: any, tickValue: string | number, index: number, ticks: any[]) {
+                        const value = Number(tickValue);
+                        const diff = ticks.length > 1 ? ticks[1].value - ticks[0].value : 1;
+                        return diff < 1 ? value.toFixed(1) + '%' : value.toFixed(0) + '%';
+                    }
+                },
+            },
+        },
+        elements: {
+            line: {
+                borderWidth: 1,
+            },
+        },
+    };
+
+    const containerStyle: React.CSSProperties = {
+        color: '#000',
+        backgroundColor: '#fff',
+        width: '100%',
+        height: '400px',
+        boxSizing: 'border-box',
+    };
+
+    return (
+        <div style={containerStyle}>
+            <Line data={data} options={options} />
+        </div>
+    );
 };
 
 export default Graph;

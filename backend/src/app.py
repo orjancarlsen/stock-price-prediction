@@ -124,8 +124,6 @@ def get_stock_price(ticker: str):
     prices = price_data['Close'].tolist()
     dates = price_data.index.strftime('%Y-%m-%d').tolist()
 
-    print("Number of dates: ", len(dates))
-
     return jsonify({'dates': dates, 'prices': prices})
 
 
@@ -171,7 +169,6 @@ def get_portfolio_values():
     sql_wrapper = SQLWrapper()
     portfolio_values = sql_wrapper.get_portfolio_values()
     return jsonify([value.__dict__ for value in portfolio_values])
-
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=2000)

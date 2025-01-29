@@ -2,6 +2,7 @@ import React, { useState, ChangeEvent } from 'react';
 import Transactions from './components/transactions/Transactions';
 import Orders from './components/orders/Orders';
 import Portfolio from './components/portfolio/Portfolio';
+import LoadingAnimation from './components/LoadingAnimation';
 import { useFetchCompanies } from './hooks/useFetchCompanies';
 import { useFetchTransactions } from './hooks/useFetchTransactions';
 import { useFetchOrders } from './hooks/useFetchOrders';
@@ -11,7 +12,6 @@ import ContentSwitch from './components/ContentSwitch';
 
 function App() {
   const [view, setView] = useState<'orders' | 'transactions'>('transactions');
-  // const [selectedCompany, setSelectedCompany] = useState<string>('');
 
   // Fetch calls
   const {
@@ -20,23 +20,13 @@ function App() {
     loading: trainedCompaniesLoading,
   } = useFetchCompanies('/companies/trained');
 
-  // const {
-  //   data: historicCompanyPrices,
-  //   loading: pricesLoading,
-  //   error: pricesError,
-  // } = useFetchPrices(selectedCompany, '2023-01-01', '2023-12-31');
-
   const transactions = useFetchTransactions();
   const orders = useFetchOrders();
   const portfolio = useFetchPortfolio();
   const portfolioValues = useFetchPortfolioValues();
 
-  // const handleCompanyChange = (e: ChangeEvent<HTMLSelectElement>) => {
-  //   setSelectedCompany(e.target.value);
-  // };
-
   if (trainedCompaniesLoading) {
-    return <div>Loading...</div>;
+    return <LoadingAnimation/>;
   }
 
   if (trainedCompaniesError) {
@@ -44,8 +34,8 @@ function App() {
   }
 
   return (
-    <div style={{ display: 'flex', height: '100vh', flexDirection: 'column' }}>
-        <div style={{ display: 'flex', flex: 1 }}>
+    <div style={{ display: 'flex', height: '100vh', flexDirection: 'column', backgroundColor: '#f5f5f5' }}>
+        <div style={{ display: 'flex', flex: 1, gap: '20px' }}>
             {/* LEFT COLUMN (flexible width) */}
             <div
                 style={{
@@ -59,38 +49,25 @@ function App() {
 
             {/* RIGHT COLUMN */}
             <div
-                style={{
+              style={{
                 width: '400px',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 padding: '1rem',
-                }}
+              }}
             >
                 <ContentSwitch currentView={view} onSwitchView={setView} />
 
                 {view === 'orders' && orders && orders.length > 0 && (
-                    <Orders orders={orders} />
+                  <Orders orders={orders} />
                 )}
 
                 {view === 'transactions' && transactions && transactions.length > 0 && (
-                    <Transactions transactions={transactions} />
+                  <Transactions transactions={transactions} />
                 )}
             </div>
         </div>
-
-        {/* <TypingFieldDropdown
-            options={trainedCompanies}
-            value={selectedCompany}
-            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-            handleCompanyChange(e as unknown as ChangeEvent<HTMLSelectElement>)
-            }
-            placeholder="Select model"
-        />
-
-        {historicCompanyPrices?.dates?.length > 0 && (
-            <Graph historicCompanyPrices={historicCompanyPrices} />
-        )} */}
     </div>
   );
 }
