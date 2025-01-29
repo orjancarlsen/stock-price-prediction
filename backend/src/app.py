@@ -1,7 +1,7 @@
 """API to interact with the stock price regressor."""
 
 from typing import List
-import time
+
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from pytickersymbols import PyTickerSymbols
