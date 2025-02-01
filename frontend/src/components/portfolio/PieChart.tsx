@@ -72,7 +72,7 @@ const PieChart: React.FC<PieChartProps> = ({
 
   // Default colors.
   const defaultColors = [
-    '#BBBBBB',
+    'lightgrey',
     '#36A2EB',
     '#FFCE56',
     '#66BB6A',

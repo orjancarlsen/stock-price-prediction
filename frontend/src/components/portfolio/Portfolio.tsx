@@ -230,7 +230,7 @@ const Portfolio: React.FC<PortfolioProps> = ({
         </div>
 
         {/* Section to View Stock Prices */}
-        <p style={{ fontSize: '2rem', fontWeight: 'bold' }}>Se aksjekurs</p>
+        {/* <p style={{ fontSize: '2rem', fontWeight: 'bold' }}>Se aksjekurs</p>
 
         <TypingFieldDropdown
           options={trainedCompanies}
@@ -242,7 +242,6 @@ const Portfolio: React.FC<PortfolioProps> = ({
           placeholder="Velg selskap"
         />
 
-        {/* Historic Company Prices Graph */}
         {historicCompanyPrices?.dates?.length > 0 && (
           <GraphWithTimeFrame
             graphData={historicCompanyPrices}
@@ -250,7 +249,7 @@ const Portfolio: React.FC<PortfolioProps> = ({
             defaultTimeframe="1y"
             compareData={indexPrices}
           />
-        )}
+        )} */}
       </div>
     </div>
   );

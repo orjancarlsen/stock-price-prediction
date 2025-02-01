@@ -9,6 +9,7 @@ import { useFetchOrders } from './hooks/useFetchOrders';
 import { useFetchPortfolio } from './hooks/useFetchPortfolio';
 import { useFetchPortfolioValues } from './hooks/useFetchPortfolioValues';
 import ContentSwitch from './components/ContentSwitch';
+import Header from './components/Header';
 
 function App() {
   const [view, setView] = useState<'orders' | 'transactions'>('transactions');
@@ -35,6 +36,7 @@ function App() {
 
   return (
     <div style={{ display: 'flex', height: '100vh', flexDirection: 'column', backgroundColor: '#f5f5f5' }}>
+        <Header trainedCompanies={trainedCompanies}/>
         <div style={{ display: 'flex', flex: 1, gap: '20px' }}>
             {/* LEFT COLUMN (flexible width) */}
             <div

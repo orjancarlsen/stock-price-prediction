@@ -1,0 +1,26 @@
+/* Entering state: starting from a contracted (scaled down) state */
+.field-enter {
+    opacity: 0;
+    transform: scaleY(0.8);
+  }
+  
+  /* Entering active state: animate to full size */
+  .field-enter-active {
+    opacity: 1;
+    transform: scaleY(1);
+    transition: opacity 300ms ease, transform 300ms ease;
+  }
+  
+  /* Exiting state: start from full size */
+  .field-exit {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+  
+  /* Exiting active state: animate to a contracted state */
+  .field-exit-active {
+    opacity: 0;
+    transform: scaleY(0.8);
+    transition: opacity 300ms ease, transform 300ms ease;
+  }
+  
