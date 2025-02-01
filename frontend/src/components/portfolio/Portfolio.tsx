@@ -6,6 +6,7 @@ import GraphWithTimeFrame from '../graph/GraphWithTimeFrame';
 import TypingFieldDropdown from '../TypingFieldDropdown';
 import { Company, Transaction } from '../../types';
 import { useFetchPrices } from '../../hooks/useFetchPrices';
+import PieChart from './PieChart';
 
 interface PortfolioProps {
     portfolio: Asset[];
@@ -61,8 +62,14 @@ const Portfolio: React.FC<PortfolioProps> = ({
         error: indexPricesError,
     } = useFetchPrices('OSEBX.OL');
 
-    console.log('indexPrices', indexPrices);
-
+    const pieChartData = portfolio.map(asset => {
+      if (asset.asset_type === AssetType.CASH) {
+        return { name: 'Saldo', value: asset.total_value };
+      } else if (asset.asset_type === AssetType.STOCK) {
+        return { name: asset.stock_symbol || 'Unknown', value: (asset.todays_value ?? 0) * (asset.number_of_shares ?? 0) };
+      }
+      return { name: 'Unknown', value: 0 };
+    });
 
 
     // Filter Transactions for Selected Company
@@ -216,6 +223,10 @@ const Portfolio: React.FC<PortfolioProps> = ({
           {sortedStocks.map((stock) => (
             <StockRow key={stock.stock_symbol} asset={stock} />
           ))}
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'center', margin: '2rem 0' }}>
+          <PieChart data={pieChartData} width={300} height={300} />
         </div>
 
         {/* Section to View Stock Prices */}
