@@ -31,6 +31,17 @@ CORS(
     }
 )
 
+trained_models = Regressor.get_trained_models()
+trained_models_names = []
+for ticker in trained_models:
+    trained_models_names.append(
+        {
+            "symbol": ticker,
+            "name": yf.Ticker(ticker).info.get('longName', '')
+        }
+    )
+trained_models_names.sort(key=lambda x: x['name'])
+
 
 @app.route('/train/<ticker>', methods=['POST'])
 def train(ticker: str):
@@ -93,18 +104,8 @@ def get_trained_models() -> List[str]:
     """
     Return a list of stocks for which there exist trained models.
     """
-    trained_models = Regressor.get_trained_models()
 
-    symbol_name = []
-    for ticker in trained_models:
-        symbol_name.append(
-            {
-                "symbol": ticker,
-                "name": yf.Ticker(ticker).info.get('longName', '')
-            }
-        )
-
-    return jsonify(symbol_name)
+    return jsonify(trained_models_names)
 
 
 @app.route('/companies/price/<string:ticker>', methods=['GET'])
@@ -134,7 +135,13 @@ def get_transactions():
     """
     sql_wrapper = SQLWrapper()
     transactions = sql_wrapper.get_transactions()
-    return jsonify([transaction.__dict__ for transaction in transactions])
+    transactions_with_names = []
+    for transaction in transactions:
+        transaction_dict = transaction.__dict__
+        if transaction_dict['transaction_type'] in ['BUY', 'SELL', 'DIVIDEND']:
+            transaction_dict['name'] = next((model['name'] for model in trained_models_names if model['symbol'] == transaction.stock_symbol), '')
+            transactions_with_names.append(transaction_dict)
+    return jsonify(transactions_with_names)
 
 
 @app.route('/orders', methods=['GET'])
@@ -145,7 +152,12 @@ def get_orders():
     limit = request.args.get('limit', default=100, type=int)
     sql_wrapper = SQLWrapper()
     orders = sql_wrapper.get_orders_by_status(limit=limit, statuses=['PENDING', 'EXECUTED'])
-    return jsonify([order.__dict__ for order in orders])
+    orders_with_names = []
+    for order in orders:
+        order_dict = order.__dict__
+        order_dict['name'] = next((model['name'] for model in trained_models_names if model['symbol'] == order.stock_symbol), '')
+        orders_with_names.append(order_dict)
+    return jsonify(orders_with_names)
 
 
 @app.route('/portfolio', methods=['GET'])
@@ -158,6 +170,7 @@ def get_portfolio():
     for port in portfolio:
         if port.asset_type != "CASH":
             port.todays_value = yf.Ticker(port.stock_symbol).history(period='1d')['Close'].values[0]
+            port.name = next((model['name'] for model in trained_models_names if model['symbol'] == port.stock_symbol), '')
     return jsonify([port.__dict__ for port in portfolio])
 
 

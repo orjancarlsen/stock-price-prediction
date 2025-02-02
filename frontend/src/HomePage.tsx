@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import PortfolioOverview from './components/portfolio/PotfolioOverview';
+import React from 'react';
+import PortfolioOverview from './components/portfolio/PortfolioOverview';
 import EquityOverview from './components/EquityOverview';
 import ActionOverview from './components/ActionOverview';
 import LoadingAnimation from './components/LoadingAnimation';
