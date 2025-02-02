@@ -2,6 +2,7 @@ import React from 'react';
 import { Transaction, IconSVGType } from '../../types';
 import { IconSVG } from './../IconSVG';
 import { formatSingleDecimal } from '../../utils';
+import { transactionTypeMap } from '../../utils';
 
 interface MoneyTransactionProps {
   transaction: Transaction;
@@ -30,7 +31,7 @@ const MoneyTransaction: React.FC<MoneyTransactionProps> = ({ transaction }) => {
           height={28}
         />
         <div style={{ fontSize: '0.7rem', marginTop: '4px' }}>
-          {transaction.transaction_type}
+          {transactionTypeMap[transaction.transaction_type]}
         </div>
       </td>
       <td style={{ padding: '8px' }}>{formattedAmount}</td>

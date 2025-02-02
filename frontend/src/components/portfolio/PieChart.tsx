@@ -64,7 +64,7 @@ const PieChart: React.FC<PieChartProps> = ({
     width = 300,
     height = 300,
     colors,
-    }) => {
+}) => {
     // Track hovered slice index.
     const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
     const hoverTimerRef = useRef<number | null>(null);
@@ -241,7 +241,24 @@ const PieChart: React.FC<PieChartProps> = ({
                         alignmentBaseline="middle"
                         style={{ pointerEvents: 'none' }}
                     >
-                        {slice.name}
+                        {slice.name.length > 15
+                            ? slice.name.split(' ').reduce<string[]>((acc, word) => {
+                                if (acc.length === 0) {
+                                    return [word];
+                                }
+                                const lastLine = acc[acc.length - 1];
+                                if (lastLine.length + word.length + 1 <= 15) {
+                                    acc[acc.length - 1] = `${lastLine} ${word}`;
+                                } else {
+                                    acc.push(word);
+                                }
+                                return acc;
+                            }, []).map((line, i) => (
+                                <tspan key={i} x={slice.textX} dy={i === 0 ? 0 : '1.2em'}>
+                                    {line}
+                                </tspan>
+                            ))
+                            : slice.name}
                     </text>
                 </g>
             ))}

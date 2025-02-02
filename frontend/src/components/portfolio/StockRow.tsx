@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Asset } from '../../types';
 import { formatSingleDecimal } from '../../utils';
 
@@ -7,6 +8,8 @@ interface StockRowProps {
 }
 
 const StockRow: React.FC<StockRowProps> = ({ asset }) => {
+    const navigate = useNavigate();
+
     const formattedValue = asset.number_of_shares !== undefined && asset.todays_value !== undefined
         ? formatSingleDecimal(asset.todays_value * asset.number_of_shares) 
         : 'N/A';
@@ -17,21 +20,27 @@ const StockRow: React.FC<StockRowProps> = ({ asset }) => {
         : 0;
     const formattedProfit = (profit * 100).toFixed(2);
 
+    const handleRowClick = () => {
+        navigate(`/${asset.stock_symbol}`);
+    };
+
     return (
         <div
+            onClick={handleRowClick}
             style={{
-            padding: '8px',
-            backgroundColor: '#f9f9f9',
-            display: 'flex',
-            flexDirection: 'row',
-            fontSize: '0.9rem',
-            gap: '8px',
-            height: '24px', // Reserve a fixed number of pixels for each row
-            alignItems: 'center' // Center items vertically
+                padding: '8px',
+                backgroundColor: '#f9f9f9',
+                display: 'flex',
+                flexDirection: 'row',
+                fontSize: '0.9rem',
+                gap: '8px',
+                height: '24px', // Reserve a fixed number of pixels for each row
+                alignItems: 'center', // Center items vertically
+                cursor: 'pointer' // Change cursor to pointer to indicate clickable row
             }}
         >
-            <div style={{ textAlign: 'left', alignItems: 'center', display: 'flex', width: '80px' }}>
-                {asset.stock_symbol}
+            <div style={{ textAlign: 'left', alignItems: 'center', display: 'flex', width: '120px' }}>
+                {asset.name}
             </div>
             <div style={{ textAlign: 'right', width: '90px' }}>
                 <div> {formattedValue} </div>

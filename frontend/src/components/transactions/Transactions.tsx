@@ -38,70 +38,73 @@ function getSortedTransactionsDesc(transactions: Transaction[]): Transaction[] {
   const flattened: Transaction[] = [];
   for (const dateKey of sortedDateKeys) {
     // Sort each day's transactions by timestamp descending
-    const dayTxs = grouped[dateKey].slice().sort((a, b) =>
-      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-    );
+    const dayTxs = grouped[dateKey]
+      .slice()
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
     flattened.push(...dayTxs);
   }
-
   return flattened;
 }
 
-function getMaxTransactionsThatFit(transactions: Transaction[], containerHeight = 510): number {
-  const dateRowHeight = 48;
-  const transactionRowHeight = 66.4 + 12; // transaction row + spacer row
+/**
+ * Paginate transactions to pack as many as will fit within containerHeight.
+ *
+ * For each transaction we add the transaction row height plus, if needed,
+ * the date header height (if the transaction’s date is different from the
+ * previous transaction on the same page).
+ */
+function paginateTransactions(transactions: Transaction[], containerHeight: number): Transaction[][] {
+  const pages: Transaction[][] = [];
+  const dateRowHeight = 48;              // height for the date header
+  const transactionRowHeight = 66.4 + 12;  // transaction row + spacer row
 
-  let maxFit = 0;
+  let i = 0;
+  while (i < transactions.length) {
+    let currentHeight = 0;
+    const pageTransactions: Transaction[] = [];
+    let lastDate: string | null = null;
 
-  for (let i = 1; i <= transactions.length; i++) {
-    // Take the first i transactions
-    const slice = transactions.slice(0, i);
+    // Pack transactions into the current page until adding the next one would overflow.
+    while (i < transactions.length) {
+      const transaction = transactions[i];
+      const transactionDate = getDateString(new Date(transaction.timestamp));
+      // If the date changes, we need to account for the header height.
+      const headerHeight = transactionDate !== lastDate ? dateRowHeight : 0;
 
-    // How many unique date rows in this slice?
-    const grouped = groupTransactionsByDate(slice);
-    const dateKeys = Object.keys(grouped);
-    const d = dateKeys.length;
-
-    // Compute total needed height
-    const totalHeight = d * dateRowHeight + i * transactionRowHeight;
-
-    // Check if we still fit within containerHeight
-    if (totalHeight <= containerHeight) {
-      maxFit = i;
-    } else {
-      break;
+      if (currentHeight + headerHeight + transactionRowHeight <= containerHeight) {
+        currentHeight += headerHeight + transactionRowHeight;
+        pageTransactions.push(transaction);
+        lastDate = transactionDate;
+        i++;
+      } else {
+        break;
+      }
     }
+    pages.push(pageTransactions);
   }
-
-  return maxFit;
+  return pages;
 }
-
 
 interface TransactionsProps {
   transactions: Transaction[];
 }
 
 const Transactions: React.FC<TransactionsProps> = ({ transactions }) => {
-  // Flatten + sort all transactions by date/time descending
-  const allSortedTx = getSortedTransactionsDesc(transactions);
+  // Get all transactions sorted descending by date/time
+  const sortedTransactions = getSortedTransactionsDesc(transactions);
 
-  // Dynamically determine how many transactions fit in 510px
-  const PER_PAGE = getMaxTransactionsThatFit(allSortedTx, 510);
+  // Pre-paginate transactions based on available vertical space (510px)
+  const containerHeight = 510;
+  const paginatedTransactions = paginateTransactions(sortedTransactions, containerHeight);
 
   // Pagination state
   const [page, setPage] = React.useState(0);
-  const totalPages = Math.ceil(allSortedTx.length / PER_PAGE);
+  const totalPages = paginatedTransactions.length;
+  const currentPageTransactions = paginatedTransactions[page] || [];
 
-  // The slice of transactions for the current page
-  const startIndex = page * PER_PAGE;
-  const endIndex = startIndex + PER_PAGE;
-  const currentSlice = allSortedTx.slice(startIndex, endIndex);
+  // Render the current page, adding date headers only when the date changes within the page.
+  let lastRenderedDate = '';
 
-  // Group the sliced transactions by date (again) for display
-  const groupedForDisplay = groupTransactionsByDate(currentSlice);
-  const groupedDateKeys = Object.keys(groupedForDisplay).sort((a, b) => b.localeCompare(a));
-
-  // Render
   return (
     <div
       style={{
@@ -118,52 +121,43 @@ const Transactions: React.FC<TransactionsProps> = ({ transactions }) => {
       <div style={{ flex: 1, overflowY: 'auto', padding: '0 1rem' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <tbody>
-            {groupedDateKeys.map((dateKey) => {
-              // Convert back to Date for display
-              const [year, month, day] = dateKey.split('-');
-              const dateObject = new Date(+year, +month - 1, +day);
+            {currentPageTransactions.map((transaction) => {
+              const transactionDate = getDateString(new Date(transaction.timestamp));
+              const dateObject = new Date(transaction.timestamp);
               const displayDate = formatNorwegianDate(dateObject);
+              const showHeader = transactionDate !== lastRenderedDate;
+              lastRenderedDate = transactionDate;
 
-              const dateTransactions = groupedForDisplay[dateKey];
+              const isStockTransaction = ['BUY', 'SELL', 'DIVIDEND'].includes(transaction.transaction_type);
 
               return (
-                <React.Fragment key={dateKey}>
-                  {/* Single date row */}
-                  <tr>
-                    <td
-                      style={{
-                        padding: '8px 0',
-                        fontWeight: 'normal',
-                        textAlign: 'left',
-                        fontSize: '0.7rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                      }}
-                    >
-                      <IconSVG icon={IconSVGType.Calendar} />
-                      <span style={{ marginLeft: '4px' }}>{displayDate}</span>
-                    </td>
+                <React.Fragment key={transaction.id}>
+                  {showHeader && (
+                    <tr>
+                      <td
+                        style={{
+                          padding: '8px 0',
+                          fontWeight: 'normal',
+                          textAlign: 'left',
+                          fontSize: '0.7rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                        }}
+                      >
+                        <IconSVG icon={IconSVGType.Calendar} />
+                        <span style={{ marginLeft: '4px' }}>{displayDate}</span>
+                      </td>
+                    </tr>
+                  )}
+                  {isStockTransaction ? (
+                    <StockTransaction transaction={transaction} />
+                  ) : (
+                    <MoneyTransaction transaction={transaction} />
+                  )}
+                  {/* Spacer row */}
+                  <tr style={{ height: '12px' }}>
+                    <td colSpan={5} />
                   </tr>
-
-                  {/* Transactions for this date */}
-                  {dateTransactions.map((transaction) => {
-                    const isStockTransaction = 
-                      ['BUY', 'SELL', 'DIVIDEND'].includes(transaction.transaction_type);
-
-                    return (
-                      <React.Fragment key={transaction.id}>
-                        {isStockTransaction ? (
-                          <StockTransaction transaction={transaction} />
-                        ) : (
-                          <MoneyTransaction transaction={transaction} />
-                        )}
-                        {/* Spacer row */}
-                        <tr style={{ height: '12px' }}>
-                          <td colSpan={5} />
-                        </tr>
-                      </React.Fragment>
-                    );
-                  })}
                 </React.Fragment>
               );
             })}
@@ -171,11 +165,7 @@ const Transactions: React.FC<TransactionsProps> = ({ transactions }) => {
         </table>
       </div>
 
-      <PageFlipper
-        currentPage={page}
-        totalPages={totalPages}
-        onPageChange={setPage}
-      />
+      <PageFlipper currentPage={page} totalPages={totalPages} onPageChange={setPage} />
     </div>
   );
 };

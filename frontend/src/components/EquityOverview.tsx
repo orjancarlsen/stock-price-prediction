@@ -33,13 +33,6 @@ const EquityOverview: React.FC<EquityOverviewProps> = ({
     const formattedSaldo = singleDecimal(saldo, 0);
     const formattedAvailable = singleDecimal(available, 0);
     const marketValue = singleDecimal(equityToday - saldo, 0);
-    
-    const {
-        data: indexPrices,
-        loading: indexPricesLoading,
-        error: indexPricesError,
-    } = useFetchPrices('OSEBX.OL');
-
 
     return (
         <div style={{ flex: 1, padding: '1rem', backgroundColor: 'white', borderRadius: '8px' }} >
@@ -101,24 +94,24 @@ const EquityOverview: React.FC<EquityOverviewProps> = ({
                     padding: '0 20px',
                 }}
             >
-            <div>
-                <p style={{ fontSize: '1rem', margin: 0, color: 'grey' }}>
-                    Aksjeverdi (NOK)
-                </p>
-                <p style={{ fontSize: '1.2rem', margin: 0 }}>{marketValue}</p>
-            </div>
-            <div>
-                <p style={{ fontSize: '1rem', margin: 0, color: 'grey' }}>
-                    Saldo (NOK)
-                </p>
-                <p style={{ fontSize: '1.2rem', margin: 0 }}>{formattedSaldo}</p>
-            </div>
-            <div>
-                <p style={{ fontSize: '1rem', margin: 0, color: 'grey' }}>
-                    Tilgjengelig (NOK)
-                </p>
-                <p style={{ fontSize: '1.2rem', margin: 0 }}>{formattedAvailable}</p>
-            </div>
+                <div>
+                    <p style={{ fontSize: '1rem', margin: 0, color: 'grey' }}>
+                        Aksjeverdi (NOK)
+                    </p>
+                    <p style={{ fontSize: '1.2rem', margin: 0 }}>{marketValue}</p>
+                </div>
+                <div>
+                    <p style={{ fontSize: '1rem', margin: 0, color: 'grey' }}>
+                        Saldo (NOK)
+                    </p>
+                    <p style={{ fontSize: '1.2rem', margin: 0 }}>{formattedSaldo}</p>
+                </div>
+                <div>
+                    <p style={{ fontSize: '1rem', margin: 0, color: 'grey' }}>
+                        Tilgjengelig (NOK)
+                    </p>
+                    <p style={{ fontSize: '1.2rem', margin: 0 }}>{formattedAvailable}</p>
+                </div>
             </div>
 
             {/* Equity Graph */}
@@ -131,8 +124,6 @@ const EquityOverview: React.FC<EquityOverviewProps> = ({
                         prices: portfolioValues.map((v) => v.value),
                     }}
                     defaultTimeframe="max"
-                    compareData={indexPrices}
-                    compareName='OSEBX'
                 />
             </div>
         </div>

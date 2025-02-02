@@ -9,12 +9,12 @@ interface PortfolioOverviewProps {
 
 const PortfolioOverview: React.FC<PortfolioOverviewProps> = ({
     portfolio,
-}) => {
+}) => {    
     const pieChartData = portfolio.map(asset => {
         if (asset.asset_type === AssetType.CASH) {
             return { name: 'Saldo', value: asset.total_value };
         } else if (asset.asset_type === AssetType.STOCK) {
-            return { name: asset.stock_symbol || 'Unknown', value: (asset.todays_value ?? 0) * (asset.number_of_shares ?? 0) };
+            return { name: asset.name || 'Unknown', value: (asset.todays_value ?? 0) * (asset.number_of_shares ?? 0) };
         }
         return { name: 'Unknown', value: 0 };
     });
@@ -63,7 +63,7 @@ const PortfolioOverview: React.FC<PortfolioOverviewProps> = ({
                         gap: '8px',
                     }}
                 >
-                    <div style={{ width: '186px', textAlign: 'right' }}>Verdi</div>
+                    <div style={{ width: '226px', textAlign: 'right' }}>Verdi</div>
                     <div style={{ width: '50px', textAlign: 'right' }}>Antall</div>
                     <div style={{ width: '80px', textAlign: 'right' }}>Kurs</div>
                     <div style={{ width: '80px', textAlign: 'right' }}>Pris</div>

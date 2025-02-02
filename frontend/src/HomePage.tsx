@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import PortfolioOverview from './components/portfolio/PotfolioOverview';
+import React from 'react';
+import PortfolioOverview from './components/portfolio/PortfolioOverview';
 import EquityOverview from './components/EquityOverview';
 import ActionOverview from './components/ActionOverview';
 import LoadingAnimation from './components/LoadingAnimation';
@@ -10,7 +10,7 @@ import { useFetchTransactions } from './hooks/useFetchTransactions';
 import { useFetchOrders } from './hooks/useFetchOrders';
 import Header from './components/Header';
 
-function App() {
+function HomePage() {
     const {
         companies: trainedCompanies,
         error: trainedCompaniesError,
@@ -34,7 +34,7 @@ function App() {
         <div style={{ display: 'flex', height: '100vh', flexDirection: 'column', backgroundColor: '#f5f5f5' }}>
             <Header trainedCompanies={trainedCompanies}/>
             
-            <div style={{ display: 'flex', flex: 1, gap: '20px', overflow: 'hidden', padding: '20px' }}>
+            <div style={{ display: 'flex', gap: '20px', overflow: 'hidden', padding: '20px' }}>
                 <div style={{ flex: 1 }}>
                     <EquityOverview portfolio={portfolio} portfolioValues={portfolioValues} />
                 </div>
@@ -51,4 +51,4 @@ function App() {
     );
 }
 
-export default App;
+export default HomePage;

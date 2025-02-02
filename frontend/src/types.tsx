@@ -9,6 +9,7 @@ export interface Transaction {
     id: number;
     transaction_type: TransactionType
     stock_symbol?: string;
+    name?: string;
     price_per_share?: number;
     number_of_shares?: number;
     fee: number;
@@ -22,6 +23,7 @@ export interface Order {
   id: number;
   order_type: string;
   stock_symbol: string;
+  name: string;
   price_per_share: number;
   number_of_shares: number;
   fee: number;
@@ -39,6 +41,7 @@ export enum AssetType {
 export interface Asset {
   asset_type: AssetType;
   stock_symbol?: string;
+  name?: string;
   number_of_shares?: number;
   price_per_share?: number;
   total_value: number;

@@ -6,51 +6,58 @@ import { Company } from '../types';
 import './Header.css';
 
 interface HeaderProps {
-    trainedCompanies: Company[];
+  trainedCompanies: Company[];
+  name?: string;
 }
 
-const Header: React.FC<HeaderProps> = ({
-    trainedCompanies
-}) => {
-    const navigate = useNavigate();
+const Header: React.FC<HeaderProps> = ({ trainedCompanies, name }) => {
+  const navigate = useNavigate();
+  const [searchActive, setSearchActive] = useState(false);
 
-    const [searchActive, setSearchActive] = useState(false);
+  const handleCompanySelect = (companyTicker: string) => {
+    navigate(`/${companyTicker}`);
+    setSearchActive(false);
+  };
 
-    const handleCompanySelect = (companyTicker: string) => {
-        navigate(`/${companyTicker}`); // Navigate to the dynamic company page
-        setSearchActive(false);
-    };
+  const handleLogoClick = () => {
+    navigate('/');
+  };
 
-    const handleLogoClick = () => {
-        navigate('/');
-    };
+  return (
+    <header style={headerStyle}>
+      <div style={wrapperStyle}>
+        {/* Left container: Logo and main title */}
+        <div className="clickable" style={leftContainerStyle} onClick={handleLogoClick}>
+          <img src={logo} alt="Logo" style={imageStyle} />
+          <h1 style={titleStyle}>Aksjeprediktoren</h1>
+        </div>
 
-    return (
-        <header style={headerStyle}>
-            <div style={wrapperStyle}>
-                <div className="clickable" style={leftContainerStyle} onClick={handleLogoClick}>
-                    <img src={logo} alt="" style={imageStyle} />
-                    <h1 style={titleStyle}>Aksjeprediktoren</h1>
-                </div>
+        {/* Right container: Search field */}
+        <div style={rightContainerStyle}>
+          <div onClick={() => !searchActive && setSearchActive(true)}>
+            <TypingFieldDropdown
+              options={trainedCompanies}
+              onSelect={(ticker) => handleCompanySelect(ticker)}
+              placeholder="Søk etter selskap"
+              expanded={searchActive}
+              onClose={() => setSearchActive(false)}
+            />
+          </div>
+        </div>
+      </div>
 
-                <div style={rightContainerStyle}>
-                    {/* Clicking the area when not expanded will activate it */}
-                    <div onClick={() => !searchActive && setSearchActive(true)}>
-                        <TypingFieldDropdown
-                            options={trainedCompanies}
-                            onSelect={(ticker) => handleCompanySelect(ticker)}
-                            placeholder="Søk etter selskap"
-                            expanded={searchActive}
-                            onClose={() => setSearchActive(false)}
-                        />
-                    </div>
-                </div>
-            </div>
-        </header>
-    );
+      {/* Centered name: absolutely positioned in the middle of the header */}
+      {name && (
+        <div style={centerNameStyle}>
+          <h2 style={titleStyle}>{name}</h2>
+        </div>
+      )}
+    </header>
+  );
 };
 
 const headerStyle: React.CSSProperties = {
+  position: 'relative', // Make header the positioning context
   width: '100%',
   backgroundColor: '#000000',
   padding: '1rem',
@@ -82,6 +89,19 @@ const titleStyle: React.CSSProperties = {
   color: '#fff',
   margin: 0,
   textAlign: 'left',
+};
+
+const centerNameStyle: React.CSSProperties = {
+  position: 'absolute',
+  left: '50%',
+  top: '50%',
+  transform: 'translate(-50%, -50%)', // Center horizontally and vertically within the header
+  textAlign: 'center',
+};
+
+const nameStyle: React.CSSProperties = {
+  color: '#fff',
+  fontSize: '1.2rem',
 };
 
 export default Header;
