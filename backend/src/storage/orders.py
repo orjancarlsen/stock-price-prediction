@@ -106,7 +106,9 @@ class Order:
         return [cls.from_db_row(r) for r in rows]
 
     @classmethod
-    def by_status(cls, conn: sqlite3.Connection, statuses: List[str], limit:int = None) -> List["Order"]:
+    def by_status(
+        cls, conn: sqlite3.Connection, statuses: List[str], limit:int = None
+    ) -> List["Order"]:
         """
         Returns a list of all orders having any of the specified statuses
         (e.g. ['PENDING', 'EXECUTED', 'CANCELED']).
