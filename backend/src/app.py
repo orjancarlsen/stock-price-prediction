@@ -139,7 +139,10 @@ def get_transactions():
     for transaction in transactions:
         transaction_dict = transaction.__dict__
         if transaction_dict['transaction_type'] in ['BUY', 'SELL', 'DIVIDEND']:
-            transaction_dict['name'] = next((model['name'] for model in trained_models_names if model['symbol'] == transaction.stock_symbol), '')
+            transaction_dict['name'] = next(
+                (model['name'] for model in trained_models_names if model['symbol'] == transaction.stock_symbol),
+                ''
+            )
             transactions_with_names.append(transaction_dict)
     return jsonify(transactions_with_names)
 
@@ -155,7 +158,10 @@ def get_orders():
     orders_with_names = []
     for order in orders:
         order_dict = order.__dict__
-        order_dict['name'] = next((model['name'] for model in trained_models_names if model['symbol'] == order.stock_symbol), '')
+        order_dict['name'] = next(
+            (model['name'] for model in trained_models_names if model['symbol'] == order.stock_symbol),
+            ''
+        )
         orders_with_names.append(order_dict)
     return jsonify(orders_with_names)
 
@@ -170,7 +176,10 @@ def get_portfolio():
     for port in portfolio:
         if port.asset_type != "CASH":
             port.todays_value = yf.Ticker(port.stock_symbol).history(period='1d')['Close'].values[0]
-            port.name = next((model['name'] for model in trained_models_names if model['symbol'] == port.stock_symbol), '')
+            port.name = next(
+                (model['name'] for model in trained_models_names if model['symbol'] == port.stock_symbol),
+                ''
+            )
     return jsonify([port.__dict__ for port in portfolio])
 
 
