@@ -198,7 +198,17 @@ const Portfolio: React.FC<PortfolioProps> = ({
       </div>
 
       {/* Right Column */}
-      <div style={{ flex: 1, padding: '20px 20px', fontSize: '0.9rem', backgroundColor: 'white', borderRadius: '8px' }}>
+      <div
+        style={{
+          flex: 1, 
+          display: 'flex',
+          flexDirection: 'column',
+          padding: '20px 20px',
+          fontSize: '0.9rem',
+          backgroundColor: 'white',
+          borderRadius: '8px'
+        }}
+      >
         {/* Holdings Header */}
         <p style={{ fontSize: '2rem', fontWeight: 'bold', marginTop: 0 }}>
           Beholdning
@@ -225,7 +235,14 @@ const Portfolio: React.FC<PortfolioProps> = ({
           ))}
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'center', margin: '2rem 0' }}>
+        <div 
+          style={{
+            flex: 1,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
           <PieChart data={pieChartData} width={300} height={300} />
         </div>
       </div>
