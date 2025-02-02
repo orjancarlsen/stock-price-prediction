@@ -5,8 +5,10 @@ import LoadingAnimation from './components/LoadingAnimation';
 import GraphWithTimeFrame from './components/graph/GraphWithTimeFrame';
 import { useFetchPrices } from './hooks/useFetchPrices';
 import { useFetchTransactions } from './hooks/useFetchTransactions';
+import { useFetchOrders } from './hooks/useFetchOrders';
 import { useFetchCompanies } from './hooks/useFetchCompanies';
 import Header from './components/Header';
+import ActionOverview from './components/ActionOverview';
 
 
 const CompanyPage: React.FC = () => {
@@ -19,12 +21,6 @@ const CompanyPage: React.FC = () => {
     } = useFetchPrices(ticker || '');
 
     const {
-        data: indexPrices,
-        loading: indexPricesLoading,
-        error: indexPricesError,
-    } = useFetchPrices('OSEBX.OL');
-
-    const {
         companies: trainedCompanies,
         error: trainedCompaniesError,
         loading: trainedCompaniesLoading,
@@ -35,22 +31,34 @@ const CompanyPage: React.FC = () => {
         (transaction) => transaction.stock_symbol === ticker
     );
 
-  if (pricesLoading) return <LoadingAnimation />;
-  if (pricesError) return <div>Error fetching prices: {pricesError}</div>;
+    const orders = useFetchOrders();
+    const filteredOrders = orders.filter(
+        (order) => order.stock_symbol === ticker
+    );
 
-  return (
-    <div>
-        <Header trainedCompanies={trainedCompanies}/>
-        {historicCompanyPrices?.dates?.length > 0 && (
-            <GraphWithTimeFrame
-                graphData={historicCompanyPrices}
-                transactions={filteredTransactions}
-                defaultTimeframe="1y"
-                compareData={indexPrices}
-            />
-        )}
-    </div>
-  );
+
+    if (pricesLoading) return <LoadingAnimation />;
+    if (pricesError) return <div>Error fetching prices: {pricesError}</div>;
+
+    return (
+        <div style={{ display: 'flex', height: '100vh', flexDirection: 'column', backgroundColor: '#f5f5f5' }}>
+            <Header trainedCompanies={trainedCompanies}/>
+
+            <div style={{ display: 'flex', gap: '20px', overflow: 'hidden', padding: '20px' }}>
+                <div style={{ flex: 1, borderRadius: '8px', backgroundColor: 'white', padding: '20px' }}>
+                    <GraphWithTimeFrame
+                        graphData={historicCompanyPrices}
+                        transactions={filteredTransactions}
+                        defaultTimeframe="1y"
+                    />
+                </div>
+
+                <div style={{ width: '440px' }}>
+                    <ActionOverview transactions={filteredTransactions} orders={filteredOrders}/>
+                </div>
+            </div>
+        </div>
+    );
 };
 
 export default CompanyPage;
