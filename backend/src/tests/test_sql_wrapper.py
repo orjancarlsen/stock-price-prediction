@@ -97,7 +97,7 @@ def test_sql_wrapper_sequence(wrapper): # pylint: disable=too-many-statements, r
     # 4. Create a buy order of 100 AAPL shares to 200kr each
     wrapper.create_buy_order("AAPL", price_per_share=200, number_of_shares=100)
     assert wrapper.get_cash_available() == 80000
-    orders = wrapper.get_orders_by_status('PENDING')
+    orders = wrapper.get_orders_by_status(['PENDING'])
     assert len(orders) == 1
     buy_order = orders[0]
     assert buy_order.order_type == 'BUY'
@@ -120,7 +120,7 @@ def test_sql_wrapper_sequence(wrapper): # pylint: disable=too-many-statements, r
     # 6. Create a buy order of 10 NOD shares to 100kr each
     wrapper.create_buy_order("NOD", price_per_share=100, number_of_shares=10)
     assert wrapper.get_cash_available() == 79000
-    orders_pending = wrapper.get_orders_by_status('PENDING')
+    orders_pending = wrapper.get_orders_by_status(['PENDING'])
     assert len(orders_pending) == 1
 
     # 7. Execute the buy order
@@ -145,7 +145,7 @@ def test_sql_wrapper_sequence(wrapper): # pylint: disable=too-many-statements, r
 
     # 11. Place a sell order for 50 AAPL shares
     wrapper.create_sell_order("AAPL", price_per_share=250, number_of_shares=50)
-    orders = wrapper.get_orders_by_status('PENDING')
+    orders = wrapper.get_orders_by_status(['PENDING'])
     assert len(orders) == 1
     sell_order = orders[0]
     assert sell_order.order_type == 'SELL'

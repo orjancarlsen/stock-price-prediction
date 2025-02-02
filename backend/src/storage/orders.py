@@ -95,22 +95,29 @@ class Order:
         return cls.from_db_row(row)
 
     @classmethod
-    def all(cls, conn: sqlite3.Connection) -> List["Order"]:
+    def all(cls, conn: sqlite3.Connection, limit:int = None) -> List["Order"]:
         """
         Retrieve all orders from the database.
         """
         query = f"SELECT * FROM {cls.TABLE_NAME}"
+        if limit is not None:
+            query += f" LIMIT {limit}"
         rows = conn.execute(query).fetchall()
         return [cls.from_db_row(r) for r in rows]
 
     @classmethod
-    def by_status(cls, conn: sqlite3.Connection, status: str) -> List["Order"]:
+    def by_status(
+        cls, conn: sqlite3.Connection, statuses: List[str], limit:int = None
+    ) -> List["Order"]:
         """
-        Returns a list of all orders having the specified status
-        (e.g. 'PENDING', 'EXECUTED', or 'CANCELED').
+        Returns a list of all orders having any of the specified statuses
+        (e.g. ['PENDING', 'EXECUTED', 'CANCELED']).
         """
-        query = f"SELECT * FROM {cls.TABLE_NAME} WHERE status = ?"
-        rows = conn.execute(query, (status,)).fetchall()
+        placeholders = ','.join('?' for _ in statuses)
+        query = f"SELECT * FROM {cls.TABLE_NAME} WHERE status IN ({placeholders})"
+        if limit is not None:
+            query += f" LIMIT {limit}"
+        rows = conn.execute(query, statuses).fetchall()
         return [cls.from_db_row(r) for r in rows]
 
     def insert(self, conn: sqlite3.Connection) -> None:
