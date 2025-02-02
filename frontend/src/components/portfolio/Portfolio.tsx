@@ -228,28 +228,6 @@ const Portfolio: React.FC<PortfolioProps> = ({
         <div style={{ display: 'flex', justifyContent: 'center', margin: '2rem 0' }}>
           <PieChart data={pieChartData} width={300} height={300} />
         </div>
-
-        {/* Section to View Stock Prices */}
-        {/* <p style={{ fontSize: '2rem', fontWeight: 'bold' }}>Se aksjekurs</p>
-
-        <TypingFieldDropdown
-          options={trainedCompanies}
-          onChange={(e: ChangeEvent<HTMLInputElement>) =>
-            handleCompanyChange(
-              e as unknown as ChangeEvent<HTMLSelectElement>
-            )
-          }
-          placeholder="Velg selskap"
-        />
-
-        {historicCompanyPrices?.dates?.length > 0 && (
-          <GraphWithTimeFrame
-            graphData={historicCompanyPrices}
-            transactions={filteredTransactions}
-            defaultTimeframe="1y"
-            compareData={indexPrices}
-          />
-        )} */}
       </div>
     </div>
   );

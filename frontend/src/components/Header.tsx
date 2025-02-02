@@ -1,8 +1,10 @@
 // src/components/Header.tsx
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import logo from '@assets/bull.png';
 import TypingFieldDropdown from './TypingFieldDropdown';
 import { Company } from '../types';
+import './Header.css';
 
 interface HeaderProps {
     trainedCompanies: Company[];
@@ -11,37 +13,46 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({
     trainedCompanies
 }) => {
-  const [searchActive, setSearchActive] = useState(false);
-  const [selectedCompany, setSelectedCompany] = useState<string>('');
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSelectedCompany(e.target.value);
-  };
+    const navigate = useNavigate();
 
-  return (
-    <header style={headerStyle}>
-      <div style={wrapperStyle}>
-        {/* Left side: Logo and Title */}
-        <div style={leftContainerStyle}>
-          <img src={logo} alt="Logo" style={imageStyle} />
-          <h1 style={titleStyle}>Stock Price Prediction</h1>
-        </div>
+    const [searchActive, setSearchActive] = useState(false);
+    const [selectedCompany, setSelectedCompany] = useState<string>('');
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSelectedCompany(e.target.value);
+    };
 
-        {/* Right side: Always render TypingFieldDropdown */}
-        <div style={rightContainerStyle}>
-          {/* Clicking the area when not expanded will activate it */}
-          <div onClick={() => !searchActive && setSearchActive(true)}>
-            <TypingFieldDropdown
-              options={trainedCompanies}
-              onChange={handleInputChange}
-              placeholder="Søk etter selskap"
-              expanded={searchActive}
-              onClose={() => setSearchActive(false)}
-            />
-          </div>
-        </div>
-      </div>
-    </header>
-  );
+    const handleCompanySelect = (companyTicker: string) => {
+        navigate(`/${companyTicker}`); // Navigate to the dynamic company page
+        setSearchActive(false);
+    };
+
+    const handleLogoClick = () => {
+        navigate('/');
+    };
+
+    return (
+        <header style={headerStyle}>
+            <div style={wrapperStyle}>
+                <div className="clickable" style={leftContainerStyle} onClick={handleLogoClick}>
+                    <img src={logo} alt="" style={imageStyle} />
+                    <h1 style={titleStyle}>Stock Price Prediction</h1>
+                </div>
+
+                <div style={rightContainerStyle}>
+                    {/* Clicking the area when not expanded will activate it */}
+                    <div onClick={() => !searchActive && setSearchActive(true)}>
+                        <TypingFieldDropdown
+                            options={trainedCompanies}
+                            onSelect={(ticker) => handleCompanySelect(ticker)}
+                            placeholder="Søk etter selskap"
+                            expanded={searchActive}
+                            onClose={() => setSearchActive(false)}
+                        />
+                    </div>
+                </div>
+            </div>
+        </header>
+    );
 };
 
 const headerStyle: React.CSSProperties = {

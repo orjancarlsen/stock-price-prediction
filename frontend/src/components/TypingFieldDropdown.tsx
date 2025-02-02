@@ -11,7 +11,8 @@ import React, {
   
   interface DropdownProps {
     options: Company[];
-    onChange: (event: ChangeEvent<HTMLInputElement>) => void;
+    onSelect: (ticker: string) => void;
+    onChange?: (event: ChangeEvent<HTMLInputElement>) => void;
     placeholder?: string;
     expanded: boolean; // Determines whether the field is expanded (active) or not
     onClose?: () => void;
@@ -19,6 +20,7 @@ import React, {
   
   const TypingFieldDropdown: React.FC<DropdownProps> = ({
     options,
+    onSelect,
     onChange,
     placeholder,
     expanded,
@@ -67,7 +69,6 @@ import React, {
         setIsDropdownOpen(true);
       }
       setHighlightedIndex(-1);
-      onChange(e);
     };
   
     const handleOptionClick = (option: Company) => {
@@ -75,7 +76,7 @@ import React, {
         ? `${option.name} (${option.symbol})`
         : option.symbol;
       setFilterText(value);
-      onChange({ target: { value: option.symbol } } as ChangeEvent<HTMLInputElement>);
+      onSelect(option.symbol);
       setIsDropdownOpen(false);
       setHighlightedIndex(-1);
     };
