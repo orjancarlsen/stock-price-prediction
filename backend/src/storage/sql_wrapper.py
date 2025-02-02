@@ -6,6 +6,7 @@ import pprint
 # import random
 from datetime import datetime
 from pytz import timezone
+from typing import List
 
 from src.storage.transactions import Transaction
 from src.storage.orders import Order
@@ -380,19 +381,19 @@ class SQLWrapper: # pylint: disable=too-many-public-methods
             order.timestamp_updated = date.strftime('%Y-%m-%d %H:%M:%S')
             order.save(conn)
 
-    def get_orders(self):
+    def get_orders(self, limit: int = 100):
         """
         Retrieve all orders as a list of Order objects.
         """
         with self.connect() as conn:
-            return Order.all(conn)
+            return Order.all(conn, limit)
 
-    def get_orders_by_status(self, status: str):
+    def get_orders_by_status(self, statuses: List[str], limit=None):
         """
         Returns a list of orders filtered by a specific status.
         """
         with self.connect() as conn:
-            return Order.by_status(conn, status)
+            return Order.by_status(conn, statuses, limit)
 
     # ----------------------------------------------------------------------
     # Transactions & Cash

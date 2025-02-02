@@ -235,7 +235,7 @@ class Broker:
             open_tickers.append(ticker)
 
             # Check if there are pending orders for the stock
-            pending_orders = self.sql_wrapper.get_orders_by_status('PENDING')
+            pending_orders = self.sql_wrapper.get_orders_by_status(['PENDING'])
             for order in pending_orders:
                 if order.stock_symbol != ticker:
                     continue

@@ -1,4 +1,3 @@
-// src/components/Header.tsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '@assets/bull.png';
@@ -16,10 +15,6 @@ const Header: React.FC<HeaderProps> = ({
     const navigate = useNavigate();
 
     const [searchActive, setSearchActive] = useState(false);
-    const [selectedCompany, setSelectedCompany] = useState<string>('');
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setSelectedCompany(e.target.value);
-    };
 
     const handleCompanySelect = (companyTicker: string) => {
         navigate(`/${companyTicker}`); // Navigate to the dynamic company page
@@ -35,7 +30,7 @@ const Header: React.FC<HeaderProps> = ({
             <div style={wrapperStyle}>
                 <div className="clickable" style={leftContainerStyle} onClick={handleLogoClick}>
                     <img src={logo} alt="" style={imageStyle} />
-                    <h1 style={titleStyle}>Stock Price Prediction</h1>
+                    <h1 style={titleStyle}>Aksjeprediktoren</h1>
                 </div>
 
                 <div style={rightContainerStyle}>
@@ -74,7 +69,7 @@ const leftContainerStyle: React.CSSProperties = {
 };
 
 const rightContainerStyle: React.CSSProperties = {
-  minWidth: '20px', // Must be at least as wide as the collapsed field
+  minWidth: '0px', // Must be at least as wide as the collapsed field
 };
 
 const imageStyle: React.CSSProperties = {

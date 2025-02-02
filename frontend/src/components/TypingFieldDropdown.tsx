@@ -8,6 +8,7 @@ import React, {
   } from 'react';
   import { Company } from '../types';
   import SearchIcon from '@assets/search.svg';
+  import './TypingFieldDropdown.css';
   
   interface DropdownProps {
     options: Company[];
@@ -33,7 +34,6 @@ import React, {
     
     const containerRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
-    // Ref for the scrollable dropdown container
     const dropdownScrollRef = useRef<HTMLDivElement>(null);
   
     // When expanded becomes true, focus the input and open the dropdown.
@@ -145,6 +145,7 @@ import React, {
         style={{
           ...containerStyle,
           width: expanded ? '300px' : '20px',
+          overflow: transitionComplete ? 'visible' : 'hidden', // Avoids scrollbars during transition
         }}
       >
         {/* Always show the search icon on the left */}

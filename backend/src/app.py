@@ -144,7 +144,7 @@ def get_orders():
     """
     limit = request.args.get('limit', default=100, type=int)
     sql_wrapper = SQLWrapper()
-    orders = sql_wrapper.get_orders()[-limit:]
+    orders = sql_wrapper.get_orders_by_status(limit=limit, statuses=['PENDING', 'EXECUTED'])
     return jsonify([order.__dict__ for order in orders])
 
 

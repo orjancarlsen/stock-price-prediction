@@ -103,7 +103,7 @@ const Orders: React.FC<OrderProps> = ({ orders }) => {
       <div
         style={{
           width: '380px',
-          height: '520px',
+          height: '540px',
           display: 'flex',
           flexDirection: 'column',
           margin: '1rem',
