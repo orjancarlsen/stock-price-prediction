@@ -33,11 +33,11 @@ CORS(
 
 trained_models = Regressor.get_trained_models()
 trained_models_names = []
-for ticker in trained_models:
+for stock_symbol in trained_models:
     trained_models_names.append(
         {
-            "symbol": ticker,
-            "name": yf.Ticker(ticker).info.get('longName', '')
+            "symbol": stock_symbol,
+            "name": yf.Ticker(stock_symbol).info.get('longName', '')
         }
     )
 trained_models_names.sort(key=lambda x: x['name'])
@@ -140,7 +140,8 @@ def get_transactions():
         transaction_dict = transaction.__dict__
         if transaction_dict['transaction_type'] in ['BUY', 'SELL', 'DIVIDEND']:
             transaction_dict['name'] = next(
-                (model['name'] for model in trained_models_names if model['symbol'] == transaction.stock_symbol),
+                (model['name'] for model in trained_models_names 
+                    if model['symbol'] == transaction.stock_symbol),
                 ''
             )
             transactions_with_names.append(transaction_dict)
@@ -159,7 +160,8 @@ def get_orders():
     for order in orders:
         order_dict = order.__dict__
         order_dict['name'] = next(
-            (model['name'] for model in trained_models_names if model['symbol'] == order.stock_symbol),
+            (model['name'] for model in trained_models_names
+                if model['symbol'] == order.stock_symbol),
             ''
         )
         orders_with_names.append(order_dict)
@@ -177,7 +179,8 @@ def get_portfolio():
         if port.asset_type != "CASH":
             port.todays_value = yf.Ticker(port.stock_symbol).history(period='1d')['Close'].values[0]
             port.name = next(
-                (model['name'] for model in trained_models_names if model['symbol'] == port.stock_symbol),
+                (model['name'] for model in trained_models_names
+                    if model['symbol'] == port.stock_symbol),
                 ''
             )
     return jsonify([port.__dict__ for port in portfolio])
