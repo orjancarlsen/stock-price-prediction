@@ -140,7 +140,7 @@ def get_transactions():
         transaction_dict = transaction.__dict__
         if transaction_dict['transaction_type'] in ['BUY', 'SELL', 'DIVIDEND']:
             transaction_dict['name'] = next(
-                (model['name'] for model in trained_models_names 
+                (model['name'] for model in trained_models_names
                     if model['symbol'] == transaction.stock_symbol),
                 ''
             )
