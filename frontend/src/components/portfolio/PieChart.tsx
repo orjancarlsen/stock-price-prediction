@@ -68,8 +68,12 @@ const PieChart: React.FC<PieChartProps> = ({
     const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
     const hoverTimerRef = useRef<number | null>(null);
 
-    // Sort data by value in descending order.
-    data.sort((a, b) => b.value - a.value);
+    // Sort data by value in descending order, and have saldo first.
+    data.sort((a, b) => {
+        if (a.name === 'Saldo') return -1;
+        if (b.name === 'Saldo') return 1;
+        return b.value - a.value;
+    });
 
     // Calculate the total and radii.
     const total = data.reduce((acc, cur) => acc + cur.value, 0);
