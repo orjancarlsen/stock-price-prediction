@@ -46,7 +46,6 @@ function describeDonutArc(
     ].join(' ');
 }
 
-// PieChart Component Props
 interface PieChartData {
     name: string;
     value: number;
@@ -69,6 +68,13 @@ const PieChart: React.FC<PieChartProps> = ({
     const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
     const hoverTimerRef = useRef<number | null>(null);
 
+    // Sort data by value in descending order, and have saldo first.
+    data.sort((a, b) => {
+        if (a.name === 'Saldo') return -1;
+        if (b.name === 'Saldo') return 1;
+        return b.value - a.value;
+    });
+
     // Calculate the total and radii.
     const total = data.reduce((acc, cur) => acc + cur.value, 0);
     let cumulativeAngle = 0;
@@ -78,19 +84,16 @@ const PieChart: React.FC<PieChartProps> = ({
     const centerY = height / 2;
 
     // Default color palette.
+    const n = data.length - 1;
     const defaultColors = [
         'lightgrey',
-        '#36A2EB',
-        '#FFCE56',
-        '#66BB6A',
-        '#BA68C8',
-        '#FF7043',
-        '#26A69A',
-        '#8D6E63',
+        ...Array.from({ length: n }, (_, i) => 
+            `rgba(${64 + i * (255 - 64) / n}, ${105 + i * (255-105) / n}, 225, 0.8)`
+        )
     ];
 
     const hoverOffset = 10;
-    const leaderLineLength = 20;
+    const leaderLineLength = 40;
 
     // Extend the viewBox to allow for hover offsets.
     const viewBoxX = -hoverOffset;
@@ -149,7 +152,7 @@ const PieChart: React.FC<PieChartProps> = ({
         // Place the label in the middle of the donut ring.
         const labelRadius = (radius + innerRadius) / 2;
         const labelCoords = polarToCartesian(centerX, centerY, labelRadius, midAngle);
-        const percentageText = ((slice.value / total) * 100).toFixed(0) + '%';
+        const percentageText = ((slice.value / total) * 100).toFixed(1) + '%';
 
         // Leader line from the outer edge.
         const lineStart = polarToCartesian(centerX, centerY, radius, midAngle);
@@ -214,7 +217,7 @@ const PieChart: React.FC<PieChartProps> = ({
                     <text
                         x={slice.labelCoords.x}
                         y={slice.labelCoords.y}
-                        fill="#fff"
+                        fill="#000"
                         fontSize="14"
                         textAnchor="middle"
                         alignmentBaseline="middle"

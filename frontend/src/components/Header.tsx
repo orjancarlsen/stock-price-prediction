@@ -29,7 +29,7 @@ const Header: React.FC<HeaderProps> = ({ trainedCompanies, name }) => {
         {/* Left container: Logo and main title */}
         <div className="clickable" style={leftContainerStyle} onClick={handleLogoClick}>
           <img src={logo} alt="Logo" style={imageStyle} />
-          <h1 style={titleStyle}>Aksjeprediktoren</h1>
+          <h1 style={titleStyle}>Bull Invest</h1>
         </div>
 
         {/* Right container: Search field */}

@@ -108,13 +108,15 @@ const CompanyPage: React.FC = () => {
                     )}
                     {!asset && (
                         <div style={{ marginBottom: '3rem' }}>
-                            Du eier ikke denne aksjen.
+                            Denne aksjen er ikke i porteføljen.
                         </div>
                     )}
                     <GraphWithTimeFrame
                         graphData={historicCompanyPrices}
+                        graphName={ticker || ''}
                         transactions={filteredTransactions}
                         defaultTimeframe="1y"
+                        defaultPercentageVsValue='value'
                     />
                 </div>
 

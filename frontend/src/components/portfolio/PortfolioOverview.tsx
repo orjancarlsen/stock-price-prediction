@@ -48,12 +48,11 @@ const PortfolioOverview: React.FC<PortfolioOverviewProps> = ({
                     flexDirection: 'column',
                     padding: '20px',
                     fontSize: '0.9rem',
-                    height: '600px'
+                    height: '600px',
                 }}
             >
-                {/* Holdings Header */}
-                <p style={{ fontSize: '2rem', fontWeight: 'bold', marginTop: 0 }}>
-                    Beholdning
+                <p style={{ fontSize: '2rem', fontWeight: 'bold', marginTop: 0, textAlign: 'center' }}>
+                    Portefølje
                 </p>
                 <div
                     style={{

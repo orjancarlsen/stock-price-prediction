@@ -36,10 +36,12 @@ const ComparisonSelector: React.FC<ComparisonSelectorProps> = ({ onChange }) => 
   };
 
   const handleClick = (option: { index: string; name: string }) => {
-    setSelected(option.index);
-    onChange(option.index);
+    const newSelected = selected === option.index ? '' : option.index;
+    setSelected(newSelected);
+    onChange(newSelected);
     setDropdownOpen(false);
   };
+  
 
   return (
     <div style={{ position: 'relative' }} ref={containerRef}>
@@ -56,7 +58,6 @@ const ComparisonSelector: React.FC<ComparisonSelectorProps> = ({ onChange }) => 
         }}
       >
         <ScalesIcon width="16" height="16" />
-        <span style={{ marginLeft: '4px' }}>Sammenlign</span>
       </button>
       {dropdownOpen && (
         <div
@@ -99,7 +100,7 @@ const ComparisonSelector: React.FC<ComparisonSelectorProps> = ({ onChange }) => 
                   <circle cx="12" cy="12" r="10" stroke="#888" strokeWidth="2" fill="none" />
                   {selected === option.index && (
                     <polyline
-                      points="9 12 12 15 16 9"
+                      points="7 12 11 16 23 3"
                       stroke="grey"
                       strokeWidth="2"
                       fill="none"

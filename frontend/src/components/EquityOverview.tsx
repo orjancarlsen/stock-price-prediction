@@ -35,7 +35,7 @@ const EquityOverview: React.FC<EquityOverviewProps> = ({
     const marketValue = singleDecimal(equityToday - saldo, 0);
 
     return (
-        <div style={{ flex: 1, padding: '1rem', backgroundColor: 'white', borderRadius: '8px' }} >
+        <div style={{ flex: 1, padding: '20px', backgroundColor: 'white', borderRadius: '8px', height: '600px' }} >
             <div
                 style={{
                     display: 'flex',
@@ -70,7 +70,7 @@ const EquityOverview: React.FC<EquityOverviewProps> = ({
                                 marginRight: '1rem',
                             }}
                         >
-                            {formattedDevelopmentPastDayPercentage}%
+                            {formattedDevelopmentPastDayPercentage}<span style={{fontFamily: 'Arial, sans-serif'}}>%</span>
                         </p>
                         <p
                             style={{
@@ -84,7 +84,6 @@ const EquityOverview: React.FC<EquityOverviewProps> = ({
                 </div>
             </div>
 
-            {/* Market Value, Saldo, and Available */}
             <div
                 style={{
                     display: 'flex',
@@ -114,7 +113,6 @@ const EquityOverview: React.FC<EquityOverviewProps> = ({
                 </div>
             </div>
 
-            {/* Equity Graph */}
             <div style={{ flex: 1 }}>
                 <GraphWithTimeFrame
                     graphData={{
@@ -123,7 +121,9 @@ const EquityOverview: React.FC<EquityOverviewProps> = ({
                         ),
                         prices: portfolioValues.map((v) => v.value),
                     }}
+                    graphName="Portefølje"
                     defaultTimeframe="max"
+                    defaultPercentageVsValue='percentage'
                 />
             </div>
         </div>
