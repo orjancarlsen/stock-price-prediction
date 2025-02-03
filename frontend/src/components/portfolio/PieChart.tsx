@@ -217,7 +217,7 @@ const PieChart: React.FC<PieChartProps> = ({
                     <text
                         x={slice.labelCoords.x}
                         y={slice.labelCoords.y}
-                        fill="#fff"
+                        fill="#000"
                         fontSize="14"
                         textAnchor="middle"
                         alignmentBaseline="middle"
