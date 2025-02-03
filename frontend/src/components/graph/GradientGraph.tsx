@@ -35,6 +35,7 @@ interface GraphProps {
         dates: string[];
         prices: number[];
     };
+    graphName: string;
     transactions?: Transaction[];
     compareData?: {
         dates: string[];
@@ -46,6 +47,7 @@ interface GraphProps {
 
 const Graph: React.FC<GraphProps> = ({
     graphData,
+    graphName,
     transactions,
     compareData,
     compareName,
@@ -191,7 +193,7 @@ const Graph: React.FC<GraphProps> = ({
                     return `${datasetLabel}: ${formatValue(rawValue, rawValue/1000)}`;
                 }
 
-                if (datasetLabel === 'Verdi') {
+                if (datasetLabel === graphName) {
                     if (percentageVsValue === 'percentage') {
                         return `${datasetLabel}: ${value.toFixed(2)}%`;
                     }
@@ -205,7 +207,7 @@ const Graph: React.FC<GraphProps> = ({
             // Define the desired order.
             const order = {
                 'Transactions': 1,
-                'Verdi': 2,
+                [graphName]: 2,
                 [compareName]: 3,
             };
     
@@ -218,7 +220,7 @@ const Graph: React.FC<GraphProps> = ({
 
     // ----- Build datasets -----
     const mainDataset = {
-        label: 'Verdi',
+        label: graphName,
         data: mainDataPoints,
         borderColor: 'rgba(64,105,225,1)',
         backgroundColor: (context: any) => {

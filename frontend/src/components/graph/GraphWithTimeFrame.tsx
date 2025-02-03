@@ -73,14 +73,15 @@ export function computePercentageProfit(dates: string[], prices: number[]): numb
 
 interface GraphWithTimeFrameProps {
     graphData: HistoricData;
+    graphName: string;
     transactions?: Transaction[];
     defaultTimeframe?: TimeFrame;
-    graphName?: string;
     defaultPercentageVsValue?: 'percentage' | 'value';
 }
 
 const GraphWithTimeFrame: React.FC<GraphWithTimeFrameProps> = ({
     graphData,
+    graphName,
     transactions = [],
     defaultTimeframe = 'max',
     defaultPercentageVsValue = 'percentage',
@@ -180,6 +181,7 @@ const GraphWithTimeFrame: React.FC<GraphWithTimeFrameProps> = ({
 
         <Graph
             graphData={filteredMain.filteredData}
+            graphName={graphName}
             transactions={filteredMain.filteredTransactions}
             compareData={slicedCompareData}
             compareName={compare}

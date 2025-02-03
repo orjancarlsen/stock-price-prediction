@@ -121,6 +121,7 @@ const EquityOverview: React.FC<EquityOverviewProps> = ({
                         ),
                         prices: portfolioValues.map((v) => v.value),
                     }}
+                    graphName="Portefølje"
                     defaultTimeframe="max"
                     defaultPercentageVsValue='percentage'
                 />

@@ -113,6 +113,7 @@ const CompanyPage: React.FC = () => {
                     )}
                     <GraphWithTimeFrame
                         graphData={historicCompanyPrices}
+                        graphName={ticker || ''}
                         transactions={filteredTransactions}
                         defaultTimeframe="1y"
                         defaultPercentageVsValue='value'
