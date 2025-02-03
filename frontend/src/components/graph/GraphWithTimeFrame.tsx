@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import Graph from './GradientGraph';
 import TimeFrameSelector from './TimeFrameSelector';
+import PercentageVsValueSelector from './PercentageVsValueSelector';
 import { Transaction, TimeFrame } from 'src/types';
 import ComparisonSelector from './ComparisonSelector';
 import { useFetchPrices } from '../../hooks/useFetchPrices';
@@ -63,27 +64,30 @@ function filterDataByTimeFrame(
 }
 
 export function computePercentageProfit(dates: string[], prices: number[]): number {
-  if (dates.length < 2) return 0;
-  const firstPrice = prices[0];
-  const lastPrice = prices[prices.length - 1];
-  if (firstPrice === 0) return 0;
-  return ((lastPrice - firstPrice) / firstPrice) * 100;
+    if (dates.length < 2) return 0;
+    const firstPrice = prices[0];
+    const lastPrice = prices[prices.length - 1];
+    if (firstPrice === 0) return 0;
+    return ((lastPrice - firstPrice) / firstPrice) * 100;
 }
 
 interface GraphWithTimeFrameProps {
-  graphData: HistoricData;
-  transactions?: Transaction[];
-  defaultTimeframe?: TimeFrame;
-  graphName?: string;
+    graphData: HistoricData;
+    transactions?: Transaction[];
+    defaultTimeframe?: TimeFrame;
+    graphName?: string;
+    defaultPercentageVsValue?: 'percentage' | 'value';
 }
 
 const GraphWithTimeFrame: React.FC<GraphWithTimeFrameProps> = ({
-  graphData,
-  transactions = [],
-  defaultTimeframe = 'max',
+    graphData,
+    transactions = [],
+    defaultTimeframe = 'max',
+    defaultPercentageVsValue = 'percentage',
 }) => {
   const [timeFrame, setTimeFrame] = useState<TimeFrame>(defaultTimeframe);
   const [compare, setCompare] = useState<string>('OSEBX.OL');
+  const [percentageVsValue, setPercentageVsValue] = useState<'percentage' | 'value'>(defaultPercentageVsValue);
 
   // Fetch compare data using the selected index.
   const {
@@ -153,21 +157,24 @@ const GraphWithTimeFrame: React.FC<GraphWithTimeFrameProps> = ({
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <div
             style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                width: '100%',
-                marginBottom: '10px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              width: '100%',
+              marginBottom: '10px',
             }}
         >
-            <ComparisonSelector onChange={setCompare} />
+            <div style={{ display: 'flex', flexDirection: 'row', gap: '4px', marginLeft: '8px' }}>
+              <ComparisonSelector onChange={setCompare} />
+              <PercentageVsValueSelector defaultValue={defaultPercentageVsValue} onChange={setPercentageVsValue} />
+            </div>
 
             <div style={{ flex: 1, display: 'flex', justifyContent: 'center', marginRight: '80px' }}>
-            <TimeFrameSelector
+              <TimeFrameSelector
                 onChange={setTimeFrame}
                 profitsMap={profitsMap}
                 defaultTimeFrame={defaultTimeframe}
-            />
+              />
             </div>
         </div>
 
@@ -176,6 +183,7 @@ const GraphWithTimeFrame: React.FC<GraphWithTimeFrameProps> = ({
             transactions={filteredMain.filteredTransactions}
             compareData={slicedCompareData}
             compareName={compare}
+            percentageVsValue={percentageVsValue}
         />
     </div>
   );

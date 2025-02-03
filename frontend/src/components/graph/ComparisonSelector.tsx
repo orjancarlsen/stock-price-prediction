@@ -56,7 +56,6 @@ const ComparisonSelector: React.FC<ComparisonSelectorProps> = ({ onChange }) => 
         }}
       >
         <ScalesIcon width="16" height="16" />
-        <span style={{ marginLeft: '4px' }}>Sammenlign</span>
       </button>
       {dropdownOpen && (
         <div
