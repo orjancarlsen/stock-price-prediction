@@ -51,7 +51,7 @@ const PortfolioOverview: React.FC<PortfolioOverviewProps> = ({
                     height: '600px',
                 }}
             >
-                <p style={{ fontSize: '2rem', fontWeight: 'bold', marginTop: 0 }}>
+                <p style={{ fontSize: '2rem', fontWeight: 'bold', marginTop: 0, textAlign: 'center' }}>
                     Portefølje
                 </p>
                 <div
