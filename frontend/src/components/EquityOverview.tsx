@@ -70,7 +70,7 @@ const EquityOverview: React.FC<EquityOverviewProps> = ({
                                 marginRight: '1rem',
                             }}
                         >
-                            {formattedDevelopmentPastDayPercentage}%
+                            {formattedDevelopmentPastDayPercentage}<span style={{fontFamily: 'Arial, sans-serif'}}>%</span>
                         </p>
                         <p
                             style={{

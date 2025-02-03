@@ -1,7 +1,7 @@
 .toggle-container {
     position: relative;
     display: flex;
-    width: 80px;
+    width: 52px;
     height: 26px;
     border: 1px solid lightgrey;
     border-radius: 4px;
@@ -10,6 +10,7 @@
     overflow: hidden;
     cursor: pointer;
     user-select: none;
+    font-family: Arial, sans-serif;
 }
   
 .toggle-indicator {

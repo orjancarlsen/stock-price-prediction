@@ -29,7 +29,7 @@ const PercentageVsValueSelector: React.FC<PercentageVsValueSelectorProps> = ({
                 className="toggle-option"
                 onClick={() => handleClick(selected === 'value' ? 'percentage' : 'value')}
             >
-                NOK
+                $
             </div>
             <div
                 className="toggle-option"
