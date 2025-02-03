@@ -155,7 +155,7 @@ def get_orders():
     """
     limit = request.args.get('limit', default=100, type=int)
     sql_wrapper = SQLWrapper()
-    orders = sql_wrapper.get_orders_by_status(limit=limit, statuses=['PENDING', 'EXECUTED'])
+    orders = sql_wrapper.get_orders_by_status(limit=limit, statuses=['PENDING'])
     orders_with_names = []
     for order in orders:
         order_dict = order.__dict__

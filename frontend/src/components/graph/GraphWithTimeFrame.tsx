@@ -154,7 +154,7 @@ const GraphWithTimeFrame: React.FC<GraphWithTimeFrameProps> = ({
     const newPrices = adjustedCompareData.prices.slice(startIdx, endSliceIdx);
 
     return { dates: newDates, prices: newPrices };
-  }, [compareData, filteredMain]);
+  }, [adjustedCompareData, filteredMain]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
