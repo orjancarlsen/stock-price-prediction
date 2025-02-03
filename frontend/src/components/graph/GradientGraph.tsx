@@ -346,4 +346,22 @@ const Graph: React.FC<GraphProps> = ({
     );
 };
 
-export default Graph;
+function areEqual(prevProps: GraphProps, nextProps: GraphProps) {
+    // Check all props except compareName. If they are equal, skip re-render.
+    return (
+        prevProps.graphName === nextProps.graphName &&
+        prevProps.percentageVsValue === nextProps.percentageVsValue &&
+        // Do a shallow comparison of graphData (dates & prices) if they are primitives:
+        prevProps.graphData.dates.join(',') === nextProps.graphData.dates.join(',') &&
+        prevProps.graphData.prices.join(',') === nextProps.graphData.prices.join(',') &&
+        // For compareData, do a similar shallow check:
+        prevProps.compareData?.dates.join(',') === nextProps.compareData?.dates.join(',') &&
+        prevProps.compareData?.prices.join(',') === nextProps.compareData?.prices.join(',') &&
+        // Compare transactions similarly (if necessary)
+        JSON.stringify(prevProps.transactions) === JSON.stringify(nextProps.transactions)
+        // Notice we deliberately ignore compareName.
+    );
+}
+  
+
+export default React.memo(Graph, areEqual);

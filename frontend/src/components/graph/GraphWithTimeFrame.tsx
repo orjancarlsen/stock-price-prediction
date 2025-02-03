@@ -97,6 +97,8 @@ const GraphWithTimeFrame: React.FC<GraphWithTimeFrameProps> = ({
     error: comparePricesError,
   } = useFetchPrices(compare);
 
+  const adjustedCompareData = compare === '' ? { dates: [], prices: [] } : compareData;
+
   // Precompute profit for each timeframe.
   const profitsMap = useMemo(() => {
     const timeFrames: TimeFrame[] = ['1w', '1m', '3m', '1y', 'max'];
@@ -124,7 +126,7 @@ const GraphWithTimeFrame: React.FC<GraphWithTimeFrameProps> = ({
 
   // Slice the compare data so that it begins at the earliest date of the filtered main data.
   const slicedCompareData = useMemo(() => {
-    if (!compareData.dates.length) return { dates: [], prices: [] };
+    if (!adjustedCompareData.dates.length) return { dates: [], prices: [] };
 
     const earliestFilteredDate = filteredMain.filteredData.dates[0];
     const latestFilteredDate =
@@ -136,20 +138,20 @@ const GraphWithTimeFrame: React.FC<GraphWithTimeFrameProps> = ({
     const earliestTs = new Date(earliestFilteredDate).getTime();
     const latestTs = new Date(latestFilteredDate).getTime();
 
-    const startIdx = compareData.dates.findIndex(
+    const startIdx = adjustedCompareData.dates.findIndex(
       (d) => new Date(d).getTime() >= earliestTs
     );
     if (startIdx === -1) {
       return { dates: [], prices: [] };
     }
 
-    const endIdx = compareData.dates.findIndex(
+    const endIdx = adjustedCompareData.dates.findIndex(
       (d) => new Date(d).getTime() > latestTs
     );
-    const endSliceIdx = endIdx === -1 ? compareData.dates.length : endIdx;
+    const endSliceIdx = endIdx === -1 ? adjustedCompareData.dates.length : endIdx;
 
-    const newDates = compareData.dates.slice(startIdx, endSliceIdx);
-    const newPrices = compareData.prices.slice(startIdx, endSliceIdx);
+    const newDates = adjustedCompareData.dates.slice(startIdx, endSliceIdx);
+    const newPrices = adjustedCompareData.prices.slice(startIdx, endSliceIdx);
 
     return { dates: newDates, prices: newPrices };
   }, [compareData, filteredMain]);

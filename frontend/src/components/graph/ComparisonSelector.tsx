@@ -36,10 +36,12 @@ const ComparisonSelector: React.FC<ComparisonSelectorProps> = ({ onChange }) => 
   };
 
   const handleClick = (option: { index: string; name: string }) => {
-    setSelected(option.index);
-    onChange(option.index);
+    const newSelected = selected === option.index ? '' : option.index;
+    setSelected(newSelected);
+    onChange(newSelected);
     setDropdownOpen(false);
   };
+  
 
   return (
     <div style={{ position: 'relative' }} ref={containerRef}>
