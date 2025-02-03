@@ -98,7 +98,7 @@ const ComparisonSelector: React.FC<ComparisonSelectorProps> = ({ onChange }) => 
                   <circle cx="12" cy="12" r="10" stroke="#888" strokeWidth="2" fill="none" />
                   {selected === option.index && (
                     <polyline
-                      points="9 12 12 15 16 9"
+                      points="7 12 11 16 23 3"
                       stroke="grey"
                       strokeWidth="2"
                       fill="none"
