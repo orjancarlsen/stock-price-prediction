@@ -49,6 +49,10 @@ const CompanyPage: React.FC = () => {
         : 0;
     const formattedProfit = (profit * 100).toFixed(2);
 
+    const todaysTotalValue = asset && asset.todays_value !== undefined && asset.number_of_shares !== undefined
+        ? asset.todays_value * asset.number_of_shares
+        : 0;
+
     return (
         <div style={{ display: 'flex', height: '100vh', flexDirection: 'column', backgroundColor: '#f5f5f5' }}>
             <Header trainedCompanies={trainedCompanies} name={name}/>
@@ -69,7 +73,7 @@ const CompanyPage: React.FC = () => {
                                     Aksjeverdi (NOK)
                                 </p>
                                 <p style={{ fontSize: '1.2rem', margin: 0 }}>
-                                    {singleDecimal(asset.total_value, 0)}
+                                    {singleDecimal(todaysTotalValue, 1)}
                                 </p>
                             </div>
                             <div style={{ flex: 1 }}>
