@@ -1,0 +1,14 @@
+name: Keep Deployment Awake
+
+on:
+  # This cron runs every 10 minutes from 07:00 to 18:59 UTC (8-20 Norway time) daily.
+  schedule:
+    - cron: "*/10 7-18 * * *"
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping frontend URL
+        run: |
+          curl -fsSL https://stock-price-prediction-frontend.onrender.com/ || echo "Ping failed"
