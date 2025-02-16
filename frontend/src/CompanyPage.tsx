@@ -1,4 +1,5 @@
 import React from 'react';
+import './CompanyPage.css';
 import { useParams } from 'react-router-dom';
 import LoadingAnimation from './components/LoadingAnimation';
 import GraphWithTimeFrame from './components/graph/GraphWithTimeFrame';
@@ -54,78 +55,73 @@ const CompanyPage: React.FC = () => {
         : 0;
 
     return (
-        <div style={{ display: 'flex', height: '100vh', flexDirection: 'column', backgroundColor: '#f5f5f5' }}>
-            <Header trainedCompanies={trainedCompanies} name={name}/>
+        <div className="company-page-container">
+            <Header trainedCompanies={trainedCompanies} name={name} />
 
-            <div style={{ display: 'flex', gap: '20px', overflow: 'hidden', padding: '20px' }}>
-                <div style={{ flex: 1, borderRadius: '8px', backgroundColor: 'white', padding: '20px' }}>
+            <div className="content-container">
+                <div className="graph-container">
                     {asset && (
-                        <div
-                            style={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                width: '900px',
-                                marginBottom: '3rem',
-                            }}
-                        >
-                            <div style={{ flex: 1 }}>
-                                <p style={{ fontSize: '1rem', margin: 0, color: 'grey' }}>
-                                    Aksjeverdi (NOK)
-                                </p>
-                                <p style={{ fontSize: '1.2rem', margin: 0 }}>
-                                    {singleDecimal(todaysTotalValue, 1)}
-                                </p>
+                        <div className="summary-container">
+                            <div className="summary-content">
+                                <div className="summary-header">
+                                    <p className="label">Aksjeverdi (NOK)</p>
+                                </div>
+                                <div className="summary-item">
+                                    <p className="value">{singleDecimal(todaysTotalValue, 1)}</p>
+                                </div>
                             </div>
-                            <div style={{ flex: 1 }}>
-                                <p style={{ fontSize: '1rem', margin: 0, color: 'grey' }}>
-                                    Antall aksjer
-                                </p>
-                                <p style={{ fontSize: '1.2rem', margin: 0 }}>
-                                    {asset.number_of_shares}
-                                </p>
+
+                            <div className="summary-content">
+                                <div className="summary-header">
+                                    <p className="label">Antall aksjer</p>
+                                </div>
+                                <div className="summary-item">
+                                    <p className="value">{asset.number_of_shares}</p>
+                                </div>
                             </div>
-                            <div style={{ flex: 1 }}>
-                                <p style={{ fontSize: '1rem', margin: 0, color: 'grey' }}>
-                                    Dagens kurs (NOK)
-                                </p>
-                                <p style={{ fontSize: '1.2rem', margin: 0 }}>
-                                    {singleDecimal(asset.todays_value)}
-                                </p>
+
+                            <div className="summary-content">
+                                <div className="summary-header">
+                                    <p className="label">Dagens kurs (NOK)</p>
+                                </div>
+                                <div className="summary-item">
+                                    <p className="value">{singleDecimal(asset.todays_value)}</p>
+                                </div>
                             </div>
-                            <div style={{ flex: 1 }}>
-                                <p style={{ fontSize: '1rem', margin: 0, color: 'grey' }}>
-                                    Pris per aksje (NOK)
-                                </p>
-                                <p style={{ fontSize: '1.2rem', margin: 0 }}>
-                                    {asset.price_per_share}
-                                </p>
+
+                            <div className="summary-content">
+                                <div className="summary-header">
+                                    <p className="label">Pris per aksje (NOK)</p>
+                                </div>
+                                <div className="summary-item">
+                                    <p className="value">{asset.price_per_share?.toLocaleString()}</p>
+                                </div>
                             </div>
-                            <div style={{ flex: 1 }}>
-                                <p style={{ fontSize: '1rem', margin: 0, color: 'grey' }}>
-                                    Avkastning
-                                </p>
-                                <p style={{ fontSize: '1.2rem', margin: 0, color: profit >= 0 ? 'green' : 'red' }}>
-                                    {formattedProfit}%
-                                </p>
+
+                            <div className="summary-content">
+                                <div className="summary-header">
+                                    <p className="label">Avkastning</p>
+                                </div>
+                                <div className="summary-item">
+                                    <p className="value" style={{ color: profit >= 0 ? 'green' : 'red' }}>
+                                        {formattedProfit}%
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     )}
-                    {!asset && (
-                        <div style={{ marginBottom: '3rem' }}>
-                            Denne aksjen er ikke i porteføljen.
-                        </div>
-                    )}
+                    {!asset && <div className="no-asset">Denne aksjen er ikke i porteføljen.</div>}
                     <GraphWithTimeFrame
                         graphData={historicCompanyPrices}
                         graphName={ticker || ''}
                         transactions={filteredTransactions}
                         defaultTimeframe="1y"
-                        defaultPercentageVsValue='value'
+                        defaultPercentageVsValue="value"
                     />
                 </div>
 
-                <div style={{ width: '440px' }}>
-                    <ActionOverview transactions={filteredTransactions} orders={filteredOrders}/>
+                <div className="action-container">
+                    <ActionOverview transactions={filteredTransactions} orders={filteredOrders} />
                 </div>
             </div>
         </div>
