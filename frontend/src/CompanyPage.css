@@ -1,0 +1,74 @@
+/* Outer container fills the viewport and scrolls vertically if needed */
+.company-page-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background-color: #f5f5f5;
+    overflow-y: auto;
+}
+
+/* Main content container with two children: graph and actions */
+.content-container {
+    display: flex;
+    gap: 20px;
+    padding: 20px;
+    flex-wrap: wrap;
+}
+
+/* Graph container takes all available space */
+.graph-container {
+    flex: 1;
+    min-width: 300px;
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* The summary container */
+.summary-container {
+    display: flex;
+    flex-wrap: wrap;
+    margin-bottom: 3rem;
+}
+
+.summary-content {
+    flex: 1;
+}
+
+.summary-header p,
+.summary-item p {
+    margin: 0;
+}
+
+.summary-header {
+    font-size: 1.0rem;
+    color: gray;
+}
+
+/* Each summary item adjusts its size */
+.summary-item {
+    font-size: 1.2rem;
+}
+
+/* Action container is fixed at 440px on wide screens */
+.action-container {
+    width: 440px;
+    min-width: 300px;
+}
+
+/* When the screen is narrower than 1200px:
+    - Change layout to a column so the action overview stacks below the graph */
+@media (max-width: 1200px) {
+    .content-container {
+        flex-direction: column;
+    }
+    .action-container {
+        width: 100%;
+    }
+    .graph-container {
+        width: 100%;
+        flex: none;
+    }
+}
+      

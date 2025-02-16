@@ -1,4 +1,5 @@
 import React from 'react';
+import './HomePage.css';
 import PortfolioOverview from './components/portfolio/PortfolioOverview';
 import EquityOverview from './components/EquityOverview';
 import ActionOverview from './components/ActionOverview';
@@ -31,20 +32,18 @@ function HomePage() {
     }
 
     return (
-        <div style={{ display: 'flex', height: '100vh', flexDirection: 'column', backgroundColor: '#f5f5f5' }}>
-            <Header trainedCompanies={trainedCompanies}/>
+        <div className="homepage-container">
+            <Header trainedCompanies={trainedCompanies} />
             
-            <div style={{ display: 'flex', gap: '20px', overflow: 'hidden', padding: '20px' }}>
-                <div style={{ flex: 1 }}>
+            <div className="content-container">
+                <div className="equity-overview">
                     <EquityOverview portfolio={portfolio} portfolioValues={portfolioValues} />
                 </div>
-
-                <div style={{ flex: 1 }}>
+                <div className="portfolio-overview">
                     <PortfolioOverview portfolio={portfolio} />
                 </div>
-
-                <div style={{ width: '440px' }}>
-                    <ActionOverview transactions={transactions} orders={orders}/>
+                <div className="action-overview">
+                    <ActionOverview transactions={transactions} orders={orders} />
                 </div>
             </div>
         </div>
