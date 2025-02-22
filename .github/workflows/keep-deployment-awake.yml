@@ -12,3 +12,6 @@ jobs:
       - name: Ping frontend URL
         run: |
           curl -fsSL https://stock-price-prediction-frontend.onrender.com/ || echo "Ping failed"
+      - name: Ping backend health check
+        run: |
+          curl -fsSL https://stock-price-prediction-backend-541r.onrender.com/health || echo "Ping failed"
