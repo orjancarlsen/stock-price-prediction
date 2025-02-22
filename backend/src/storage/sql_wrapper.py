@@ -593,7 +593,7 @@ if __name__ == "__main__":
     # sql_wrapper.delete_portfolio_value(datetime(2024, 2, 12).date())
 
     # Initial cash deposit
-    # sql_wrapper.deposit(100000, date(2024, 1, 1))
+    sql_wrapper.deposit(100000, datetime(2024, 1, 1))
 
     # sql_wrapper.create_buy_order('NOD.OL', 100, 99, 20)
 
@@ -647,5 +647,5 @@ if __name__ == "__main__":
     # Summary
     pprint.pp(sql_wrapper.get_portfolio())
     pprint.pp(sql_wrapper.get_transactions())
-    # pprint.pp(sql_wrapper.get_orders())
+    pprint.pp(sql_wrapper.get_orders())
     pprint.pp(sql_wrapper.get_portfolio_values())

@@ -1,5 +1,6 @@
 """Module for backtracking trading logic to test performance."""
 
+import time
 from datetime import date, timedelta
 from dateutil.relativedelta import relativedelta
 
@@ -22,8 +23,8 @@ def backtrack_trading():
     broker = Broker()
     all_tickers = Regressor.get_trained_models()
 
-    start_date = date(2025, 1, 13)
-    end_date = date(2025, 1, 13)
+    start_date = date(2024, 1, 1)
+    end_date = date(2025, 2, 16)
 
     current_day = start_date
 
@@ -73,6 +74,8 @@ def backtrack_trading():
 
             # --- 5) Update portfolio value for the current day ---
             broker.update_portfolio_value(date=current_day)
+
+            time.sleep(5)
 
         # Move to the next calendar day
         current_day += timedelta(days=1)

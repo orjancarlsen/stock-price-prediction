@@ -29,10 +29,10 @@ class Broker:
         Calculates the buy and sell thresholds based on the prediction.
     """
 
-    number_of_stocks_allowed = 10
+    number_of_stocks_allowed = 5
     min_prediction_difference = 0.1
-    buy_threshold_increase = 0.02
-    sell_threshold_decrease = 0.02
+    buy_threshold_increase = 0.03
+    sell_threshold_decrease = 0.03
 
     def __init__(self) -> None:
         self.sql_wrapper = SQLWrapper()
@@ -78,7 +78,7 @@ class Broker:
 
         return (None, None)
 
-    def calculate_fee(self, ticker: str, price_per_share: float, number_of_shares: int) -> float:
+    def calculate_fee(self, price_per_share: float, number_of_shares: int) -> float:
         """
         Calculates the fee for a transaction based on the price per share and the number of shares.
         Follows the brokerage fees of Nordnet's Mini class, with lower prices in the Nordics.
@@ -91,22 +91,12 @@ class Broker:
         number_of_shares : int
             The number of shares.
         """
-        percentage_nordics = 0.0015
-        minimum_fee_nordics = 29
+        perecentage = 0.0015
+        minimum_fee = 29
 
-        precentage = 0.002
-        minimum_fee = 49
+        return min(minimum_fee, perecentage * price_per_share * number_of_shares)
 
-        # Check if the stock's ticker is listed in the Nordics or not
-        nordic_exchanges = ['STO', 'CPH', 'HEL', 'OSL']
-        stock_info = yf.Ticker(ticker).info
-        exchange = stock_info.get('exchange', '')
-
-        if any(exchange.endswith(nordic) for nordic in nordic_exchanges):
-            return min(minimum_fee_nordics, percentage_nordics * price_per_share * number_of_shares)
-        return min(minimum_fee, precentage * price_per_share * number_of_shares)
-
-    def calculate_number_of_shares(self, ticker: str, buy_threshold: float) -> int:
+    def calculate_number_of_shares(self, buy_threshold: float) -> int:
         """
         Calculates maximum number of shares to buy without exceeding the allowed value per stock.
 
@@ -115,12 +105,13 @@ class Broker:
         int
             The maximum number of shares to buy.
         """
-        portfolio_value = self.sql_wrapper.get_portfolio_value()
-        allowed_value_per_stock = portfolio_value / self.number_of_stocks_allowed
+        cash_balance = self.sql_wrapper.get_cash_balance()
+        number_of_stocks_in_portfolio = len(self.sql_wrapper.get_portfolio()) - 1
+        allowed_value_per_stock = cash_balance / (self.number_of_stocks_allowed - number_of_stocks_in_portfolio)
 
         max_shares = int(allowed_value_per_stock // buy_threshold)
         while max_shares > 0:
-            fee = self.calculate_fee(ticker, buy_threshold, max_shares)
+            fee = self.calculate_fee(buy_threshold, max_shares)
             total_cost = max_shares * buy_threshold + fee
             if total_cost <= allowed_value_per_stock:
                 break
@@ -159,12 +150,12 @@ class Broker:
                 continue
 
             # Only proceed if we can afford at least one share
-            number_of_shares = self.calculate_number_of_shares(prediction.ticker, buy_threshold)
+            number_of_shares = self.calculate_number_of_shares(buy_threshold)
             if number_of_shares <= 0:
                 continue
 
-            buy_fee = self.calculate_fee(prediction.ticker, buy_threshold, number_of_shares)
-            sell_fee = self.calculate_fee(prediction.ticker, sell_threshold, number_of_shares)
+            buy_fee = self.calculate_fee(buy_threshold, number_of_shares)
+            sell_fee = self.calculate_fee(sell_threshold, number_of_shares)
             total_buy_cost = number_of_shares * buy_threshold + buy_fee
             total_sell_value = number_of_shares * sell_threshold - sell_fee
             prediction.profit = total_sell_value - total_buy_cost
@@ -245,7 +236,6 @@ class Broker:
                     # If the order was a buy order and the open price was lower than the buy
                     # threshold, the order was executed at opening with the open price
                     _fee = self.calculate_fee(
-                        ticker,
                         todays_prices['Open'].values[0][0],
                         order.number_of_shares
                     )
@@ -268,7 +258,6 @@ class Broker:
                         order_id=order.id,
                         _price_per_share=todays_prices['Open'].values[0][0],
                         _fee=self.calculate_fee(
-                            ticker,
                             todays_prices['Open'].values[0][0],
                             order.number_of_shares
                         ),
@@ -302,7 +291,6 @@ class Broker:
                     price_per_share=prediction.sell_threshold,
                     number_of_shares=number_of_shares,
                     fee=self.calculate_fee(
-                        prediction.ticker,
                         prediction.sell_threshold,
                         number_of_shares
                     ),
@@ -315,7 +303,6 @@ class Broker:
                         price_per_share=prediction.buy_threshold,
                         number_of_shares=prediction.number_of_shares,
                         fee=self.calculate_fee(
-                            prediction.ticker,
                             prediction.buy_threshold,
                             prediction.number_of_shares
                         ),
