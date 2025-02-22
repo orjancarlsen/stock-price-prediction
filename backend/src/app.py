@@ -43,6 +43,14 @@ for stock_symbol in trained_models:
 trained_models_names.sort(key=lambda x: x['name'])
 
 
+@app.route('/health', methods=['GET'])
+def health_check():
+    """
+    Health check endpoint to keep the application alive.
+    """
+    return jsonify({'status': 'alive'}), 200
+
+
 @app.route('/train/<ticker>', methods=['POST'])
 def train(ticker: str):
     """
