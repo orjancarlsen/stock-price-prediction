@@ -7,7 +7,7 @@ matplotlib==3.9.3
 pylint==3.3.2
 Flask==3.1.0
 Flask-cors==5.0.0
-yfinance==0.2.51
+yfinance==0.2.54
 pandas-datareader==0.10.0
 pytest==8.3.4
 pytickersymbols==1.15.0

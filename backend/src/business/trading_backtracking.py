@@ -22,8 +22,8 @@ def backtrack_trading():
     broker = Broker()
     all_tickers = Regressor.get_trained_models()
 
-    start_date = date(2025, 1, 13)
-    end_date = date(2025, 1, 13)
+    start_date = date(2025, 2, 19)
+    end_date = date(2025, 2, 22)
 
     current_day = start_date
 
