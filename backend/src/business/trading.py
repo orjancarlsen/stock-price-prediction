@@ -1,6 +1,6 @@
 """Trading logic to be ran daily."""
 
-from src.app import N_DAYS
+from src.app import N_DAYS, available_companies
 from src.business.broker import Broker, StockPrediction
 from src.model.regressor import Regressor
 
@@ -8,19 +8,23 @@ from src.model.regressor import Regressor
 def trading():
     """Trading logic to be ran daily."""
     broker = Broker()
-    tickers = Regressor.get_trained_models()
+    regressor = Regressor.load()
 
     broker.dividend_payout()
 
     # Checking orders and making predictions is only necessary if there have been
     # activity in the stock since last time. Either set existing orders as executed or cancel them.
-    tickers = broker.conclude_pending_orders_for_traded_stocks(tickers)
+    broker.conclude_pending_orders_for_traded_stocks()
+
+    broker.update_portfolio_value()
 
     # Make prediction for next N_DAYS
     predictions = []
-    for ticker in tickers:
-        regressor = Regressor.load(ticker)
-        prediction_next_period = regressor.predict_next_period(n_days=N_DAYS)
+    for ticker in available_companies:
+        prediction_next_period = regressor.predict_next_period(
+            n_days=N_DAYS,
+            ticker=ticker
+        )
         predictions.append(
             StockPrediction(
                 ticker,
@@ -34,8 +38,6 @@ def trading():
 
     # Decide orders to create
     broker.create_orders(predictions)
-
-    broker.update_portfolio_value()
 
 
 if __name__ == "__main__":

@@ -28,7 +28,7 @@ const CompanyPage: React.FC = () => {
         companies: trainedCompanies,
         error: trainedCompaniesError,
         loading: trainedCompaniesLoading,
-      } = useFetchCompanies('/companies/trained');
+      } = useFetchCompanies('/companies/available');
 
     const transactions = useFetchTransactions();
     const filteredTransactions = transactions.filter(

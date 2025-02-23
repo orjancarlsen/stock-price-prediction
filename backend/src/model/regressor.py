@@ -6,7 +6,6 @@ import glob
 from datetime import datetime
 import joblib
 import numpy as np
-import matplotlib.pyplot as plt
 
 # Suppress tensorflow warnings
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -23,33 +22,13 @@ import tensorflow as tf
 set_random_seed(42)
 tf.config.experimental.enable_op_determinism()
 
-from src.data.data_transformer import DataTransformer # pylint: disable=import-error
+from src.data.data_transformer import DataTransformer  # pylint: disable=import-error
 
 class Regressor:
     """
-    Representation of a machine learning model performing a regression to
-    predict stock prices.
-
-    Attributes
-    ----------
-    name : str
-        Name of the regressor.
-    data : DataTransformer
-        Transormed data used for training and testing the model.
-    model : Sequential
-        Model with plain stack of layers where each layer has exactly
-        one input tensor and one output tensor.
-
-    Methods
-    -------
-    train()
-        Fit the parameters of the model to the training set.
-    predict()
-        Use the trained model to predict the label features for the test set.
-    save()
-        Save the model parameters to file.
-    load()
-        Load the model parameters from file.
+    A regression model for stock price prediction trained on data from multiple companies.
+    Uses a common scaler (built from all raw training data) for all scaling during training
+    and prediction.
     """
 
     epochs = 100
@@ -58,48 +37,45 @@ class Regressor:
     y_pred = None
     y_true = None
 
-    def __init__(self, ticker: str, data: DataTransformer) -> None:
+    def __init__(self, data_dict: dict[str, DataTransformer]) -> None:
         """
         Parameters
         ----------
-        ticker : str
-            Ticker of stock.
-        data : DataTransformer
-            Transormed data used for training and testing the model.
+        data_dict : dict[str, DataTransformer]
+            Mapping of ticker symbols to their respective DataTransformer instances.
+            (Each DataTransformer should already have been scaled with the common scaler.)
         """
-        self.ticker = ticker
-        self.data = data
+        self.data_dict = data_dict
+        self.tickers = list(data_dict.keys())
+        # Assume all DataTransformers now share the same scales.
+        self.common_scales = data_dict[self.tickers[0]].scales
 
-        # Set seed for reproducibility
-        np.random.seed(42)
-        tf.random.set_seed(42)
+        # Aggregate training and testing data from all companies.
+        self.x_train = np.concatenate([data_dict[ticker].x_train for ticker in self.tickers],axis=0)
+        self.y_train = np.concatenate([data_dict[ticker].y_train for ticker in self.tickers],axis=0)
+        self.x_test = np.concatenate([data_dict[ticker].x_test for ticker in self.tickers], axis=0)
+        self.y_test = np.concatenate([data_dict[ticker].y_test for ticker in self.tickers], axis=0)
 
+        # Build the model.
         model = Sequential()
-
         input_layer = Input(
-            shape=(self.data.x_train.shape[1], self.data.x_train.shape[2]),
+            shape=(self.x_train.shape[1], self.x_train.shape[2]),
             batch_size=self.batch_size,
             dtype='float32',
             sparse=False
         )
         model.add(input_layer)
-
         model.add(LSTM(units=50, return_sequences=True))
         model.add(Dropout(0.2))
-
         model.add(LSTM(units=100, return_sequences=True))
         model.add(Dropout(0.2))
-
         model.add(LSTM(units=200, return_sequences=True))
         model.add(Dropout(0.2))
-
         model.add(LSTM(units=100, return_sequences=True))
         model.add(Dropout(0.2))
-
         model.add(LSTM(units=50, return_sequences=False))
         model.add(Dropout(0.2))
-
-        model.add(Dense(units=self.data.y_train.shape[1]))
+        model.add(Dense(units=self.y_train.shape[1]))
 
         model.compile(
             optimizer=Adam(learning_rate=1e-4),
@@ -108,128 +84,90 @@ class Regressor:
         )
 
         model.summary()
-
         self.model = model
 
     def train(self) -> None:
         """
-        Fit the parameters of the model to the training set.
+        Fit the model to the aggregated training data.
         """
         self.model.fit(
-            self.data.x_train,
-            self.data.y_train,
+            self.x_train,
+            self.y_train,
             epochs=self.epochs,
             batch_size=self.batch_size,
-            validation_data=(self.data.x_test, self.data.y_test),
+            validation_data=(self.x_test, self.y_test),
             callbacks=[EarlyStopping(monitor='val_loss', patience=5)]
         )
-
-    def predict(self) -> None:
-        """
-        Use the trained model to predict the label features for the test set.
-        """
-        self.y_pred = self.model.predict(self.data.x_test)
-        self.y_pred[:, 0] = self.data.scales['Low'].inverse_transform(
-            self.y_pred[:, 0].reshape(-1, 1)).reshape(-1)
-        self.y_pred[:, 1] = self.data.scales['High'].inverse_transform(
-            self.y_pred[:, 1].reshape(-1, 1)).reshape(-1)
-
-        self.y_true = self.data.y_test.copy()
-        self.y_true[:, 0] = self.data.scales['Low'].inverse_transform(
-            self.y_true[:, 0].reshape(-1, 1)).reshape(-1)
-        self.y_true[:, 1] = self.data.scales['High'].inverse_transform(
-            self.y_true[:, 1].reshape(-1, 1)).reshape(-1)
 
     def predict_next_period(
             self,
             n_days: int,
+            ticker: str,
             start_date: datetime = None,
             end_date: datetime = None
         ) -> np.ndarray:
         """
-        Predict the lowest and highest stock price in the next 10 days.
-
+        Predict the next period's stock prices for the given ticker.
+        
         Parameters
         ----------
         n_days : int
-            Number of days used for prediction.
-        start_date : datetime
-            A date which is a year ago from the date to predict.
-
+            Number of days for input sequence.
+        ticker : str
+            Ticker symbol to retrieve recent data for prediction.
+        start_date : datetime, optional
+            Start date for data retrieval.
+        end_date : datetime, optional
+            End date for data retrieval.
+        
         Returns
         -------
         np.ndarray
-            Array containing the predicted stock prices for the next period.
+            Predicted stock prices for the next period.
         """
-        past_n_days = self.data.get_past_n_days(n_days, start_date=start_date, end_date=end_date)
+        # Use the provided ticker’s DataTransformer if available,
+        # otherwise create a temporary one.
+        data = self.data_dict.get(ticker, DataTransformer(ticker))
+        past_n_days = data.get_past_n_days(
+            n_days,
+            start_date=start_date,
+            end_date=end_date,
+            scales=self.common_scales
+        )
+        # Assumes 5 features.
         prediction_next_period = self.model.predict(past_n_days.reshape(1, n_days, 5))
-
-        prediction_next_period[:, 0] = self.data.scales['Low'].inverse_transform(
-            prediction_next_period[:, 0].reshape(-1, 1)).reshape(-1)
-        prediction_next_period[:, 1] = self.data.scales['High'].inverse_transform(
-            prediction_next_period[:, 1].reshape(-1, 1)).reshape(-1)
+        # Inverse transform the predictions using the common scaler.
+        prediction_next_period[:, 0] = self.common_scales['Low'].inverse_transform(
+            prediction_next_period[:, 0].reshape(-1, 1)
+        ).reshape(-1)
+        prediction_next_period[:, 1] = self.common_scales['High'].inverse_transform(
+            prediction_next_period[:, 1].reshape(-1, 1)
+        ).reshape(-1)
         return prediction_next_period[0]
-
-    def plot(self, feature: str) -> None:
-        """
-        Plots predicted values against true values for one feature.
-
-        Parameters
-        ----------
-        feature : str
-            Feature's values to be plotted.
-
-        Raises
-        ------
-        Exception
-            If feature which is not predicted is tried to be plotted.
-        """
-        if feature not in self.data.y_features:
-            raise NameError(f'{feature} not found in y_features: {self.data.y_features}')
-
-        plt.plot(
-            self.y_true[feature].values,
-            '-',
-            color='red',
-            label=f'Real Stock Price {feature}'
-        )
-        plt.plot(
-            self.y_pred[:, self.data.y_features.index(feature)],
-            '--',
-            color='red',
-            label=f'Predicted Stock Price {feature}'
-        )
-        plt.title('Stock Price Prediction')
-        plt.xlabel('Time')
-        plt.ylabel('Stock Price')
-        plt.legend()
 
     def save(self) -> None:
         """
-        Save the model parameters to file.
+        Save the trained model to file.
         """
         timezone_norway = timezone('Europe/Oslo')
         date = datetime.now(timezone_norway).strftime('%Y-%m-%d_%H-%M-%S')
         filepath = pathlib.Path(__file__).parent.resolve()
-        filename = filepath / f'models/{self.ticker}-{date}.joblib'
+        filename = filepath / f'models/{date}.joblib'
         joblib.dump(self, filename)
 
     @staticmethod
-    def load(ticker) -> 'Regressor':
+    def load() -> 'Regressor':
         """
-        Load the newest model parameters from file based on the date in the filename.
+        Load the most recent model from file.
         """
         filepath = pathlib.Path(__file__).parent.resolve()
-        files = glob.glob(str(filepath / f'models/{ticker}-*.joblib'))
+        files = glob.glob(str(filepath / 'models/2025*.joblib'))
         if not files:
-            raise FileNotFoundError(f"No model files found for ticker {ticker}")
+            raise FileNotFoundError(f"No model files found in {filepath / 'models'}")
 
-        # Extract timestamps from filenames and sort by date
         def extract_date(filename) -> datetime:
             basename = os.path.basename(filename)
-            # Split only on the first hyphen
-            parts = basename.split('-', 1)
-            date_str = parts[1].replace('.joblib', '')
+            date_str = basename.replace('.joblib', '')
             try:
                 return datetime.strptime(date_str, '%Y-%m-%d_%H-%M-%S')
             except ValueError as e:
@@ -239,19 +177,3 @@ class Regressor:
         files.sort(key=extract_date, reverse=True)
         latest_file = files[0]
         return joblib.load(latest_file)
-
-    @staticmethod
-    def get_trained_models() -> set[str]:
-        """
-        Return a list of tickers for which there exist a model.
-        """
-        filepath = pathlib.Path(__file__).parent.resolve()
-        files = glob.glob(str(filepath / 'models/*.joblib'))
-
-        trained_models = set()
-        for filename in files:
-            basename = os.path.basename(filename)
-            ticker = basename.split('-', 1)[0]
-            trained_models.add(ticker)
-
-        return trained_models

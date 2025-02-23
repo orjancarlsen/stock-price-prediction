@@ -34,9 +34,10 @@ const StockRow: React.FC<StockRowProps> = ({ asset }) => {
                 flexDirection: 'row',
                 fontSize: '0.9rem',
                 gap: '8px',
-                height: '24px', // Reserve a fixed number of pixels for each row
+                height: '20px', // Reserve a fixed number of pixels for each row
                 alignItems: 'center', // Center items vertically
-                cursor: 'pointer' // Change cursor to pointer to indicate clickable row
+                cursor: 'pointer', // Change cursor to pointer to indicate clickable row
+                borderBottom: '1px solid lightgrey',
             }}
         >
             <div style={{ textAlign: 'left', alignItems: 'center', display: 'flex', width: '120px' }}>

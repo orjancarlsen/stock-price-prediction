@@ -46,14 +46,11 @@ const PortfolioOverview: React.FC<PortfolioOverviewProps> = ({
                 style={{
                     display: 'flex',
                     flexDirection: 'column',
-                    padding: '20px',
+                    padding: '20px 20px',
                     fontSize: '0.9rem',
                     height: '600px',
                 }}
             >
-                <p style={{ fontSize: '2rem', fontWeight: 'bold', marginTop: 0, textAlign: 'center' }}>
-                    Portefølje
-                </p>
                 <div
                     style={{
                         display: 'flex',
@@ -64,9 +61,9 @@ const PortfolioOverview: React.FC<PortfolioOverviewProps> = ({
                 >
                     <div style={{ width: '226px', textAlign: 'right' }}>Verdi</div>
                     <div style={{ width: '50px', textAlign: 'right' }}>Antall</div>
-                    <div style={{ width: '80px', textAlign: 'right' }}>Kurs</div>
-                    <div style={{ width: '80px', textAlign: 'right' }}>Pris</div>
-                    <div style={{ width: '80px', textAlign: 'right' }}>Avkastning</div>
+                    <div style={{ width: '78px', textAlign: 'right' }}>Kurs</div>
+                    <div style={{ width: '78px', textAlign: 'right' }}>Pris</div>
+                    <div style={{ width: '82px', textAlign: 'right' }}>Avkastning</div>
                 </div>
 
                 {/* Sorted Stocks List */}
@@ -82,10 +79,10 @@ const PortfolioOverview: React.FC<PortfolioOverviewProps> = ({
                         display: 'flex',
                         justifyContent: 'center',
                         alignItems: 'center',
-                        padding: '30px',
+                        padding: '0px',
                     }}
                 >
-                    <PieChart data={pieChartData} width={300} height={300} />
+                    <PieChart data={pieChartData} width={220} height={220} />
                 </div>
             </div>
         </div>
