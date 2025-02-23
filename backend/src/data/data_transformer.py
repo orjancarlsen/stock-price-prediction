@@ -7,7 +7,6 @@ import yfinance as yf
 from yfinance.exceptions import YFPricesMissingError
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import MinMaxScaler
 
 
 class DataTransformer:
@@ -49,7 +48,12 @@ class DataTransformer:
         # Ensure the 'Date' column is of datetime type
         self.df['Date'] = pd.to_datetime(self.df['Date'])
 
-    def split_data(self, date: str) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    def split_data(self, date: str) -> Tuple[
+        pd.DataFrame,
+        pd.DataFrame,
+        pd.DataFrame,
+        pd.DataFrame
+    ]:
         """
         Splits the DataFrame into raw training and testing parts without scaling.
         
@@ -82,7 +86,12 @@ class DataTransformer:
 
         return df_train_x, df_train_y, df_test_x, df_test_y
 
-    def split_and_scale(self, date: str, common_scales: dict) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    def split_and_scale(self, date: str, common_scales: dict) -> Tuple[
+        pd.DataFrame,
+        pd.DataFrame,
+        pd.DataFrame,
+        pd.DataFrame
+    ]:
         """
         Splits the dataset and then scales it. If a common scaler is provided,
         it is used to transform the data. Otherwise, scalers are fitted per stock.
@@ -113,7 +122,11 @@ class DataTransformer:
 
         return df_train_x, df_train_y, df_test_x, df_test_y
 
-    def create_train_and_test_data(self, n_days: int, common_scales: dict = None) -> None:
+    def create_train_and_test_data(
+            self,
+            n_days: int,
+            common_scales: dict = None
+        ) -> None:
         """
         Creates training and testing arrays from the split (and scaled) data.
         

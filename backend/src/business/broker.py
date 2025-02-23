@@ -108,7 +108,8 @@ class Broker:
         cash_available = self.sql_wrapper.get_cash_available()
         number_of_stocks_in_portfolio = len(self.sql_wrapper.get_portfolio()) - 1
         try:
-            allowed_value_per_stock = cash_available / (self.number_of_stocks_allowed - number_of_stocks_in_portfolio)
+            allowed_value_per_stock = cash_available / (self.number_of_stocks_allowed 
+                - number_of_stocks_in_portfolio)
         except ZeroDivisionError:
             allowed_value_per_stock = 0
 
@@ -140,7 +141,7 @@ class Broker:
             The sorted predictions.
         """
         # Valid predictions are all stocks in portifolio to be sold 
-        # and the ones not in portfolio that have a buy and sell threshold and positive profit
+        # and those not in portfolio and have a buy/sell threshold and positive profit
         sell_predictions = []
         buy_predictions = []
         stock_symbols_in_portfolio = self.sql_wrapper.get_stock_symbols_in_portfolio()
@@ -153,7 +154,9 @@ class Broker:
 
             if prediction.ticker in stock_symbols_in_portfolio:
                 # If the stock is already in the portfolio, only sell orders are considered
-                number_of_shares = self.sql_wrapper.get_stock_in_portfolio(prediction.ticker).number_of_shares
+                number_of_shares = self.sql_wrapper.get_stock_in_portfolio(
+                    prediction.ticker
+                ).number_of_shares
                 sell_fee = self.calculate_fee(sell_threshold, number_of_shares)
                 total_sell_value = number_of_shares * sell_threshold - sell_fee
                 prediction.number_of_shares = number_of_shares
@@ -195,7 +198,9 @@ class Broker:
         buy_predictions.sort(key=lambda x: x.profit, reverse=True)
 
         # Limit the number of predictions to the maximum allowed stocks
-        return sell_predictions + buy_predictions[:self.number_of_stocks_allowed - len(sell_predictions)]
+        return sell_predictions + buy_predictions[
+            :self.number_of_stocks_allowed - len(sell_predictions)
+        ]
 
     def round_to_tick_size(self, number: float) -> float:
         """

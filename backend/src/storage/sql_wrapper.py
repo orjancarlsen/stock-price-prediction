@@ -4,7 +4,7 @@ import os
 import sqlite3
 import pprint
 # import random
-from datetime import datetime, date
+from datetime import datetime
 from pytz import timezone
 from typing import List
 
@@ -547,7 +547,7 @@ class SQLWrapper: # pylint: disable=too-many-public-methods
         with self.connect() as conn:
             stock_port = Portfolio.get_by_key(conn, "STOCK", stock_symbol)
             return stock_port.number_of_shares if stock_port else 0
-    
+
     def get_stock_symbols_in_portfolio(self):
         """
         Returns a list of stock symbols in the portfolio.

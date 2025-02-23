@@ -95,12 +95,11 @@ available_tickers = [
     'YAR.OL',
 ]
 available_companies = []
-for ticker in available_tickers:
-    print(ticker)
+for _ticker in available_tickers:
     available_companies.append(
         {
-            "symbol": ticker,
-            "name": yf.Ticker(ticker).info.get('longName', '')
+            "symbol": _ticker,
+            "name": yf.Ticker(_ticker).info.get('longName', '')
         }
     )
 available_companies.sort(key=lambda x: x['name'])
@@ -134,7 +133,7 @@ def train():
         return jsonify({'error': str(e)}), 400
     except ValueError as e:
         return jsonify({'error': f"Data preparation error: {e}"}), 400
-    
+
     all_train_df = pd.concat(raw_train_frames, axis=0)
     common_scales = {}
     for feature in DataTransformer.x_features:

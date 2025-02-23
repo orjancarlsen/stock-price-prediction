@@ -51,8 +51,8 @@ class Regressor:
         self.common_scales = data_dict[self.tickers[0]].scales
 
         # Aggregate training and testing data from all companies.
-        self.x_train = np.concatenate([data_dict[ticker].x_train for ticker in self.tickers], axis=0)
-        self.y_train = np.concatenate([data_dict[ticker].y_train for ticker in self.tickers], axis=0)
+        self.x_train = np.concatenate([data_dict[ticker].x_train for ticker in self.tickers],axis=0)
+        self.y_train = np.concatenate([data_dict[ticker].y_train for ticker in self.tickers],axis=0)
         self.x_test = np.concatenate([data_dict[ticker].x_test for ticker in self.tickers], axis=0)
         self.y_test = np.concatenate([data_dict[ticker].y_test for ticker in self.tickers], axis=0)
 
@@ -128,7 +128,12 @@ class Regressor:
         # Use the provided ticker’s DataTransformer if available,
         # otherwise create a temporary one.
         data = self.data_dict.get(ticker, DataTransformer(ticker))
-        past_n_days = data.get_past_n_days(n_days, start_date=start_date, end_date=end_date, scales=self.common_scales)
+        past_n_days = data.get_past_n_days(
+            n_days,
+            start_date=start_date,
+            end_date=end_date,
+            scales=self.common_scales
+        )
         # Assumes 5 features.
         prediction_next_period = self.model.predict(past_n_days.reshape(1, n_days, 5))
         # Inverse transform the predictions using the common scaler.
