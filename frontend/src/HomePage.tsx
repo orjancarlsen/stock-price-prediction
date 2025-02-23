@@ -16,7 +16,7 @@ function HomePage() {
         companies: trainedCompanies,
         error: trainedCompaniesError,
         loading: trainedCompaniesLoading,
-    } = useFetchCompanies('/companies/trained');
+    } = useFetchCompanies('/companies/available');
 
     const portfolio = useFetchPortfolio();
     const portfolioValues = useFetchPortfolioValues();

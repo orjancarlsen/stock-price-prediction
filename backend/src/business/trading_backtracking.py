@@ -1,10 +1,11 @@
 """Module for backtracking trading logic to test performance."""
 
+import time
 from datetime import date, timedelta
 from dateutil.relativedelta import relativedelta
 
 # Make sure these imports match your actual project structure
-from src.app import N_DAYS
+from src.app import N_DAYS, available_tickers
 from src.business.broker import Broker, StockPrediction
 from src.model.regressor import Regressor
 
@@ -20,10 +21,10 @@ def backtrack_trading():
     """
 
     broker = Broker()
-    all_tickers = Regressor.get_trained_models()
+    regressor = Regressor.load()
 
-    start_date = date(2025, 2, 19)
-    end_date = date(2025, 2, 22)
+    start_date = date(2024, 3, 23)
+    end_date = date(2025, 2, 23)
 
     current_day = start_date
 
@@ -36,20 +37,21 @@ def backtrack_trading():
             broker.dividend_payout(date=current_day)
 
             # --- 1) Conclude/cancel/execute any pending orders ---
-            tickers = broker.conclude_pending_orders_for_traded_stocks(
-                all_tickers,
+            broker.conclude_pending_orders_for_traded_stocks(
                 todays_date=current_day
             )
 
-            # --- 2) Make predictions for the next N_DAYS ---
-            predictions = []
-            for ticker in tickers:
-                try:
-                    regressor = Regressor.load(ticker)
+            # --- 2) Update portfolio value for the current day ---
+            broker.update_portfolio_value(date=current_day)
 
+            # --- 3) Make predictions for the next N_DAYS ---
+            predictions = []
+            for ticker in available_tickers:
+                try:
                     # Optional start_date 1 year before "current_day"
                     prediction_next_period = regressor.predict_next_period(
                         n_days=N_DAYS,
+                        ticker=ticker,
                         start_date=current_day - relativedelta(years=1),
                         end_date=current_day + relativedelta(days=1)
                     )
@@ -65,14 +67,14 @@ def backtrack_trading():
                     print(f"Error processing {ticker}: {e}")
                     continue
 
-            # --- 3) Sort predictions by profitability and create possible orders ---
+            # --- 4) Sort predictions by profitability and create possible orders ---
             predictions = broker.populate_prediction_with_orders(predictions)
 
-            # --- 4) Decide which orders to create in the exchange ---
+            # --- 5) Decide which orders to create in the exchange ---
             broker.create_orders(predictions, date=current_day)
 
-            # --- 5) Update portfolio value for the current day ---
-            broker.update_portfolio_value(date=current_day)
+            # --- 6) Sleep to not overload yfinance ---
+            time.sleep(8)
 
         # Move to the next calendar day
         current_day += timedelta(days=1)

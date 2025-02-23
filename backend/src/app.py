@@ -4,9 +4,10 @@ from typing import List
 
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from pytickersymbols import PyTickerSymbols
 import yfinance as yf
+import pandas as pd
 from yfinance.exceptions import YFPricesMissingError
+from sklearn.preprocessing import MinMaxScaler
 
 from src.data.data_transformer import DataTransformer # pylint: disable=import-error
 from src.model.regressor import Regressor             # pylint: disable=import-error
@@ -31,16 +32,79 @@ CORS(
     }
 )
 
-trained_models = Regressor.get_trained_models()
-trained_models_names = []
-for stock_symbol in trained_models:
-    trained_models_names.append(
+available_tickers = [
+    'ABG.OL',
+    'AFG.OL',
+    'AFK.OL',
+    'AKER.OL',
+    'AKRBP.OL',
+    'AKSO.OL',
+    'ATEA.OL',
+    'AUSS.OL',
+    'AUTO.OL',
+    'B2I.OL',
+    'BAKKA.OL',
+    'BONHR.OL',
+    'BOUV.OL',
+    'BWLPG.OL',
+    'BRG.OL',
+    'CADLR.OL',
+    'CLOUD.OL',
+    'CRAYN.OL',
+    'DNB.OL',
+    'DNO.OL',
+    'ELK.OL',
+    'ELMRA.OL',
+    'ENTRA.OL',
+    'EQNR.OL',
+    'EPR.OL',
+    'FLNG.OL',
+    'FRO.OL',
+    'GJF.OL',
+    'GOGL.OL',
+    'HAFNI.OL',
+    'HAUTO.OL',
+    'KID.OL',
+    'KIT.OL',
+    'KOA.OL',
+    'KOG.OL',
+    'LSG.OL',
+    'MPCC.OL',
+    'NEL.OL',
+    'MOWI.OL',
+    'MULTI.OL',
+    'NHY.OL',
+    'NOD.OL',
+    'NAS.OL',
+    'ORK.OL',
+    'PHO.OL',
+    'RECSI.OL',
+    'SALM.OL',
+    'SCHB.OL',
+    'SCATC.OL',
+    'SB1NO.OL',
+    'SNI.OL',
+    'STB.OL',
+    'SUBC.OL',
+    'TEL.OL',
+    'TGS.OL',
+    'TOM.OL',
+    'VEI.OL',
+    'VAR.OL',
+    'WAWI.OL',
+    'YAR.OL',
+]
+available_companies = []
+for ticker in available_tickers:
+    print(ticker)
+    available_companies.append(
         {
-            "symbol": stock_symbol,
-            "name": yf.Ticker(stock_symbol).info.get('longName', '')
+            "symbol": ticker,
+            "name": yf.Ticker(ticker).info.get('longName', '')
         }
     )
-trained_models_names.sort(key=lambda x: x['name'])
+available_companies.sort(key=lambda x: x['name'])
+print(available_companies)
 
 
 @app.route('/health', methods=['GET'])
@@ -51,37 +115,41 @@ def health_check():
     return jsonify({'status': 'alive'}), 200
 
 
-@app.route('/train/<ticker>', methods=['POST'])
-def train(ticker: str):
+@app.route('/train', methods=['POST'])
+def train():
     """
     Train regressor to predict stock prices.
     """
+
+    data_dict = {}
+    raw_train_frames = []
     try:
-        data = DataTransformer(ticker=ticker)
-        data.create_train_and_test_data(n_days=N_DAYS)
+        for ticker in available_tickers:
+            data = DataTransformer(ticker=ticker)
+            # Get raw training data (without scaling) for building the common scaler.
+            df_train_x, _, _, _ = data.split_data('2023-01-01')
+            raw_train_frames.append(df_train_x)
+            data_dict[ticker] = data
     except YFPricesMissingError as e:
         return jsonify({'error': str(e)}), 400
     except ValueError as e:
         return jsonify({'error': f"Data preparation error: {e}"}), 400
+    
+    all_train_df = pd.concat(raw_train_frames, axis=0)
+    common_scales = {}
+    for feature in DataTransformer.x_features:
+        scaler = MinMaxScaler(feature_range=(0,1))
+        scaler.fit(all_train_df[feature].values.reshape(-1, 1))
+        common_scales[feature] = scaler
 
-    regressor = Regressor(ticker=ticker, data=data)
+    for ticker in available_tickers:
+        data_dict[ticker].create_train_and_test_data(n_days=N_DAYS, common_scales=common_scales)
+
+    regressor = Regressor(data_dict=data_dict)
     regressor.train()
     regressor.save()
 
     return jsonify({}), 200
-
-
-@app.route('/predict/<ticker>', methods=['GET'])
-def predict(ticker: str):
-    """
-    Make stock price prediction.
-    """
-    regressor = Regressor.load(ticker)
-    regressor.predict()
-
-    y_pred_list = regressor.y_pred.tolist()
-    y_true_list = regressor.y_true.tolist()
-    return jsonify({'prediction': y_pred_list, 'true_values': y_true_list}), 200
 
 
 @app.route('/predict_next/<ticker>', methods=['GET'])
@@ -89,31 +157,18 @@ def predict_next_period(ticker: str):
     """
     Make stock price prediction for the specified number of days.
     """
-    regressor = Regressor.load(ticker)
-    prediction_next_period = regressor.predict_next_period(n_days=N_DAYS)
+    regressor = Regressor.load()
+    prediction_next_period = regressor.predict_next_period(n_days=N_DAYS, ticker=ticker)
 
     return jsonify(prediction_next_period.tolist())
 
 
 @app.route('/companies/available', methods=['GET'])
-def available_companies() -> List[str]:
+def get_available_companies() -> List[str]:
     """
-    Get available companies through the yahoo finance api.
+    Get available companies.
     """
-    stock_data = PyTickerSymbols()
-    sp500 = stock_data.get_stocks_by_index('S&P 500')
-    sp500_ticker_name = [{'symbol': stock['symbol'], 'name': stock['name']} for stock in sp500]
-
-    return jsonify(sp500_ticker_name)
-
-
-@app.route('/companies/trained', methods=['GET'])
-def get_trained_models() -> List[str]:
-    """
-    Return a list of stocks for which there exist trained models.
-    """
-
-    return jsonify(trained_models_names)
+    return jsonify(available_companies)
 
 
 @app.route('/companies/price/<string:ticker>', methods=['GET'])
@@ -148,7 +203,7 @@ def get_transactions():
         transaction_dict = transaction.__dict__
         if transaction_dict['transaction_type'] in ['BUY', 'SELL', 'DIVIDEND']:
             transaction_dict['name'] = next(
-                (model['name'] for model in trained_models_names
+                (model['name'] for model in available_companies
                     if model['symbol'] == transaction.stock_symbol),
                 ''
             )
@@ -168,7 +223,7 @@ def get_orders():
     for order in orders:
         order_dict = order.__dict__
         order_dict['name'] = next(
-            (model['name'] for model in trained_models_names
+            (model['name'] for model in available_companies
                 if model['symbol'] == order.stock_symbol),
             ''
         )
@@ -187,7 +242,7 @@ def get_portfolio():
         if port.asset_type != "CASH":
             port.todays_value = yf.Ticker(port.stock_symbol).history(period='1d')['Close'].values[0]
             port.name = next(
-                (model['name'] for model in trained_models_names
+                (model['name'] for model in available_companies
                     if model['symbol'] == port.stock_symbol),
                 ''
             )

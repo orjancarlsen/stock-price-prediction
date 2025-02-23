@@ -4,7 +4,7 @@ import os
 import sqlite3
 import pprint
 # import random
-from datetime import datetime
+from datetime import datetime, date
 from pytz import timezone
 from typing import List
 
@@ -547,6 +547,18 @@ class SQLWrapper: # pylint: disable=too-many-public-methods
         with self.connect() as conn:
             stock_port = Portfolio.get_by_key(conn, "STOCK", stock_symbol)
             return stock_port.number_of_shares if stock_port else 0
+    
+    def get_stock_symbols_in_portfolio(self):
+        """
+        Returns a list of stock symbols in the portfolio.
+        """
+        with self.connect() as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT stock_symbol FROM portfolio 
+                WHERE asset_type = 'STOCK'
+            ''')
+            return [row[0] for row in cursor]
 
     def get_number_of_distinct_stocks(self):
         """
@@ -589,11 +601,12 @@ class SQLWrapper: # pylint: disable=too-many-public-methods
 if __name__ == "__main__":
     sql_wrapper = SQLWrapper()
     sql_wrapper.create_tables()
+    #sql_wrapper.deposit(100000, date(2024, 1, 1))
 
     # sql_wrapper.delete_portfolio_value(datetime(2024, 2, 12).date())
 
     # Initial cash deposit
-    # sql_wrapper.deposit(100000, date(2024, 1, 1))
+    #sql_wrapper.deposit(100000, date(2024, 1, 1))
 
     # sql_wrapper.create_buy_order('NOD.OL', 100, 99, 20)
 
@@ -647,5 +660,5 @@ if __name__ == "__main__":
     # Summary
     pprint.pp(sql_wrapper.get_portfolio())
     pprint.pp(sql_wrapper.get_transactions())
-    # pprint.pp(sql_wrapper.get_orders())
+    pprint.pp(sql_wrapper.get_orders_by_status(['PENDING']))
     pprint.pp(sql_wrapper.get_portfolio_values())
