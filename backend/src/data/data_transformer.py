@@ -137,7 +137,10 @@ class DataTransformer:
         common_scales : dict, optional
             Dictionary of pre-fitted scalers to use.
         """
-        df_train_x, df_train_y, df_test_x, df_test_y = self.split_and_scale('2023-01-01', common_scales)
+        df_train_x, df_train_y, df_test_x, df_test_y = self.split_and_scale(
+            '2023-01-01',
+            common_scales
+        )
 
         # Build training arrays
         self.x_train = []

@@ -108,7 +108,7 @@ class Broker:
         cash_available = self.sql_wrapper.get_cash_available()
         number_of_stocks_in_portfolio = len(self.sql_wrapper.get_portfolio()) - 1
         try:
-            allowed_value_per_stock = cash_available / (self.number_of_stocks_allowed 
+            allowed_value_per_stock = cash_available / (self.number_of_stocks_allowed
                 - number_of_stocks_in_portfolio)
         except ZeroDivisionError:
             allowed_value_per_stock = 0
@@ -140,7 +140,7 @@ class Broker:
         List[StockPrediction]
             The sorted predictions.
         """
-        # Valid predictions are all stocks in portifolio to be sold 
+        # Valid predictions are all stocks in portifolio to be sold
         # and those not in portfolio and have a buy/sell threshold and positive profit
         sell_predictions = []
         buy_predictions = []
