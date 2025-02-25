@@ -24,6 +24,9 @@ tf.config.experimental.enable_op_determinism()
 
 from src.data.data_transformer import DataTransformer  # pylint: disable=import-error
 
+import dotenv
+dotenv.load_dotenv()
+
 # Ensure that S3_BUCKET is set in your environment
 S3_BUCKET = os.environ.get('S3_BUCKET')
 if not S3_BUCKET:
