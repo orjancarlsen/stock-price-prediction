@@ -1,8 +1,8 @@
 """Module providing regressor class for stock price prediction"""
 
 import os
-import pathlib
-import glob
+import tempfile
+import boto3
 from datetime import datetime
 import joblib
 import numpy as np
@@ -23,6 +23,16 @@ set_random_seed(42)
 tf.config.experimental.enable_op_determinism()
 
 from src.data.data_transformer import DataTransformer  # pylint: disable=import-error
+
+import dotenv
+dotenv.load_dotenv()
+
+# Ensure that S3_BUCKET is set in your environment
+S3_BUCKET = os.environ.get('S3_BUCKET')
+if not S3_BUCKET:
+    raise ValueError(
+        "Environment variable S3_BUCKET is not set. Please set it to your S3 bucket name."
+    )
 
 class Regressor:
     """
@@ -147,33 +157,53 @@ class Regressor:
 
     def save(self) -> None:
         """
-        Save the trained model to file.
+        Save the trained model to S3.
         """
         timezone_norway = timezone('Europe/Oslo')
         date = datetime.now(timezone_norway).strftime('%Y-%m-%d_%H-%M-%S')
-        filepath = pathlib.Path(__file__).parent.resolve()
-        filename = filepath / f'models/{date}.joblib'
-        joblib.dump(self, filename)
+        filename = f'{date}.joblib'
+        s3_key = f'models/{filename}'
+
+        # Save the model to a temporary file
+        with tempfile.NamedTemporaryFile() as temp_file:
+            joblib.dump(self, temp_file.name)
+            temp_file.seek(0)
+            # Upload the file to S3
+            s3 = boto3.client('s3')
+            s3.upload_file(temp_file.name, S3_BUCKET, s3_key)
+            print(f"Model saved to s3://{S3_BUCKET}/{s3_key}")
 
     @staticmethod
     def load() -> 'Regressor':
         """
-        Load the most recent model from file.
+        Load the most recent model from S3.
         """
-        filepath = pathlib.Path(__file__).parent.resolve()
-        files = glob.glob(str(filepath / 'models/*.joblib'))
-        if not files:
-            raise FileNotFoundError(f"No model files found in {filepath / 'models'}")
+        s3 = boto3.client('s3')
+        prefix = 'models/'
+        response = s3.list_objects_v2(Bucket=S3_BUCKET, Prefix=prefix)
+        if 'Contents' not in response:
+            raise FileNotFoundError(f"No model files found in s3://{S3_BUCKET}/{prefix}")
 
-        def extract_date(filename) -> datetime:
-            basename = os.path.basename(filename)
+        # Filter out keys that end with '.joblib'
+        files = [obj['Key'] for obj in response['Contents'] if obj['Key'].endswith('.joblib')]
+        if not files:
+            raise FileNotFoundError(f"No model files found in s3://{S3_BUCKET}/{prefix}")
+
+        def extract_date(key: str) -> datetime:
+            # Assumes key format is "models/YYYY-MM-DD_HH-MM-SS.joblib"
+            basename = os.path.basename(key)
             date_str = basename.replace('.joblib', '')
             try:
                 return datetime.strptime(date_str, '%Y-%m-%d_%H-%M-%S')
             except ValueError as e:
-                print(f"Error parsing date from filename {filename}: {e}")
+                print(f"Error parsing date from key {key}: {e}")
                 raise
 
         files.sort(key=extract_date, reverse=True)
-        latest_file = files[0]
-        return joblib.load(latest_file)
+        latest_key = files[0]
+        # Download the latest file to a temporary file and load it
+        with tempfile.NamedTemporaryFile() as temp_file:
+            s3.download_file(S3_BUCKET, latest_key, temp_file.name)
+            model = joblib.load(temp_file.name)
+            print(f"Model loaded from s3://{S3_BUCKET}/{latest_key}")
+            return model

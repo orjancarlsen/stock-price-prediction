@@ -12,3 +12,5 @@ pandas-datareader==0.10.0
 pytest==8.3.4
 pytickersymbols==1.15.0
 PyYAML==6.0.2
+boto3==1.37.1
+dotenv==0.9.9
