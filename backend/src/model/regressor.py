@@ -30,7 +30,9 @@ dotenv.load_dotenv()
 # Ensure that S3_BUCKET is set in your environment
 S3_BUCKET = os.environ.get('S3_BUCKET')
 if not S3_BUCKET:
-    raise ValueError("Environment variable S3_BUCKET is not set. Please set it to your S3 bucket name.")
+    raise ValueError(
+        "Environment variable S3_BUCKET is not set. Please set it to your S3 bucket name."
+    )
 
 class Regressor:
     """
