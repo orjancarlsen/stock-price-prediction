@@ -1,6 +1,6 @@
 """Trading logic to be ran daily."""
 
-from src.app import N_DAYS, available_companies
+from src.app import N_DAYS, available_tickers
 from src.business.broker import Broker, StockPrediction
 from src.model.regressor import Regressor
 
@@ -20,7 +20,7 @@ def trading():
 
     # Make prediction for next N_DAYS
     predictions = []
-    for ticker in available_companies:
+    for ticker in available_tickers:
         prediction_next_period = regressor.predict_next_period(
             n_days=N_DAYS,
             ticker=ticker
