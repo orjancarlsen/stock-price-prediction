@@ -161,7 +161,7 @@ class Regressor:
         Load the most recent model from file.
         """
         filepath = pathlib.Path(__file__).parent.resolve()
-        files = glob.glob(str(filepath / 'models/2025*.joblib'))
+        files = glob.glob(str(filepath / 'models/*.joblib'))
         if not files:
             raise FileNotFoundError(f"No model files found in {filepath / 'models'}")
 
