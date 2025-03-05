@@ -94,7 +94,7 @@ class Broker:
         percentage = 0.0015
         minimum_fee = 29
 
-        return min(minimum_fee, percentage * price_per_share * number_of_shares)
+        return max(minimum_fee, percentage * price_per_share * number_of_shares)
 
     def calculate_number_of_shares(self, buy_threshold: float) -> int:
         """
