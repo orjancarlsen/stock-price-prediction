@@ -23,8 +23,8 @@ def backtrack_trading():
     broker = Broker()
     regressor = Regressor.load()
 
-    start_date = date(2024, 3, 23)
-    end_date = date(2025, 2, 23)
+    start_date = date(2025, 3, 5)
+    end_date = date(2025, 3, 7)
 
     current_day = start_date
 

@@ -144,9 +144,8 @@ class Regressor:
             end_date=end_date,
             scales=self.common_scales
         )
-        # Assumes 5 features.
         prediction_next_period = self.model.predict(past_n_days.reshape(1, n_days, 5))
-        # Inverse transform the predictions using the common scaler.
+
         prediction_next_period[:, 0] = self.common_scales['Low'].inverse_transform(
             prediction_next_period[:, 0].reshape(-1, 1)
         ).reshape(-1)

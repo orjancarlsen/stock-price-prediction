@@ -11,6 +11,14 @@
             "console": "integratedTerminal",
             "cwd": "${workspaceFolder}/backend",
             "module": "src.business.trading"
-        }
+        },
+        {
+            "name": "Python Debugger: Trading Backtracking",
+            "type": "python",
+            "request": "launch",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/backend",
+            "module": "src.business.trading_backtracking"
+        },
     ]
 }

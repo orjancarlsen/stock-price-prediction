@@ -94,7 +94,7 @@ class Broker:
         percentage = 0.0015
         minimum_fee = 29
 
-        return min(minimum_fee, percentage * price_per_share * number_of_shares)
+        return max(minimum_fee, percentage * price_per_share * number_of_shares)
 
     def calculate_number_of_shares(self, buy_threshold: float) -> int:
         """
@@ -116,7 +116,7 @@ class Broker:
         max_shares = int(allowed_value_per_stock // buy_threshold)
         while max_shares > 0:
             fee = self.calculate_fee(buy_threshold, max_shares)
-            if buy_threshold + fee / max_shares <= allowed_value_per_stock:
+            if buy_threshold * max_shares + fee <= allowed_value_per_stock:
                 break
             max_shares -= 1
 
