@@ -116,7 +116,7 @@ class Broker:
         max_shares = int(allowed_value_per_stock // buy_threshold)
         while max_shares > 0:
             fee = self.calculate_fee(buy_threshold, max_shares)
-            if buy_threshold + fee / max_shares <= allowed_value_per_stock:
+            if buy_threshold * max_shares + fee <= allowed_value_per_stock:
                 break
             max_shares -= 1
 

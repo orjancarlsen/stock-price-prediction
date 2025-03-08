@@ -33,7 +33,6 @@ CORS(
 )
 
 available_tickers = [
-    'ABG.OL',
     'AFG.OL',
     'AFK.OL',
     'AKER.OL',
@@ -103,7 +102,6 @@ for _ticker in available_tickers:
         }
     )
 available_companies.sort(key=lambda x: x['name'])
-print(available_companies)
 
 
 @app.route('/health', methods=['GET'])
